@@ -122,7 +122,7 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn('<span id="locationLabel">Дача</span><span class="location-chevron"', HTML)
         self.assertNotIn('id="locationGroup"', HTML)
         self.assertNotIn(".location-button #locationGroup{", HTML)
-        self.assertIn("(group?'Група '+String(group).split('.')[0]:'')+(unread?' · Новий графік':'')", HTML)
+        self.assertIn("(group?'Група '+String(group).split('.')[0]:'')+(alert?.level==='active'?' · Екстрені відключення'", HTML)
         self.assertIn("hint.hidden=!group", HTML)
         refresh = ROOT.joinpath("scripts/refresh.py").read_text(encoding="utf-8")
         self.assertIn("'group':'4.1'", refresh)
