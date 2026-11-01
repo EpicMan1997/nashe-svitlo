@@ -51,7 +51,7 @@
   const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
   function applyReadings() {
     const state = live?.summary()?.status || 'preview';
-    liveMode = state !== 'preview' && state !== 'error';
+    liveMode = state !== 'preview';
     if (!liveMode) {
       inventory = demoInventory;
       return;
