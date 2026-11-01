@@ -176,13 +176,20 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("main > header.location-menu-expanded .header-time", css)
         self.assertIn("@media(max-width:380px)", css)
 
-    def test_emergency_warning_does_not_erase_schedule(self):
+    def test_emergency_warning_is_compact_and_keeps_schedule(self):
         self.assertIn("const emergency=tab==='today'?data?.locations?.[locationId]?.emergency:null;", HTML)
         self.assertIn("class=\"emergency-banner", HTML)
         self.assertIn("role=\"alert", HTML)
-        self.assertIn("Екстрені відключення в окремих районах", HTML)
-        self.assertIn("Повідомлення ДТЕК", HTML)
-        self.assertIn("Погодинний графік нижче збережено для орієнтиру", HTML)
+        self.assertIn("Екстрені в окремих районах", HTML)
+        self.assertIn("Екстрені відключення", HTML)
+        self.assertIn("Графік орієнтовний", HTML)
+        self.assertIn("Перевірте свою адресу", HTML)
+        self.assertIn("class=\"emergency-primary", HTML)
+        self.assertIn("class=\"emergency-secondary", HTML)
+        self.assertIn("class=\"emergency-link", HTML)
+        self.assertIn("aria-label=\"Відкрити повідомлення ДТЕК\"", HTML)
+        self.assertNotIn("Погодинний графік нижче збережено для орієнтиру, але", HTML)
+        self.assertNotIn("ДТЕК повідомив про екстрені обмеження у вашому регіоні.", HTML)
         self.assertIn("emergencyOn?'Плановий графік'", HTML)
         self.assertIn("За планом: без світла", HTML)
         self.assertIn("За планом: зі світлом", HTML)
@@ -191,8 +198,11 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("out.forEach(x=>", HTML)
         css = ROOT.joinpath("site/ecoflow.css").read_text(encoding="utf-8")
         self.assertIn(".emergency-banner{", css)
-        self.assertIn(".emergency-unverified .emergency-pulse", css)
-        self.assertIn("@media(max-width:480px){.emergency-banner", css)
+        self.assertIn(".emergency-message{", css)
+        self.assertIn(".emergency-unverified .emergency-symbol", css)
+        self.assertIn("@media(max-width:700px){", css)
+        self.assertIn("@media(max-width:350px){", css)
+
 
     def test_daily_change_badge_high_contrast_and_color_thresholds(self):
         self.assertIn("min-width:32px;height:32px", HTML)
