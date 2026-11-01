@@ -109,7 +109,7 @@ test('dashboard initializes, shows loaded schedules and an emergency beside the 
   await new Promise(setImmediate);
   assert.match(r.node('display').innerHTML,/graph/);
   assert.match(r.node('display').innerHTML,/07:30/);
-  r.locations[1].events.click();
+  r.locations[1].onclick();
   assert.match(r.node('display').innerHTML,/Екстрені відключення/);
   assert.match(r.node('display').innerHTML,/Плановий графік/);
   assert.match(r.node('display').innerHTML,/07:30/);
@@ -119,10 +119,10 @@ test('dashboard initializes, shows loaded schedules and an emergency beside the 
 test('unknown tomorrow does not invent intervals, city tabs remain switchable',async()=>{
   const r=runDashboard();
   await new Promise(setImmediate);
-  r.tabs[1].events.click();
+  r.tabs[1].onclick();
   assert.match(r.node('display').innerHTML,/Графіка немає/);
   assert.doesNotMatch(r.node('display').innerHTML,/class="off"/);
-  r.locations[3].events.click();
+  r.locations[3].onclick();
   assert.equal(r.node('locationLabel').textContent,'Науменки');
   assert.match(r.node('display').innerHTML,/Графіка немає/);
 });
