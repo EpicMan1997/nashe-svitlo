@@ -2024,3 +2024,11 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
   .emergency-banner{flex-wrap:wrap}
   .emergency-secondary{width:100%;flex-direction:row;justify-content:space-between}
 }
+
+/* Telemetry state is read-only and clearly distinct from the sample preview. */
+.eco-status.is-live{color:#a7f3d0;border-color:#27745f;background:#153f37}
+.eco-status.is-live i{background:#34d399;box-shadow:0 0 0 3px #34d39925}
+.eco-status.is-stale{color:#fcd34d;border-color:#876324;background:#403119}
+.eco-status.is-stale i{background:#eab308;box-shadow:0 0 0 3px #eab30825}
+.eco-shell[data-telemetry-state="connecting"] .eco-operation,
+.eco-shell[data-telemetry-state="stale"] .eco-operation{opacity:.7}
