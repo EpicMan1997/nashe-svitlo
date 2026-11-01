@@ -83,14 +83,20 @@
       stale: 'Дані застаріли',
       error: 'Налаштування відсутнє'
     };
-    element.classList.toggle('is-live', mode === 'live');
-    element.classList.toggle('is-stale', mode === 'stale');
+    const devicesHere = demoInventory[activeEcoLocation]?.devices || [];
+    const liveHere = devicesHere.filter(device =>
+      live?.statusFor(activeEcoLocation + ':' + device.id) === 'live').length;
+    const stateHere = mode === 'live' && liveHere === 0 ? 'stale' : mode;
+    element.classList.toggle('is-live', stateHere === 'live');
+    element.classList.toggle('is-stale', stateHere === 'stale');
     element.title = mode === 'preview' ?
       'Тестові показники, не реальна телеметрія EcoFlow' :
       mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
       'Немає свіжих даних. Показники приховано.';
-    element.innerHTML = '<i aria-hidden="true"></i>' + (labels[mode] || 'Немає зв’язку');
-    root.dataset.telemetryState = mode;
+    element.innerHTML = '<i aria-hidden="true"></i>' + (mode === 'live'
+      ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
+      : labels[mode] || 'Немає зв’язку');
+    root.dataset.telemetryState = stateHere;
   }
 
   // Physical battery inventory for overview metrics (PowerOcean has two 5000 Wh modules).
