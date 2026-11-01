@@ -491,13 +491,14 @@
   function metricBreakdown(kind) {
     const devices = physicalDevices(inventory[activeEcoLocation].devices);
     const total = devices.reduce((sum, item) => sum + item.capacityWh, 0);
-    const stored = devices.reduce((sum, item) => sum + item.capacityWh * item.pct / 100, 0);
-    const weighted = total ? stored / total * 100 : 0;
+    const allSocKnown = devices.every(d => Number.isFinite(d.pct));
+    const stored = allSocKnown ? devices.reduce((sum, item) => sum + item.capacityWh * item.pct / 100, 0) : null;
+    const weighted = stored !== null && total ? stored / total * 100 : null;
     const fmtPercent = value => percentValue.format(value) + '%';
     const deviceShare = device => total ? device.capacityWh / total * 100 : 0;
     // Percent contribution to the location-wide weighted charge, not device SOC.
-    const chargeContribution = device => total ? device.capacityWh * device.pct / total : 0;
-    const storedEnergyWh = device => device.capacityWh * device.pct / 100;
+    const chargeContribution = device => total && Number.isFinite(device.pct) ? device.capacityWh * device.pct / total : null;
+    const storedEnergyWh = device => Number.isFinite(device.pct) ? device.capacityWh * device.pct / 100 : null;
     const title = kind === 'capacity' ? 'Розподіл ємності локації'
       : kind === 'charge' ? 'Внесок станцій у середній заряд'
       : 'Станції та акумулятори локації';
@@ -521,7 +522,7 @@
           '</span><span class="eco-detail-device-name">' + name + '<small>' + type + '</small></span></div>' +
           '<div class="eco-detail-inventory-stats"><span><b>' + capacity + '</b> ємність</span>' +
           '<span><b class="eco-detail-percent" data-level="' + level(device.pct) + '">' +
-          device.pct + '%</b> заряд</span>' +
+          pctLabel(device.pct) + '</b> заряд</span>' +
           '<span>' + textEscape(operation.label) + '</span>' + powerLine + '</div></div>';
       }
       if (kind === 'capacity') {
@@ -533,13 +534,14 @@
       }
       return '<div class="eco-detail-device eco-detail-charge">' +
         '<span class="eco-detail-device-name">' + name + '</span>' +
-        '<strong class="eco-detail-contribution">+' + fmtPercent(contribution) + '</strong>' +
-        '<div class="eco-detail-track"><i style="width:' + contribution +
+        '<strong class="eco-detail-contribution">' + (contribution === null ? '—' : '+' + fmtPercent(contribution)) + '</strong>' +
+        '<div class="eco-detail-track"><i style="width:' + (contribution ?? 0) +
         '%" data-level="' + level(device.pct) + '"></i></div>' +
-        '<small>Заряд ' + device.pct + '% · частка ємності ' + fmtPercent(share) +
-        '</small><small><strong class="eco-detail-stored">≈ ' + niceWh(Math.round(savedEnergy)) + ' запасено</strong></small>' +
-        '<small>' + fmtPercent(share) + ' × ' + device.pct + '% = +' +
-        fmtPercent(contribution) + ' загального заряду</small></div>';
+        '<small>Заряд ' + pctLabel(device.pct) + ' · частка ємності ' + fmtPercent(share) +
+        '</small><small><strong class="eco-detail-stored">' + (savedEnergy === null ? 'Дані недоступні' : '≈ ' + niceWh(Math.round(savedEnergy)) + ' запасено') + '</strong></small>' +
+        '<small>' + (contribution === null ? 'Внесок невідомий' :
+        fmtPercent(share) + ' × ' + pctLabel(device.pct) + ' = +' +
+        fmtPercent(contribution) + ' загального заряду') + '</small></div>';
     }).join('');
 
     const capacityDistribution = kind === 'capacity' && total
@@ -549,24 +551,26 @@
         '</div>' : '';
     const chargeDistribution = kind === 'charge' && total
       ? '<div class="eco-detail-contribution-bar" role="img" aria-label="Внески станцій у середній заряд ' +
-        fmtPercent(weighted) + '">' + devices.map(device =>
+        (weighted === null ? 'невідомий' : fmtPercent(weighted)) + '">' + devices.map(device =>
           '<i data-level="' + level(device.pct) + '" style="width:' +
-          chargeContribution(device) + '%" title="' + textEscape(device.name) + ': +' +
-          fmtPercent(chargeContribution(device)) + ' середнього заряду"></i>').join('') + '</div>' : '';
+          (chargeContribution(device) ?? 0) + '%" title="' + textEscape(device.name) + ': +' +
+          (chargeContribution(device) === null ? 'невідомо' : fmtPercent(chargeContribution(device))) + ' середнього заряду"></i>').join('') + '</div>' : '';
     const formula = kind === 'capacity'
       ? '<div class="eco-detail-total"><span>Загальна ємність</span><strong>' +
         exactCapacity(total) + ' = 100%</strong></div>'
       : kind === 'charge'
         ? '<div class="eco-detail-formula"><span>Внески в середній заряд</span>' +
-          '<strong>' + devices.map(device => fmtPercent(chargeContribution(device))).join(' + ') +
-          ' = ' + fmtPercent(weighted) + ' ≈ ' + Math.round(weighted) + '%</strong></div>'
+          '<strong>' + (weighted === null ? 'Очікуємо даних від усіх акумуляторів' :
+          devices.map(device => fmtPercent(chargeContribution(device))).join(' + ') +
+          ' = ' + fmtPercent(weighted) + ' ≈ ' + Math.round(weighted) + '%') + '</strong></div>'
         : '<div class="eco-detail-total"><span>Усього акумуляторів і станцій</span><strong>' +
           devices.length + '</strong></div>';
 
     const note = kind === 'capacity'
       ? 'Частка від загальної номінальної ємності, незалежно від поточного заряду'
       : kind === 'charge'
-        ? 'Внесок у загальні ' + Math.round(weighted) + '%: враховано і ємність, і заряд'
+        ? (weighted === null ? 'Не всі акумулятори передали заряд' :
+          'Внесок у загальні ' + Math.round(weighted) + '%: враховано і ємність, і заряд')
         : 'Перелік пристроїв, їхній заряд, ємність та стан';
     return '<div class="eco-detail-heading"><strong>' + title +
       '</strong><span>' + textEscape(note) + '</span></div>' +
@@ -677,18 +681,21 @@
   }
   function generatorSOC(device) {
     const stored = generatorPlan.soc.get(device.id);
-    const fallback = Number(device.pct);
-    return Math.max(0, Math.min(100, Number.isFinite(stored) ? stored : fallback));
+    return Number.isFinite(stored) ? Math.max(0, Math.min(100, stored)) :
+      Number.isFinite(device.pct) ? device.pct : null;
   }
   function generatorMissingWh(devices) {
+    if (devices.some(d => generatorSOC(d) === null)) return null;
     return devices.reduce((total, d) =>
       total + d.capacityWh * Math.max(0, generatorPlan.targetPct - generatorSOC(d)) / 100, 0);
   }
   function generatorDuration(energyWh, availableW) {
+    if (energyWh === null) return NaN;
     return energyWh <= 0 ? 0 :
       availableW > 0 ? energyWh / (availableW * generatorChargeEfficiency) : Infinity;
   }
   function generatorTime(hours) {
+    if (Number.isNaN(hours)) return 'Немає даних';
     if (!Number.isFinite(hours)) return 'Недостатньо W';
     if (hours <= 0) return 'Заряджено до цілі';
     const minutes = Math.max(1, Math.ceil(hours * 60));
