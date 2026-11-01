@@ -176,6 +176,24 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("main > header.location-menu-expanded .header-time", css)
         self.assertIn("@media(max-width:380px)", css)
 
+    def test_emergency_warning_does_not_erase_schedule(self):
+        self.assertIn("const emergency=tab==='today'?data?.locations?.[locationId]?.emergency:null;", HTML)
+        self.assertIn("class=\"emergency-banner", HTML)
+        self.assertIn("role=\"alert", HTML)
+        self.assertIn("Екстрені відключення в окремих районах", HTML)
+        self.assertIn("Повідомлення ДТЕК", HTML)
+        self.assertIn("Погодинний графік нижче збережено для орієнтиру", HTML)
+        self.assertIn("emergencyOn?'Плановий графік'", HTML)
+        self.assertIn("За планом: без світла", HTML)
+        self.assertIn("За планом: зі світлом", HTML)
+        self.assertIn("За планом ще ", HTML)
+        self.assertIn("'<div class=\"graph\"><div class=\"bar", HTML)
+        self.assertIn("out.forEach(x=>", HTML)
+        css = ROOT.joinpath("site/ecoflow.css").read_text(encoding="utf-8")
+        self.assertIn(".emergency-banner{", css)
+        self.assertIn(".emergency-unverified .emergency-pulse", css)
+        self.assertIn("@media(max-width:480px){.emergency-banner", css)
+
     def test_daily_change_badge_high_contrast_and_color_thresholds(self):
         self.assertIn("min-width:32px;height:32px", HTML)
         self.assertIn("font-size:18px;font-weight:850", HTML)
