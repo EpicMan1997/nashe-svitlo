@@ -1950,24 +1950,77 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
 }
 
 
-/* Authoritative emergency operator notices remain separate from the retained schedule. */
+
+/* Compact operator alert: high visibility without pushing the timeline below the fold. */
 .emergency-banner{
-  margin:14px 0 16px;
-  padding:16px 18px;
-  border:2px solid #ef6b72;
-  border-radius:15px;
-  background:linear-gradient(120deg,#57202c 0%,#311d32 100%);
-  color:#ffe1e6;
-  box-shadow:0 0 0 2px #ee4e6420,0 8px 22px #00000028;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px 20px;
   min-width:0;
+  margin:12px 0 16px;
+  padding:11px 14px;
+  border:1px solid #ef6974;
+  border-left:4px solid #ff6475;
+  border-radius:12px;
+  background:#42212f;
+  color:#ffe7eb;
 }
-.emergency-banner-head{display:flex;align-items:center;gap:10px}
-.emergency-banner-head strong{font-size:clamp(16px,3.5vw,22px);line-height:1.24;letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere}
-.emergency-pulse{flex:none;width:12px;height:12px;border-radius:50%;background:#ff6b7b;box-shadow:0 0 0 5px #ff6b7b25}
-.emergency-banner p{margin:10px 0 12px;line-height:1.52;font-size:13px;color:#fcd8dd}
-.emergency-source{border-top:1px solid #ff9aa143;padding-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 14px;font-size:12px}
-.emergency-source>span{color:#f2afb7}
-.emergency-source a{color:#fff1b6;font-weight:750;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
-.emergency-banner.emergency-unverified{border-color:#efb659;background:linear-gradient(120deg,#483a29,#292c38)}
-.emergency-unverified .emergency-pulse{background:#facc15;box-shadow:0 0 0 5px #facc1520}
-@media(max-width:480px){.emergency-banner{margin:12px 0 14px;padding:13px 14px}.emergency-banner p{font-size:12px}.emergency-source{font-size:11px}}
+.emergency-primary{display:flex;align-items:center;gap:11px;min-width:0}
+.emergency-symbol{
+  flex:0 0 30px;
+  display:grid;
+  place-items:center;
+  width:30px;
+  height:30px;
+  border-radius:9px;
+  background:#fa657530;
+  color:#ff8c99;
+  font:900 20px/1 system-ui;
+}
+.emergency-message{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;min-width:0}
+.emergency-message strong{font-size:clamp(13px,1.6vw,16px);font-weight:850;line-height:1.3;color:#fff0f2;overflow-wrap:anywhere}
+.emergency-message>span{
+  display:inline-flex;
+  align-items:center;
+  font-size:12px;
+  font-weight:700;
+  color:#ffbcc5;
+  white-space:normal;
+}
+.emergency-secondary{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:none}
+.emergency-source{color:#eab1ba;font:700 11px/1.3 system-ui;white-space:nowrap}
+.emergency-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  flex:none;
+  padding:7px 9px;
+  border:1px solid #9b5c68;
+  border-radius:8px;
+  background:#613040;
+  color:#fff0b7;
+  font:800 12px/1 system-ui;
+  text-decoration:none;
+  white-space:nowrap;
+}
+.emergency-link:hover,.emergency-link:focus-visible{background:#74384b;border-color:#f6a4af}
+.emergency-banner.emergency-unverified{border-color:#b58a48;border-left-color:#f3bc52;background:#382d31}
+.emergency-unverified .emergency-symbol{background:#fbbf2430;color:#fcd34d}
+.emergency-unverified .emergency-message>span{color:#f7d99e}
+@media(max-width:700px){
+  .emergency-banner{align-items:flex-start;padding:10px 11px;gap:9px 12px}
+  .emergency-primary{gap:9px;flex:1 1 auto}
+  .emergency-message{flex-direction:column;align-items:flex-start;gap:3px}
+  .emergency-message strong{font-size:14px}
+  .emergency-message>span{font-size:11px}
+  .emergency-secondary{flex-direction:column;align-items:flex-end;gap:5px}
+  .emergency-symbol{width:28px;height:28px;flex-basis:28px}
+  .emergency-source{font-size:10px}
+  .emergency-link{padding:6px 8px;font-size:11px}
+}
+@media(max-width:350px){
+  .emergency-banner{flex-wrap:wrap}
+  .emergency-secondary{width:100%;flex-direction:row;justify-content:space-between}
+}
