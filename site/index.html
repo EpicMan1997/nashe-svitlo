@@ -615,7 +615,7 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 function remember(k,v){
   try{localStorage.setItem(k,v)}catch(e){}
   if(k==='dubechnya-selected-location'){
-    try{document.cookie='svitlo_location='+encodeURIComponent(v)+'; Max-Age=31536000; Path=/svitlo-dubechnya/; SameSite=Lax; Secure'}catch(e){}
+    try{document.cookie='svitlo_location='+encodeURIComponent(v)+'; Max-Age=31536000; Path='+new URL('.',location.href).pathname+'; SameSite=Lax; Secure'}catch(e){}
   }
 }function markTomorrowSeen(){const f=tomorrowFingerprint();if(f)remember('dubechnya-tomorrow-seen-'+locationId+'-'+f.iso,f.hash)}function updateTomorrowTab(){const f=tomorrowFingerprint(),button=document.querySelector('[data-tab="tomorrow"]');if(!button)return;const names={dacha:'Дача',home:'Дім',solovky:'Соловки',naumenky:'Науменки'};const unseen=Object.keys(names).filter(key=>{const item=tomorrowFingerprintFor(key);return item&&remembered('dubechnya-tomorrow-seen-'+key+'-'+item.iso)!==item.hash});const fresh=Boolean(f);button.classList.toggle('unavailable',!fresh&&!unseen.length);button.classList.toggle('available',fresh||unseen.length>0);button.classList.toggle('preliminary',fresh&&activeLocation()?.days?.[f.iso]?.status==='preliminary');button.title=unseen.length?'Нові дані на завтра: '+unseen.map(key=>names[key]).join(', '):'';const dot=$('tomorrowUnread');if(dot)dot.hidden=unseen.length===0}function paint(n){n=n||now();updateLocationHeader();
 const emergency=tab==='today'?data?.locations?.[locationId]?.emergency:null;
