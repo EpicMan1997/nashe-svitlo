@@ -57,7 +57,8 @@ class DtekEmergencyTests(unittest.TestCase):
   old={'level':'active','published_at':'2026-10-30T09:00:00+02:00','source_checked':True}
   self.assertFalse(select_emergency({},'city',recent,now,False)['source_checked'])
   self.assertIsNone(select_emergency({},'city',old,now,False))
-  self.assertIsNone(select_emergency({},'city',recent,now,True))
+  self.assertFalse(select_emergency({},'city',recent,now,True)['source_checked'])
+  self.assertIsNone(select_emergency({'city':None},'city',recent,now,True))
 
 class Tests(unittest.TestCase):
  def test_bez(self):self.assertIn(E,parse_bez(B,D)['candidates'])
