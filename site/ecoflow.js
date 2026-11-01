@@ -4,7 +4,7 @@
 
   // Initial numeric UI values are static until EcoFlow telemetry is connected; never claim they are live.
   // capacityWh contains nominal manufacturer capacity, never inverter output.
-  const inventory = Object.freeze({
+  const demoInventory = Object.freeze({
     dacha: {
       name: 'Дача', space: 'Дача',
       devices: [
@@ -42,6 +42,56 @@
     }
   });
 
+  // Specifications are local. Dynamic values are supplied only by a read-only
+  // gateway with validated, freshness-checked, location-scoped telemetry.
+  const live = window.NasheSvitloEcoFlowLive || null;
+  let inventory = demoInventory;
+  let liveMode = false;
+  const pctLabel = value => Number.isFinite(value) ? value + '%' : '—';
+  const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
+  function applyReadings() {
+    const state = live?.summary()?.status || 'preview';
+    liveMode = state !== 'preview' && state !== 'error';
+    if (!liveMode) {
+      inventory = demoInventory;
+      return;
+    }
+    inventory = Object.fromEntries(Object.entries(demoInventory).map(([key, place]) => [
+      key, { ...place, devices: place.devices.map(device => {
+        const value = live.reading(key + ':' + device.id);
+        return {
+          ...device,
+          pct: value?.socPercent ?? null,
+          inputW: value?.inputW ?? null,
+          outputW: value?.outputW ?? null,
+          operation: value?.operation || 'unknown',
+          // Unknown module SOC is never invented from a primary BMS value.
+          modulePercentages: device.type === 'system' ? (value?.moduleSocPercent ?? []) : undefined
+        };
+      }) }
+    ]));
+  }
+  function renderConnection() {
+    const element = root.querySelector('.eco-status');
+    if (!element) return;
+    const mode = live?.summary()?.status || 'preview';
+    const labels = {
+      preview: 'Демо · API не підключено',
+      connecting: 'Підключення…',
+      live: 'Live · EcoFlow',
+      stale: 'Дані застаріли',
+      error: 'Налаштування відсутнє'
+    };
+    element.classList.toggle('is-live', mode === 'live');
+    element.classList.toggle('is-stale', mode === 'stale');
+    element.title = mode === 'preview' ?
+      'Тестові показники, не реальна телеметрія EcoFlow' :
+      mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
+      'Немає свіжих даних. Показники приховано.';
+    element.innerHTML = '<i aria-hidden="true"></i>' + (labels[mode] || 'Немає зв’язку');
+    root.dataset.telemetryState = mode;
+  }
+
   // Physical battery inventory for overview metrics (PowerOcean has two 5000 Wh modules).
   function physicalDevices(devices) {
     return devices.flatMap(device => {
@@ -53,8 +103,8 @@
         name: device.name + ' · акумулятор ' + (i + 1),
         type: 'battery',
         capacityWh: perModule,
-        pct: Array.isArray(device.modulePercentages)
-          ? (device.modulePercentages[i] ?? device.pct) : device.pct
+        pct: Array.isArray(device.modulePercentages) && Number.isFinite(device.modulePercentages[i])
+          ? device.modulePercentages[i] : (liveMode ? null : device.pct)
       }));
     });
   }
@@ -77,6 +127,7 @@
     return 'size-small';
   }
   function level(pct) {
+    if (!Number.isFinite(pct)) return 'unknown';
     if (pct >= 80) return 'high';
     if (pct >= 55) return 'good';
     if (pct >= 35) return 'medium';
@@ -100,7 +151,7 @@
   }
 
   function formatAutonomy(capacityWh, chargePct, outputW) {
-    if (!Number.isFinite(outputW) || outputW <= 0) return '—';
+    if (!Number.isFinite(outputW) || outputW <= 0 || !Number.isFinite(chargePct)) return '—';
     // Approximation using an 85% available energy factor.
     const estimatedMinutes = Math.round(capacityWh * chargePct / 100 * 0.85 / outputW * 60 / 5) * 5;
     const hours = Math.floor(estimatedMinutes / 60);
