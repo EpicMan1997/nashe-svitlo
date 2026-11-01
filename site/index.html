@@ -662,27 +662,62 @@ function prepareBoundaryLabels(out){
  }
 }
 function updateBoundaryLanes(n){
- // 00:00 and 24:00 stay below. Every outage start/end is usually above.
- // During the 30-minute window on either side (or an actual pixel collision),
- // the respective white label moves below, without animation.
+ // Place labels in nonoverlapping lanes according to actual mobile text widths.
+ // At narrow viewports not every boundary fits: full intervals remain in Details.
  const graph=document.querySelector('#display .graph');
- if(!graph)return;
+ if(!graph||!graph.clientWidth)return;
+ const width=graph.clientWidth;
+ const graphRect=graph.getBoundingClientRect();
  const marker=$('marker');
- const badge=marker?.querySelector('em');
- const badgeRect=badge?.getBoundingClientRect();
+ const badgeRect=marker?.querySelector('em')?.getBoundingClientRect();
  const currentMinute=n.h*60+n.m+n.s/60;
- graph.querySelectorAll('.axis.outage-boundary:not([hidden])').forEach(label=>{
-  const boundary=Number(label.dataset.boundaryMinute);
-  const start=Number(label.dataset.boundaryStart??boundary),end=Number(label.dataset.boundaryEnd??boundary);
-  let below=Boolean(marker)&&(Math.abs(start-currentMinute)<=30||Math.abs(end-currentMinute)<=30);
-  if(!below&&badgeRect?.width>0){
-   // True rendered geometry; includes iPhone viewport width and text scaling.
-   const r=label.getBoundingClientRect();
-   below=badgeRect.left<=r.right+5&&badgeRect.right>=r.left-5;
-  }
-  label.classList.toggle('down',below);
-  label.classList.toggle('up',!below);
+ const padding=5;
+ const lanes=[
+  {top:5,occupied:[]},
+  {top:28,occupied:[]},
+  {top:94,occupied:[]},
+  {top:117,occupied:[]}
+ ];
+ // Bottom edge labels are fixed and must never be covered by a boundary time.
+ graph.querySelectorAll('.axis.start,.axis.end').forEach(edge=>{
+  const rect=edge.getBoundingClientRect();
+  if(rect.width)lanes[2].occupied.push([rect.left-graphRect.left-padding,rect.right-graphRect.left+padding]);
  });
+ const labels=[...graph.querySelectorAll('.axis.outage-boundary:not([hidden])')]
+  .sort((a,b)=>Number(a.dataset.boundaryMinute)-Number(b.dataset.boundaryMinute));
+ for(const label of labels){
+  // The previous clock tick may have hidden this label, so restore its geometry.
+  label.style.visibility='hidden';
+  label.style.left=pct(Number(label.dataset.boundaryMinute))+'%';
+  const labelWidth=label.getBoundingClientRect().width;
+  const labelHeight=label.getBoundingClientRect().height;
+  if(!labelWidth||labelWidth>width-2*padding)continue;
+  const boundary=Number(label.dataset.boundaryMinute);
+  const first=Number(label.dataset.boundaryStart??boundary);
+  const last=Number(label.dataset.boundaryEnd??boundary);
+  const center=Math.max(labelWidth/2+padding,Math.min(width-labelWidth/2-padding,boundary*width/1440));
+  const x1=center-labelWidth/2,x2=center+labelWidth/2;
+  // Time marker gets priority over white labels. Prefer bottom lanes nearby.
+  const nearMarker=Boolean(marker)&&(Math.abs(first-currentMinute)<=30||Math.abs(last-currentMinute)<=30);
+  const order=nearMarker?[2,3,0,1]:[0,1,2,3];
+  let placed=false;
+  for(const laneId of order){
+   const lane=lanes[laneId];
+   if(lane.occupied.some(([left,right])=>x1<right+padding&&x2>left-padding))continue;
+   const y1=graphRect.top+lane.top,y2=y1+labelHeight;
+   if(badgeRect?.width&&laneId<2&&x1+graphRect.left<badgeRect.right+padding&&
+       x2+graphRect.left>badgeRect.left-padding&&y1<badgeRect.bottom+padding&&y2>badgeRect.top-padding)continue;
+   label.style.left=center+'px';
+   label.style.top=lane.top+'px';
+   label.classList.toggle('down',laneId>=2);
+   label.classList.toggle('up',laneId<2);
+   label.style.visibility='visible';
+   lane.occupied.push([x1,x2]);
+   placed=true;
+   break;
+  }
+  if(!placed)label.style.visibility='hidden';
+ }
 }
 const sourcePalette={
  // Five highly distinct hues on the dark background, kept consistent across
@@ -1014,7 +1049,7 @@ function updateCurrentPower(n){
  }
  chip.parentElement?.classList.toggle('status-has-power-off',state==='power-off');
 }
-function tick(){const n=now();$('clock').innerHTML=n.time+'<span>'+n.display+'</span>';updateRefreshRing();const s=currentStatus(selected(n).entry);if(n.iso!==dayShown||s!==modeShown){dayShown=n.iso;paint(n);events()}move(n);updateCurrentPower(n)}async function reload(){try{const r=await fetch('./data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const j=await r.json();if(!j.days||!Array.isArray(j.logs))throw Error('payload');data=j;paint();events();if(tab==='tomorrow'&&tomorrowFingerprint()){markTomorrowSeen();updateTomorrowTab()}}catch(e){if(!data)paint();console.warn(e)}}function updateLocationHeader(){const names={dacha:'Дача',home:'Дім',solovky:'Соловки',naumenky:'Науменки'};$('locationLabel').textContent=names[locationId]||'Дача';document.querySelectorAll('[data-location]').forEach(b=>{b.classList.toggle('selected',b.dataset.location===locationId);const hint=b.querySelector('.location-group-hint');const group=data?.locations?.[b.dataset.location]?.group;if(hint){const f=tomorrowFingerprintFor(b.dataset.location);const unread=f&&remembered('dubechnya-tomorrow-seen-'+b.dataset.location+'-'+f.iso)!==f.hash;hint.textContent=(group?'Група '+String(group).split('.')[0]:'')+(unread?' · Новий графік':'');hint.hidden=!group&&!unread}})}function closeLocationMenu(){const m=$('locationMenu');m.hidden=true;$('locationButton').setAttribute('aria-expanded','false')}function selectLocation(key){if(!['dacha','home','solovky','naumenky'].includes(key))return;locationId=key;remember('dubechnya-selected-location',key);closeLocationMenu();paint();events();if(tab==='tomorrow'){markTomorrowSeen();updateTomorrowTab()}window.dispatchEvent(new CustomEvent('svitlo:location-change',{detail:{id:key}}))}function installMetricInfoTooltip(){
+function tick(){const n=now();$('clock').innerHTML=n.time+'<span>'+n.display+'</span>';updateRefreshRing();const s=currentStatus(selected(n).entry);if(n.iso!==dayShown||s!==modeShown){dayShown=n.iso;paint(n);events()}move(n);updateCurrentPower(n)}async function reload(){try{const r=await fetch('./data.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(r.status);const j=await r.json();if(!j.days||!Array.isArray(j.logs))throw Error('payload');data=j;paint();events();if(tab==='tomorrow'&&tomorrowFingerprint()){markTomorrowSeen();updateTomorrowTab()}}catch(e){if(!data)paint();console.warn(e)}}function updateLocationHeader(){const names={dacha:'Дача',home:'Дім',solovky:'Соловки',naumenky:'Науменки'};$('locationLabel').textContent=names[locationId]||'Дача';document.querySelectorAll('[data-location]').forEach(b=>{b.classList.toggle('selected',b.dataset.location===locationId);const hint=b.querySelector('.location-group-hint');const group=data?.locations?.[b.dataset.location]?.group;if(hint){const f=tomorrowFingerprintFor(b.dataset.location);const unread=f&&remembered('dubechnya-tomorrow-seen-'+b.dataset.location+'-'+f.iso)!==f.hash;hint.textContent=(group?'Група '+String(group).split('.')[0]:'')+(unread?' · Новий графік':'');hint.hidden=!group&&!unread}})}function closeLocationMenu(){const m=$('locationMenu');m.hidden=true;$('locationButton').setAttribute('aria-expanded','false');document.querySelector('main > header')?.classList.remove('location-menu-expanded')}function selectLocation(key){if(!['dacha','home','solovky','naumenky'].includes(key))return;locationId=key;remember('dubechnya-selected-location',key);closeLocationMenu();paint();events();if(tab==='tomorrow'){markTomorrowSeen();updateTomorrowTab()}window.dispatchEvent(new CustomEvent('svitlo:location-change',{detail:{id:key}}))}function installMetricInfoTooltip(){
  let pressTimer=null,fromLongPress=false;
  const control=()=>document.getElementById('metricInfoControl');
  const button=()=>document.getElementById('metricInfoTrigger');
@@ -1237,4 +1272,4 @@ document.addEventListener('keydown',e=>{
   options[(options.indexOf(e.target)+(e.key==='ArrowDown'?1:options.length-1))%options.length].focus();
  }
 });
-$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(!menu.hidden))};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow.js?v=42" defer></script></html>
+$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;const expanded=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(expanded));document.querySelector('main > header')?.classList.toggle('location-menu-expanded',expanded);if(expanded)closeViewMenu()};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);window.addEventListener('resize',()=>{updateBoundaryLanes(now())});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow.js?v=42" defer></script></html>
