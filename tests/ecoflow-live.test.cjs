@@ -18,7 +18,7 @@ function fixture() {
     close() {}
   }
   const window = {
-    location: { href: 'https://epicman1997.github.io/svitlo-dubechnya/' },
+    location: { href: 'https://epicman1997.github.io/nashe-svitlo/' },
     document: { addEventListener() {}, visibilityState: 'visible' }
   };
   const context = {
