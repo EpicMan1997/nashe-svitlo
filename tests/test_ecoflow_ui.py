@@ -24,11 +24,11 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertEqual(JS.count("capacityWh: 10000"), 1)
 
     def test_disconnected_device_values_are_not_claimed_as_live(self):
-        self.assertIn("Не підключено", HTML)
-        self.assertIn("Відсотки та потужності поки не надходять", HTML)
+        self.assertIn("Демо · API не підключено", HTML)
+        self.assertIn("Тестові показники, не реальна телеметрія EcoFlow", HTML)
         panel = HTML.split('<section class="eco-shell"', 1)[1].split('</section>', 1)[0]
         self.assertTrue(panel)
-        self.assertNotRegex(panel + JS, r"(?i)демо|демонстрац|макет|preview")
+        self.assertIn("const demoInventory = Object.freeze({", JS)
         self.assertNotRegex(JS, r"\bfetch\s*\(|XMLHttpRequest|WebSocket")
         self.assertIn("disabled", JS)
 
@@ -496,7 +496,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertLess(HTML.index('id="eco-location-summary"'), HTML.index('id="eco-overview-heading"'))
         self.assertIn('.eco-location-summary[hidden],.eco-overview-details[hidden]', CSS)
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
-        self.assertIn("    clearMetric();", JS)
+        self.assertIn("if (!refreshOnly) clearMetric();", JS)
         self.assertNotIn("eco-overview-details').open", JS)
         self.assertNotIn('.eco-overview-details[open]', CSS)
 
@@ -519,8 +519,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("kind === 'capacity'", JS)
         self.assertIn("kind === 'charge'", JS)
         self.assertIn("kind === 'count'", JS)
-        self.assertIn("const stored = devices.reduce", JS)
-        self.assertIn("const weighted = total ? stored / total * 100", JS)
+        self.assertIn("const stored = allSocKnown ?", JS)
+        self.assertIn("const weighted = stored !== null && total", JS)
         self.assertIn("device.capacityWh * device.pct / total", JS)
         self.assertIn("Внески в середній заряд</span>", JS)
         self.assertIn("exactCapacity(total)", JS)
@@ -631,7 +631,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("$('eco-location-summary').hidden = empty", JS)
         self.assertIn("$('eco-overview-details').hidden = empty", JS)
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
-        self.assertIn("    clearMetric();", JS)
+        self.assertIn("if (!refreshOnly) clearMetric();", JS)
         self.assertNotIn("eco-overview-details').open", JS)
         self.assertIn("У цій локації немає EcoFlow", JS)
         self.assertIn(".eco-empty-state", CSS)
@@ -642,7 +642,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("preciseWh.format(wh) + ' Wh'", JS)
         self.assertIn("uk.format(d.inverterKw * 1000) + ' W'", JS)
         self.assertIn("const solarUiEnabled = false;", JS)
-        self.assertIn("'<div class=\"eco-device-stat\"><span>Вхід</span><strong>' + d.inputW + ' W", JS)
+        self.assertIn("wattsLabel(d.inputW)", JS)
         self.assertNotIn("кВт", JS)
         self.assertNotIn("кВт", HTML)
         self.assertNotIn("Вт", JS)
@@ -650,7 +650,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("4 800 Wh", HTML)
         self.assertIn("maximumFractionDigits: 2", JS)
         self.assertIn("device.capacityWh * device.pct / total", JS)
-        self.assertIn("const weighted = total ? stored / total * 100", JS)
+        self.assertIn("const weighted = stored !== null && total", JS)
 
     def test_solar_generation_is_read_only_and_dacha_only(self):
         self.assertIn('id="eco-solar"', HTML)
@@ -705,7 +705,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("solarDisclosure(d)", device_fn)
         self.assertIn("adminControls(d)", device_fn)
         self.assertLess(device_fn.index("solarDisclosure(d)"), device_fn.index("adminControls(d)"))
-        loc = JS.split("function updateLocation(id) {", 1)[1].split("// Read-only draft controls", 1)[0]
+        loc = JS.split("function updateLocation(id, refreshOnly = false) {", 1)[1].split("// Read-only draft controls", 1)[0]
         self.assertLess(loc.index("renderDeviceGrid(place.devices)"), loc.index("renderSolar(place);"))
         self.assertIn("if (!solarUiEnabled || !device.solar) return '';", JS)
         self.assertIn("source.innerHTML", JS)
@@ -722,7 +722,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("solarPowerLabel(device.solar.maxW)", JS)
         self.assertIn("progress.setAttribute('aria-valuenow'", JS)
         self.assertIn("Очікується підключення EcoFlow", JS)
-        self.assertNotIn('Демо', HTML)
+        self.assertIn('Демо · API не підключено', HTML)
 
 
     def test_solar_footnote_removed_and_overview_details_closed_initially(self):
@@ -767,16 +767,16 @@ class EcoFlowPreviewContract(unittest.TestCase):
 
     def test_average_charge_uses_percent_contributions_and_real_energy_units(self):
         self.assertIn("Внесок станцій у середній заряд", JS)
-        self.assertIn("const chargeContribution = device => total ? device.capacityWh * device.pct / total : 0;", JS)
-        self.assertIn("const storedEnergyWh = device => device.capacityWh * device.pct / 100;", JS)
+        self.assertIn("const chargeContribution = device => total && Number.isFinite(device.pct)", JS)
+        self.assertIn("const storedEnergyWh = device => Number.isFinite(device.pct)", JS)
         self.assertIn("const savedEnergy = storedEnergyWh(device);", JS)
         self.assertIn("eco-detail-contribution", JS)
         self.assertIn("eco-detail-contribution-bar", JS)
         self.assertIn("eco-detail-stored", JS)
         self.assertIn("niceWh(Math.round(savedEnergy))", JS)
-        self.assertIn("fmtPercent(contribution) + '</strong>'", JS)
+        self.assertIn("fmtPercent(contribution)) + '</strong>'", JS)
         self.assertIn("fmtPercent(contribution) + ' загального заряду", JS)
-        self.assertIn("Заряд ' + device.pct + '% · частка ємності", JS)
+        self.assertIn("Заряд ' + pctLabel(device.pct) + ' · частка ємності", JS)
         self.assertIn("Внески в середній заряд</span>", JS)
         self.assertIn("devices.map(device => fmtPercent(chargeContribution(device)))", JS)
         self.assertNotIn("в.п.", JS)
