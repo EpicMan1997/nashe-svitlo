@@ -6,7 +6,7 @@
 
 ## Публікація
 
-Settings → Pages → Source → **GitHub Actions**. Потім Actions → **Наше Світло | оновлення графіків і публікація** → **Run workflow**. Адреса: https://EpicMan1997.github.io/svitlo-dubechnya/
+Settings → Pages → Source → **GitHub Actions**. Потім Actions → **Наше Світло | оновлення графіків і публікація** → **Run workflow**. Адреса: https://EpicMan1997.github.io/nashe-svitlo/
 
 ## Тести
 
@@ -14,7 +14,7 @@ Settings → Pages → Source → **GitHub Actions**. Потім Actions → **�
 
 ## Встановлення як застосунку на iPhone
 
-1. Відкрийте **Safari** → https://epicman1997.github.io/svitlo-dubechnya/
+1. Відкрийте **Safari** → https://epicman1997.github.io/nashe-svitlo/
 2. **Поділитися** → **На початковий екран**.
 3. Увімкніть **Відкривати як вебзастосунок**, натисніть **Додати**.
 
@@ -32,7 +32,7 @@ Settings → Pages → Source → **GitHub Actions**. Потім Actions → **�
 
 GitHub `schedule` є резервним і може пропускати запуски. Зовнішній cron-job.org можна налаштувати відправляти `POST` з `{"ref":"main"}` кожні 1–2 хвилини (за потреби швидкого виявлення нового графіка; враховуйте навантаження) на
 
-`https://api.github.com/repos/EpicMan1997/svitlo-dubechnya/actions/workflows/refresh.yml/dispatches`
+`https://api.github.com/repos/EpicMan1997/nashe-svitlo/actions/workflows/refresh.yml/dispatches`
 
 з окремим fine-grained GitHub token **лише для цього репозиторію**, з правом **Actions: Read and write**. Токен необхідно зберігати тільки в приватних HTTP-заголовках завдання планувальника: `Authorization: Bearer TOKEN`, `Accept: application/vnd.github+json`, `Content-Type: application/json`. **Не вставляйте токен у код сайту, репозиторій, URL або чат.**
 
