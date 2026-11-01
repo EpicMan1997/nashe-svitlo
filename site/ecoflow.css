@@ -1948,3 +1948,26 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
     justify-self:end;
   }
 }
+
+
+/* Authoritative emergency operator notices remain separate from the retained schedule. */
+.emergency-banner{
+  margin:14px 0 16px;
+  padding:16px 18px;
+  border:2px solid #ef6b72;
+  border-radius:15px;
+  background:linear-gradient(120deg,#57202c 0%,#311d32 100%);
+  color:#ffe1e6;
+  box-shadow:0 0 0 2px #ee4e6420,0 8px 22px #00000028;
+  min-width:0;
+}
+.emergency-banner-head{display:flex;align-items:center;gap:10px}
+.emergency-banner-head strong{font-size:clamp(16px,3.5vw,22px);line-height:1.24;letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere}
+.emergency-pulse{flex:none;width:12px;height:12px;border-radius:50%;background:#ff6b7b;box-shadow:0 0 0 5px #ff6b7b25}
+.emergency-banner p{margin:10px 0 12px;line-height:1.52;font-size:13px;color:#fcd8dd}
+.emergency-source{border-top:1px solid #ff9aa143;padding-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 14px;font-size:12px}
+.emergency-source>span{color:#f2afb7}
+.emergency-source a{color:#fff1b6;font-weight:750;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}
+.emergency-banner.emergency-unverified{border-color:#efb659;background:linear-gradient(120deg,#483a29,#292c38)}
+.emergency-unverified .emergency-pulse{background:#facc15;box-shadow:0 0 0 5px #facc1520}
+@media(max-width:480px){.emergency-banner{margin:12px 0 14px;padding:13px 14px}.emergency-banner p{font-size:12px}.emergency-source{font-size:11px}}
