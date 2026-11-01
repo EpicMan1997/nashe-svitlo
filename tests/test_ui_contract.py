@@ -62,7 +62,7 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn('function currentOutageEnd(outages,minuteNow){', HTML)
         self.assertIn('function remainingOutageLabel(seconds){', HTML)
         self.assertIn('const outageEnd=canPredict?currentOutageEnd(outages,minuteNow):null;', HTML)
-        self.assertIn("remaining.textContent='Ще '+remainingOutageLabel(seconds);", HTML)
+        self.assertIn("remaining.textContent=(emergencyOn?'За планом ще ':'Ще ')+remainingOutageLabel(seconds);", HTML)
         self.assertNotIn("remaining.textContent='Ще без світла: '", HTML)
         self.assertNotIn("'За графіком до '+String(Math.floor(outageEnd/60))", HTML)
         self.assertNotIn("'До кінця доби за графіком'", HTML)
@@ -77,7 +77,7 @@ class VisualStatusContract(unittest.TestCase):
     def test_yesterday_archive_and_comparison(self):
         refresh = ROOT.joinpath("scripts/refresh.py").read_text(encoding="utf-8")
         self.assertIn("'days':visible_days", refresh)
-        self.assertIn("'days':visible_days,'logs':logs,'operator':", refresh)
+        self.assertIn("'days':visible_days,'logs':logs,'emergency':dacha_emergency,'operator':", refresh)
         self.assertIn("if k>=(today-timedelta(days=2)).isoformat()", refresh)
         self.assertIn("function changeComparison(parts){", HTML)
         self.assertIn("hoursAndMinutes(yMinutes)+' без світла'", HTML)
