@@ -30,6 +30,8 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r requirements.txt
       - run: node --check site/ecoflow.js
+      - run: node --check site/ecoflow-live.js
+      - run: node --test tests/ecoflow-live.test.cjs
       - run: python -m unittest discover -s tests -v
       - run: python scripts/refresh.py
       - uses: actions/configure-pages@v5
