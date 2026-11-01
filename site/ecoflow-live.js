@@ -19,6 +19,8 @@
   let streamUrl = null;
   let enabled = false;
   let newestEmittedMs = 0;
+  let revision = 0;
+  let publishedSignature = '';
   let lastError = null;
   const subscribers = new Set();
 
@@ -74,9 +76,12 @@
     if (!enabled) return;
     const freshCount = DEVICE_KEYS.filter(key => statusFor(key) === 'live').length;
     const next = freshCount ? 'live' : newestEmittedMs ? 'stale' : 'connecting';
-    if (status !== next) { status = next; notify(); }
-    // Update device tiles when an individual reading turns stale even if others remain fresh.
-    else notify();
+    status = next;
+    const signature = [status, revision, ...DEVICE_KEYS.map(key => statusFor(key))].join('|');
+    if (signature !== publishedSignature) {
+      publishedSignature = signature;
+      notify();
+    }
   }
   function acceptFrame(raw) {
     if (!enabled || !raw || raw.version !== 1 ||
@@ -96,6 +101,7 @@
     if (!changed) return false;
     telemetry = next;
     newestEmittedMs = emittedMs;
+    revision++;
     lastError = null;
     refreshStatus();
     return true;
