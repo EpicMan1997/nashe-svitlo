@@ -1,6 +1,6 @@
 /* Network-first app shell. Keep outage data and UI assets fresh, with offline fallback. */
-const SHELL_CACHE = "nashe-svitlo-static-v46";
-const STATIC = ["./", "./favicon.svg", "./touch-bulb-v2.png", "./manifest.webmanifest", "./ecoflow.css?v=46", "./ecoflow.js?v=46"];
+const SHELL_CACHE = "nashe-svitlo-static-v47";
+const STATIC = ["./", "./favicon.svg", "./touch-bulb-v2.png", "./manifest.webmanifest", "./ecoflow.css?v=47", "./ecoflow-live.js?v=47", "./ecoflow.js?v=47"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
 });
@@ -16,7 +16,7 @@ self.addEventListener("fetch", event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
-  if (url.pathname.endsWith("/data.json")) {
+  if (url.pathname.endsWith("/data.json") || url.pathname.endsWith("/ecoflow-live-config.json")) {
     // Never cache schedules.
     event.respondWith(fetch(request, {cache: "no-store"}));
     return;
@@ -33,7 +33,7 @@ self.addEventListener("fetch", event => {
     );
     return;
   }
-  if (url.pathname.endsWith("/ecoflow.css") || url.pathname.endsWith("/ecoflow.js")) {
+  if (url.pathname.endsWith("/ecoflow.css") || url.pathname.endsWith("/ecoflow.js") || url.pathname.endsWith("/ecoflow-live.js")) {
     // Network-first: a previous service worker must never pin old charging arrows or layouts.
     event.respondWith(
       fetch(request, {cache: "no-store"}).then(response => {
