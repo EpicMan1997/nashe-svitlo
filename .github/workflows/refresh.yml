@@ -13,7 +13,7 @@ permissions:
   pages: write
   id-token: write
 concurrency:
-  group: dubechnya-pages-v2
+  group: nashe-svitlo-pages-v3
   # Never cancel a publish already running when scheduled checks overlap.
   cancel-in-progress: false
 jobs:
