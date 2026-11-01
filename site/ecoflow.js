@@ -809,6 +809,7 @@
       Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
     }
     activeEcoLocation = id;
+    renderConnection();
     if (!refreshOnly) clearMetric();
     root.dataset.location = id;
     const empty = place.devices.length === 0;
