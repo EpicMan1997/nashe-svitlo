@@ -61,7 +61,8 @@
         const value = live.reading(key + ':' + device.id);
         return {
           ...device,
-          pct: value?.socPercent ?? (value?.moduleSocPercent?.length === device.batteryCount ?
+          pct: value?.socPercent ?? (device.type === 'system' &&
+            Array.isArray(value?.moduleSocPercent) && value.moduleSocPercent.length === device.batteryCount ?
             value.moduleSocPercent.reduce((sum, p) => sum + p, 0) / device.batteryCount : null),
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
