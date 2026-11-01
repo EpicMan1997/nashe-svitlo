@@ -61,7 +61,8 @@
         const value = live.reading(key + ':' + device.id);
         return {
           ...device,
-          pct: value?.socPercent ?? null,
+          pct: value?.socPercent ?? (value?.moduleSocPercent?.length === device.batteryCount ?
+            value.moduleSocPercent.reduce((sum, p) => sum + p, 0) / device.batteryCount : null),
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
           operation: value?.operation || 'unknown',
@@ -713,11 +714,18 @@
         '<label class="eco-generator-soc-item"><span>' + textEscape(device.name) +
         '<small>' + niceWh(device.capacityWh) + '</small></span>' +
         '<span class="eco-generator-soc-input"><input type="number" min="0" max="100" step="1" ' +
-        'data-eco-gen-soc="' + textEscape(device.id) + '" value="' + generatorSOC(device) +
-        '" aria-label="Заряд ' + textEscape(device.name) + '"><span>%</span></span></label>'
+        'data-eco-gen-soc="' + textEscape(device.id) + '" value="' + (generatorSOC(device) ?? '') +
+        '" placeholder="—" aria-label="Заряд ' + textEscape(device.name) + '"><span>%</span></span></label>'
       ).join('');
       area.dataset.initialized = 'true';
     }
+    // Update fields from latest telemetry unless the user explicitly entered an override.
+    area.querySelectorAll('[data-eco-gen-soc]').forEach(field => {
+      if (!generatorPlan.soc.has(field.dataset.ecoGenSoc)) {
+        const pack = packs.find(d => d.id === field.dataset.ecoGenSoc);
+        if (pack && document.activeElement !== field) field.value = generatorSOC(pack) ?? '';
+      }
+    });
     const allowedW = Math.max(0, Math.floor(generatorRatedW * generatorSuggestedFraction) - generatorPlan.otherLoadW);
     const actualW = Math.min(generatorPlan.chargeW, allowedW);
     const dp3Missing = generatorMissingWh(dp3);
@@ -726,9 +734,9 @@
     const allHours = generatorDuration(allMissing, actualW);
     $('eco-gen-dp3-time').textContent = '≈ ' + generatorTime(dp3Hours);
     $('eco-gen-all-time').textContent = '≈ ' + generatorTime(allHours);
-    $('eco-gen-dp3-energy').textContent = 'Дозарядити ' + niceWh(Math.ceil(dp3Missing)) + ' із ' +
+    $('eco-gen-dp3-energy').textContent = 'Дозарядити ' + (dp3Missing === null ? '—' : niceWh(Math.ceil(dp3Missing))) + ' із ' +
       niceWh(dp3.reduce((sum, d) => sum + d.capacityWh, 0));
-    $('eco-gen-all-energy').textContent = 'Дозарядити ' + niceWh(Math.ceil(allMissing)) + ' із ' +
+    $('eco-gen-all-energy').textContent = 'Дозарядити ' + (allMissing === null ? '—' : niceWh(Math.ceil(allMissing))) + ' із ' +
       niceWh(packs.reduce((sum, d) => sum + d.capacityWh, 0));
     $('eco-gen-charge-value').textContent = generatorNum.format(generatorPlan.chargeW) + ' W';
     $('eco-gen-house-value').textContent = generatorNum.format(generatorPlan.otherLoadW) + ' W';
@@ -781,27 +789,28 @@
     renderGeneratorPlanner();
   });
 
-  function updateLocation(id) {
+  function updateLocation(id, refreshOnly = false) {
     if (!Object.prototype.hasOwnProperty.call(inventory, id)) return;
     const place = inventory[id];
     const packs = physicalDevices(place.devices);
     const totalWh = packs.reduce((v, d) => v + (d.capacityWh || 0), 0);
-    const allKnown = packs.every(d => d.capacityWh !== null);
-    const weighted = allKnown && totalWh
+    const allKnown = packs.every(d => Number.isFinite(d.capacityWh));
+    const allChargesKnown = packs.every(d => Number.isFinite(d.pct));
+    const weighted = allKnown && allChargesKnown && totalWh
       ? Math.round(packs.reduce((v, d) => v + d.capacityWh * d.pct, 0) / totalWh)
       : null;
     if (adminDraft.scope === 'current' && activeEcoLocation !== id) {
       Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
     }
     activeEcoLocation = id;
-    clearMetric();
+    if (!refreshOnly) clearMetric();
     root.dataset.location = id;
     const empty = place.devices.length === 0;
     $('eco-select-generator').hidden = id !== 'dacha';
     $('eco-location-summary').hidden = empty;
     $('eco-overview-details').hidden = empty;
     // Dacha has EcoFlow stations again; keep Generator as a separate selectable tab.
-    selectBackupTab('ecoflow');
+    if (!refreshOnly) selectBackupTab('ecoflow');
     $('eco-selected-location').textContent = place.name;
     $('eco-space-name').textContent = place.space;
     $('eco-count').textContent = String(packs.length);
@@ -824,6 +833,9 @@
     renderSolar(place);
     renderBulkPanel();
     if (id === 'dacha') renderGeneratorPlanner();
+    if (refreshOnly && metricOpen && detailPanel && !detailPanel.hidden) {
+      detailPanel.innerHTML = metricBreakdown(metricOpen);
+    }
   }
 
   // Read-only draft controls; no configuration reaches any EcoFlow device.
@@ -900,6 +912,14 @@
 
   const selectedButton = document.querySelector('[data-location].selected');
   const restored = selectedButton?.dataset.location || 'dacha';
+  applyReadings();
+  renderConnection();
   updateLocation(restored);
+  live?.subscribe(() => {
+    applyReadings();
+    renderConnection();
+    updateLocation(activeEcoLocation, true);
+  });
+  live?.start();
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
 })();
