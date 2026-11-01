@@ -89,7 +89,7 @@ test('all four locations render and switch without DOM exceptions', () => {
   assert.match(m.get('eco-devices').innerHTML, /PowerOcean/);
   assert.equal(m.get('eco-count').textContent, '2');
   m.events['svitlo:location-change']({detail:{id:'solovky'}});
-  assert.match(m.get('eco-devices').innerHTML, /Додаткова батарея DELTA 2/);
+  assert.match(m.get('eco-devices').innerHTML, /\+ додаткова батарея/);
   assert.equal(m.get('eco-count').textContent, '3');
   m.events['svitlo:location-change']({detail:{id:'naumenky'}});
   assert.match(m.get('eco-devices').innerHTML, /DELTA 2/);
