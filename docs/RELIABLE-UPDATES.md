@@ -11,7 +11,7 @@ GitHub Actions \`on.schedule\` — **best effort**. GitHub може відкин
 У GitHub відкрийте Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.
 
 - Resource owner: **EpicMan1997**
-- Repository access: **Only select repositories** → **svitlo-dubechnya**
+- Repository access: **Only select repositories** → **nashe-svitlo**
 - Repository permissions: **Actions → Read and write**. Інші дозволи залишіть мінімальними; GitHub додає базовий доступ до метаданих автоматично.
 - Expiration: виберіть термін із запасом (наприклад 90 днів) і налаштуйте нагадування для поновлення.
 
@@ -22,7 +22,7 @@ GitHub Actions \`on.schedule\` — **best effort**. GitHub може відкин
 У [cron-job.org](https://cron-job.org/EN/) → **Create cronjob**:
 
 - Title: \`Nashe Svitlo — refresh GitHub\`
-- URL: \`https://api.github.com/repos/EpicMan1997/svitlo-dubechnya/actions/workflows/refresh.yml/dispatches\`
+- URL: \`https://api.github.com/repos/EpicMan1997/nashe-svitlo/actions/workflows/refresh.yml/dispatches\`
 - Request method: \`POST\`
 - Schedule: **Every 15 minutes** (00, 15, 30, 45 кожної години; UTC чи Київ — неважливо для періодичного запуску)
 - Body / request content: \`{"ref":"main"}\`
@@ -38,9 +38,9 @@ GitHub REST API наразі може повернути HTTP **200** із да�
 ## 3. Обов'язково перевірити результат
 
 1. Натисніть **Test run** у cron-job.org.
-2. Відкрийте [GitHub Actions](https://github.com/EpicMan1997/svitlo-dubechnya/actions/workflows/refresh.yml).
+2. Відкрийте [GitHub Actions](https://github.com/EpicMan1997/nashe-svitlo/actions/workflows/refresh.yml).
 3. Має з'явитися новий запуск із типом **workflow_dispatch**.
-4. Після успішного завершення відкрийте [Наше Світло](https://epicman1997.github.io/svitlo-dubechnya/): у блоці «Інтервали та джерела» час «Перевірено» повинен змінитися.
+4. Після успішного завершення відкрийте [Наше Світло](https://epicman1997.github.io/nashe-svitlo/): у блоці «Інтервали та джерела» час «Перевірено» повинен змінитися.
 5. Через годину подивіться, чи отримали **не менше 3–4 успішних** оновлень із зовнішнього планувальника.
 
 Після підтвердження працездатності зовнішнього планувальника рекомендовано зменшити **внутрішній GitHub \`schedule\` до одного резервного запуску на годину**, щоб уникати дублювань. **До цього не вимикайте чинні спроби** — вони хоча й ненадійні, але залишаються резервом.
