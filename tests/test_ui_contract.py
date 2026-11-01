@@ -145,7 +145,36 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("a.hidden=true;b.hidden=true", HTML)
         self.assertIn("getBoundingClientRect().width", HTML)
         self.assertIn(".axis.outage-boundary[hidden]{display:none!important}", HTML)
-        self.assertIn("Math.abs(start-currentMinute)<=30||Math.abs(end-currentMinute)<=30", HTML)
+        self.assertIn("Math.abs(first-currentMinute)<=30||Math.abs(last-currentMinute)<=30", HTML)
+
+    def test_mobile_time_labels_use_measured_nonoverlapping_lanes(self):
+        self.assertIn("function updateBoundaryLanes(n){", HTML)
+        self.assertIn("graph.getBoundingClientRect()", HTML)
+        self.assertIn("label.getBoundingClientRect().width", HTML)
+        self.assertIn("const lanes=[", HTML)
+        self.assertIn("{top:5,occupied:[]}", HTML)
+        self.assertIn("{top:28,occupied:[]}", HTML)
+        self.assertIn("{top:94,occupied:[]}", HTML)
+        self.assertIn("{top:117,occupied:[]}", HTML)
+        self.assertIn("lane.occupied.some(([left,right])=>x1<right+padding&&x2>left-padding)", HTML)
+        self.assertIn("label.style.visibility='hidden'", HTML)
+        self.assertIn("label.style.visibility='visible'", HTML)
+        self.assertIn("label.style.left=center+'px'", HTML)
+        self.assertIn("graph.querySelectorAll('.axis.start,.axis.end')", HTML)
+        self.assertIn("window.addEventListener('resize',()=>{updateBoundaryLanes(now())})", HTML)
+
+    def test_mobile_location_dropdown_expands_in_normal_document_flow(self):
+        css = ROOT.joinpath("site/ecoflow.css").read_text(encoding="utf-8")
+        self.assertIn("classList.toggle('location-menu-expanded',expanded)", HTML)
+        self.assertIn("classList.remove('location-menu-expanded')", HTML)
+        self.assertIn("if(expanded)closeViewMenu()", HTML)
+        self.assertIn("@media(max-width:650px)", css)
+        self.assertIn("main > header.location-menu-expanded #locationMenu:not([hidden])", css)
+        self.assertIn("position:static;", css)
+        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", css)
+        self.assertIn("main > header.location-menu-expanded .clock-view", css)
+        self.assertIn("main > header.location-menu-expanded .header-time", css)
+        self.assertIn("@media(max-width:380px)", css)
 
     def test_daily_change_badge_high_contrast_and_color_thresholds(self):
         self.assertIn("min-width:32px;height:32px", HTML)
