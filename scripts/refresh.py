@@ -362,8 +362,10 @@ def parse_dtek_telegram(html, now):
 
 def select_emergency(parsed, key, previous, now, fetched):
     """Keep an unverified recent operator notice through a transient fetch failure."""
-    if fetched:
-        return parsed.get(key)
+    # A recent explicit cancellation clears the alert. If the Telegram page
+    # is truncated or unavailable, preserve a recent alert as unverified.
+    if key in parsed:
+        return parsed[key]
     if not isinstance(previous, dict):
         return None
     try:
