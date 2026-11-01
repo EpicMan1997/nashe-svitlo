@@ -131,32 +131,35 @@ no-store`, `Access-Control-Allow-Origin` лише на потрібний origin
    у фоні; застаріле значення; розсинхронізовані модулі; відновлення
    після втрати Інтернету. Тільки після цього називати інфу live.
 
-## Перейменування репозиторію / Pages
+## Репозиторій перейменовано на nashe-svitlo
 
-Поточні: `EpicMan1997/svitlo-dubechnya`,
-`https://epicman1997.github.io/svitlo-dubechnya/`.
-Видима назва сайту **вже «Наше Світло»**. Для нового URL пропозиція:
-`EpicMan1997/nashe-svitlo` →
+Актуальний репозиторій: `EpicMan1997/nashe-svitlo`.
+Поточна адреса GitHub Pages у налаштуваннях репозиторію:
 `https://epicman1997.github.io/nashe-svitlo/`.
 
-Краще виконати **окремою узгодженою міграцією після цього рефакторингу,
-але ДО production EcoFlow endpoint налаштувань**, щоб доменний origin
-не довелося переналаштовувати двічі. Не перейменовувати мовчки:
-GitHub redirects перенаправляють репозиторій, **але не GitHub Pages
-project URL**. Потрібно перевірити:
+Перевіряйте GitHub Actions за новою адресою репозиторію.
+Зовнішній планувальник `workflow_dispatch` має викликати:
 
-- PWA manifest `id`, `scope`, `start_url`, встановлені іконки,
-  service worker scope і вже встановлені іконки на iPhone.
-- Зовнішній scheduler cron-job.org / GitHub workflow dispatch URL
-  та permissions/token.
-- README, документи, посилання в чаті, збережені закладки.
-- CORS `Access-Control-Allow-Origin` і конфігурацію майбутнього SSE.
-- Доступність нового Pages URL, тестовий деплой, окремий план
-  перенаправлення зі старої адреси (сам GitHub Pages його не створить).
+`https://api.github.com/repos/EpicMan1997/nashe-svitlo/actions/workflows/refresh.yml/dispatches`
 
-Найбезпечніший довгостроковий шлях: власний домен, незалежний від назви
-репозиторію. Альтернатива: оновити всі посилання й перевстановити PWA.
+Налаштування зовнішнього планувальника, дозволи токена та його прив'язку
+до репозиторію треба перевіряти окремо. Репозиторій і UI вже
+перейменовані, але старий URL GitHub Pages не отримує автоматичного
+redirect: потрібна нова PWA-інсталяція на iPhone. Всі шляхи
+`manifest.webmanifest` (`id`, `scope`, `start_url`), service worker
+та JS/CSS відносні (`./`), тому після нового деплою вони повинні
+працювати під новою адресою.
 
-Джерела:
-- https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository
-- https://developer-eu.ecoflow.com/us/document/introduction
+Перед увімкненням SSE gateway його CORS allowlist та налаштування
+origin потрібно створювати **тільки для нової адреси**, не для старого
+шляху. При цьому origin для браузера залишається
+`https://epicman1997.github.io`; шлях до Pages застосунку змінений.
+
+GitHub офіційно не перенаправляє GitHub Pages project URL після
+перейменування репозиторію:
+https://docs.github.com/en/repositories/creating-and-managing-repositories/renaming-a-repository
+
+Якщо URL Deploy Pages в Actions усе ще показує старий шлях, перевірити
+`Settings → Pages` та повторно опублікувати workflow. Не вважати
+успішний workflow доказом відкриття саме нової URL, доки вона не
+перевірена браузером.
