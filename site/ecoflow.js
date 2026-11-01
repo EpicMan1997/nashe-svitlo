@@ -161,16 +161,17 @@
 
   function chargeTrack(pct, name) {
     return '<div class="eco-charge-track" role="progressbar" aria-label="Заряд ' + name +
-      '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '">' +
-      '<i style="width:' + pct + '%"></i></div>';
+      '" aria-valuemin="0" aria-valuemax="100"' +
+      (Number.isFinite(pct) ? ' aria-valuenow="' + pct + '"' : ' aria-valuetext="Заряд невідомий"') + '>' +
+      '<i style="width:' + (Number.isFinite(pct) ? pct : 0) + '%"></i></div>';
   }
 
   function energyStats(d, capWh, pct) {
-    const output = Number.isFinite(d.outputW) ? d.outputW : 0;
+    const output = d.outputW;
     const autonomy = formatAutonomy(capWh, pct, output);
     return '<div class="eco-device-stats eco-common-stats">' +
-      '<div class="eco-device-stat"><span>Вхід</span><strong>' + d.inputW + ' W</strong></div>' +
-      '<div class="eco-device-stat"><span>Вихід</span><strong>' + output + ' W</strong></div>' +
+      '<div class="eco-device-stat"><span>Вхід</span><strong>' + wattsLabel(d.inputW) + '</strong></div>' +
+      '<div class="eco-device-stat"><span>Вихід</span><strong>' + wattsLabel(output) + '</strong></div>' +
       '<div class="eco-device-stat eco-autonomy"><span>Автономність</span><strong>' + autonomy + '</strong></div>' +
       '</div>';
   }
@@ -251,13 +252,13 @@
     const capacity = niceWh(d.capacityWh);
     const titleNote = 'Зарядна станція';
     return '<article class="eco-device eco-standalone ' + size + ' charge-' + charge +
-      '" aria-label="' + d.name + ', заряд ' + d.pct + '%">' +
+      '" aria-label="' + d.name + ', заряд ' + pctLabel(d.pct) + '">' +
       '<div class="eco-device-head"><div class="eco-device-ident">' +
       '<strong class="eco-device-name">' + d.name + '</strong>' +
       '<span class="eco-device-model">' + titleNote + '</span></div>' + operationBadge(d) + '</div>' +
-      '<div class="eco-battery"><span class="eco-battery-percent">' + d.pct +
-      '%</span><span class="eco-battery-art" aria-hidden="true"><i style="width:' +
-      d.pct + '%"></i></span></div>' +
+      '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) +
+      '</span><span class="eco-battery-art" aria-hidden="true"><i style="width:' +
+      (Number.isFinite(d.pct) ? d.pct : 0) + '%"></i></span></div>' +
       chargeTrack(d.pct, d.name) +
       '<div class="eco-capacity-line"><strong>' + capacity + '</strong></div>' +
       energyStats(d, d.capacityWh, d.pct) +
@@ -268,16 +269,16 @@
 
   function powerOceanView(d) {
     const cap = niceWh(d.capacityWh);
-    return '<article class="eco-powerocean charge-' + level(d.pct) + '" aria-label="PowerOcean, домашня система, заряд ' + d.pct + '%">' +
+    return '<article class="eco-powerocean charge-' + level(d.pct) + '" aria-label="PowerOcean, домашня система, заряд ' + pctLabel(d.pct) + '">' +
       '<div class="eco-ocean-top"><div><span class="eco-ocean-overline">Домашня енергосистема</span>' +
       '<h3>PowerOcean</h3><span class="eco-ocean-cap">' + d.batteryCount + ' акумулятори · ' + cap + ' · інвертор ' + uk.format(d.inverterKw * 1000) + ' W' +
       '</span></div>' + operationBadge(d) + '</div>' +
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
-      '<div class="eco-battery"><span class="eco-battery-percent">' + d.pct + '%</span></div>' +
+      '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) + '</span></div>' +
       chargeTrack(d.pct, d.name) + '<span>' + cap + '</span></div>' +
-      '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span><strong>' + d.inputW + ' W</strong></div>' +
+      '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span><strong>' + wattsLabel(d.inputW) + '</strong></div>' +
       '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span><strong>' +
-      d.outputW + ' W</strong></div></div></div>' +
+      wattsLabel(d.outputW) + '</strong></div></div></div>' +
       '<div class="eco-ocean-autonomy"><span>Орієнтовна автономність</span><strong>' +
       formatAutonomy(d.capacityWh, d.pct, d.outputW) + '</strong></div>' +
       powerOceanAdmin(d) + '</article>';
@@ -285,12 +286,13 @@
 
   function systemView(main, addon) {
     const capacityWh = main.capacityWh + addon.capacityWh;
-    const weighted = Math.round((main.capacityWh * main.pct + addon.capacityWh * addon.pct) / capacityWh);
+    const weighted = Number.isFinite(main.pct) && Number.isFinite(addon.pct) ?
+      Math.round((main.capacityWh * main.pct + addon.capacityWh * addon.pct) / capacityWh) : null;
     const batteryPart = (d, role) => {
       const name = role === 'Основна' ? 'основної станції' : 'додаткової батареї';
       return '<div class="eco-system-part charge-' + level(d.pct) + '">' +
         '<div class="eco-system-part-top"><span class="eco-system-part-label">' + role + '</span>' +
-        '<strong class="eco-system-percent">' + d.pct + '%</strong></div>' +
+        '<strong class="eco-system-percent">' + pctLabel(d.pct) + '</strong></div>' +
         (role === 'Додаткова' && main.id === 'dp3'
           ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
         operationBadge(d) +
@@ -303,7 +305,7 @@
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
       '</strong><span class="eco-system-tag">' + (main.id === 'dp3' ? '+ Smart Extra Battery' : '+ додаткова батарея') + '</span></div>' +
       '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' +
-      '<span>' + weighted + '% загалом</span></div></div>' +
+      '<span>' + (Number.isFinite(weighted) ? weighted + '% загалом' : 'Заряд невідомий') + '</span></div></div>' +
       '<div class="eco-system-parts">' + batteryPart(main, 'Основна') + batteryPart(addon, 'Додаткова') + '</div>' +
       energyStats(main, capacityWh, weighted) +
       solarDisclosure(main) +
