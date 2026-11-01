@@ -3,11 +3,10 @@ on:
   push:
     branches: [main]
   # Reliable primary: external workflow_dispatch roughly every 10 minutes.
-  # Best-effort evening fallback: check for newly released tomorrow schedules.
-  # GitHub's native scheduler can be delayed; do not rely on it alone.
+  # Emergency announcements can arrive at any hour. Five-minute UTC
+  # backup schedule (GitHub scheduler is best-effort and may run late).
   schedule:
-    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 16-23 * * *'
-      timezone: "Europe/Kyiv"
+    - cron: '3,8,13,18,23,28,33,38,43,48,53,58 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
