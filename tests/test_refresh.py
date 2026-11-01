@@ -1,13 +1,64 @@
 import sys,unittest,json
+from zoneinfo import ZoneInfo
 from datetime import date,datetime,timezone,timedelta
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from refresh import normalize,pairs,parse_bez,parse_kolysvitlo,parse_kolybude,parse_kyivshchyna,parse_svitlolive,source_reports,parse_alerts,parse_mapasvitla,choose,change,make_log_event,record_source_observations,earliest_observed_source,parse_city_bez,parse_city_koly,parse_city_bude,city_sources,CITY_LOCATIONS
+from refresh import normalize,pairs,parse_bez,parse_kolysvitlo,parse_kolybude,parse_kyivshchyna,parse_svitlolive,source_reports,parse_alerts,parse_mapasvitla,choose,change,make_log_event,record_source_observations,earliest_observed_source,parse_city_bez,parse_city_koly,parse_city_bude,city_sources,CITY_LOCATIONS,parse_dtek_notice,parse_dtek_telegram,select_emergency
 D=date(2026,10,24)
 E=(('08:00','12:00'),('18:30','22:30'))
 B='<h1>Вища Дубечня на 24.10.2026</h1><h3>Графік Черга 3.1</h3>00:00 – 08:00 08:00 – 12:00 12:00 – 18:30 18:30 – 22:30 22:30 – 24:00 Зберегти підчергу'
 K='Сьогодні, 24 жовтня 2026 р. 3.1 Немає світла: 08:00–12:00, 18:30–22:30 3.2 Немає світла: 08:00–12:00'
 KB='Сьогодні, 24 жовтня 2026. Черга 3.1: 08:00–12:00, 18:30–22:30 Черга 3.2: 08:00–12:00'
+class DtekEmergencyTests(unittest.TestCase):
+ def setup_now(self):
+  return datetime(2026,11,1,13,15,tzinfo=ZoneInfo('Europe/Kyiv'))
+ def post(self, number, time, body):
+  return ('<div class="tgme_widget_message" data-post="dtek_ua/'+str(number)+'">'
+    '<div class="tgme_widget_message_text">'+body+'</div>'
+    '<a class="tgme_widget_message_date"><time datetime="'+time+'">13:15</time></a></div>')
+ def test_city_emergency_without_mutating_schedules(self):
+  page=self.post(4901,'2026-11-01T08:14:00+02:00',
+    '‼️Київ: через обстріли застосовані екстрені відключення. Графіки не діють.')
+  result=parse_dtek_telegram(page,self.setup_now())
+  self.assertEqual(result['city']['level'],'active')
+  self.assertEqual(result['city']['url'],'https://t.me/dtek_ua/4901')
+  self.assertNotIn('dacha',result)
+ def test_dacha_only_when_oblast_or_vyshhorod_is_affected(self):
+  page=self.post(4902,'2026-11-01T08:00:00+02:00',
+    'Київщина: в Обухівському та Бучанському районах аварія, графіки не діють.')
+  self.assertIsNone(parse_dtek_telegram(page,self.setup_now()).get('dacha'))
+  page=self.post(4903,'2026-11-01T08:10:00+02:00',
+    '‼️Київщина: у Вишгородському районі екстрені відключення.')
+  self.assertEqual(parse_dtek_telegram(page,self.setup_now())['dacha']['level'],'partial')
+ def test_city_partial_is_never_reported_as_citywide(self):
+  page=self.post(4904,'2026-11-01T07:30:00+02:00',
+    '‼️Правий берег Києва: аварія на обладнанні, графіки тимчасово не діють.')
+  self.assertEqual(parse_dtek_telegram(page,self.setup_now())['city']['level'],'partial')
+ def test_explicit_cancellation_wins_over_older_emergency(self):
+  page=(self.post(4901,'2026-11-01T07:30:00+02:00',
+    '‼️Київ: застосовані екстрені відключення')+
+    self.post(4902,'2026-11-01T09:30:00+02:00',
+      '💡Київ: повертаємось до графіків, екстрені відключення скасовано'))
+  self.assertIsNone(parse_dtek_telegram(page,self.setup_now())['city'])
+ def test_stale_and_future_posts_are_rejected(self):
+  page=self.post(4901,'2026-10-29T08:00:00+02:00',
+    '‼️Київ: екстрені відключення')
+  self.assertFalse(parse_dtek_telegram(page,self.setup_now()))
+  page=self.post(4902,'2026-11-02T08:00:00+02:00',
+    '‼️Київ: екстрені відключення')
+  self.assertFalse(parse_dtek_telegram(page,self.setup_now()))
+ def test_generic_article_and_other_city_do_not_trigger(self):
+  self.assertIsNone(parse_dtek_notice('Київ: графік відключень на завтра.'))
+  self.assertIsNone(parse_dtek_notice('Дніпро: екстрені відключення.'))
+  self.assertIsNone(parse_dtek_notice('Обережно: шахраї в Києві.'))
+ def test_failed_feed_keeps_recent_warning_without_claiming_verification(self):
+  now=self.setup_now()
+  recent={'level':'active','published_at':'2026-11-01T09:00:00+02:00','source_checked':True}
+  old={'level':'active','published_at':'2026-10-30T09:00:00+02:00','source_checked':True}
+  self.assertFalse(select_emergency({},'city',recent,now,False)['source_checked'])
+  self.assertIsNone(select_emergency({},'city',old,now,False))
+  self.assertIsNone(select_emergency({},'city',recent,now,True))
+
 class Tests(unittest.TestCase):
  def test_bez(self):self.assertIn(E,parse_bez(B,D)['candidates'])
  def test_koly(self):self.assertEqual(parse_kolysvitlo(K,D,D),E)
