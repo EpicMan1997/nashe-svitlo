@@ -265,6 +265,116 @@ def fetch(url, label, errors):
         errors.append(label+': '+type(exc).__name__+(f' HTTP {code}' if code is not None else ''))
         return None
 
+DTEK_TELEGRAM = 'https://t.me/s/dtek_ua'
+EMERGENCY_MAX_AGE = timedelta(hours=36)
+EMERGENCY_FALLBACK_AGE = timedelta(hours=8)
+
+
+def parse_dtek_notice(text):
+    """Classify explicit official operator notices, never generic news or forecasts."""
+    line = re.sub(r'^[^\wА-Яа-яІіЇїЄєҐґ]*', '', text.strip().lower())
+    # Telegram uses emoji headings. Only a notice headed with a location is actionable.
+    combined = bool(re.match(r'київ\s+(?:та|і)\s+київськ(?:а область|ій області)', line))
+    oblast = combined or bool(re.match(r'(?:київщина|київська область)\s*[:–,\s]', line))
+    city = combined or bool(re.match(r'київ\s*[:–,]', line)) or bool(
+        re.match(r'(?:правий|лівий)\s+берег\s+києва\s*[:–,]', line))
+    if not city and not oblast:
+        return None
+    # An explicit cancellation is stronger than generic mentions of past emergencies.
+    cancelled = bool(re.search(
+        r'(?:екстрен\w*\s+відключенн\w*\s+скасован|'
+        r'поверта[єй]мось\s+до\s+графік|повертаємось\s+до\s+графік|'
+        r'графіки\s+відновлен|відновлен[оі]\s+графік)', line))
+    emergency = bool(re.search(
+        r'екстрен\w*\s+відключ|аварійн\w*\s+відключ|аварія\s+на\s+'
+        r'|графіки\s+(?:тимчасово\s+|наразі\s+)?не\s+діють'
+        r'|графіки\s+відключень\s+.+?\s+не\s+діють', line))
+    if not cancelled and not emergency:
+        return None
+    city_partial = city and bool(re.search(
+        r'правий\s+берег|лівий\s+берег|(?:частин\w*\s+)?'
+        r'(?:оболонськ|дарницьк|деснянськ|подільськ|голосіївськ|'
+        r'шевченківськ|печерськ|солом.?янськ|святошинськ|дніпровськ)'
+        r'|(?:окремих|цих|деяких)\s+район', line))
+    oblast_partial = oblast and bool(re.search(
+        r'(?:у|в|по)\s+[\w,\s–-]{0,120}район(?:і|ах)|'
+        r'вишгородськ|бучанськ|броварськ|бориспільськ|'
+        r'обухівськ|фастівськ|білоцерківськ', line))
+    return {
+        'kind': 'clear' if cancelled else 'emergency',
+        'city': city, 'oblast': oblast,
+        'city_partial': city_partial,
+        'oblast_partial': oblast_partial,
+        # The dacha is in Vyshhorod district. Don't apply notices naming other
+        # oblast districts to this location.
+        'dacha_affected': not oblast_partial or 'вишгородськ' in line,
+    }
+
+
+def parse_dtek_telegram(html, now):
+    """Read timestamped original DTEK Telegram posts; prefer latest per geography."""
+    if not html:
+        return {}
+    soup = BeautifulSoup(html, 'html.parser')
+    messages = []
+    for post in soup.select('.tgme_widget_message[data-post]'):
+        text_node = post.select_one('.tgme_widget_message_text')
+        time_node = post.select_one('time[datetime]')
+        identifier = post.get('data-post', '')
+        if not text_node or not time_node or not re.fullmatch(r'dtek_ua/\d+', identifier):
+            continue
+        try:
+            published = datetime.fromisoformat(time_node['datetime'].replace('Z', '+00:00'))
+            if published.tzinfo is None:
+                continue
+            published = published.astimezone(KYIV)
+        except (ValueError, KeyError, TypeError):
+            continue
+        if not -timedelta(minutes=5) <= now - published <= EMERGENCY_MAX_AGE:
+            continue
+        body = text_node.get_text(' ', strip=True)
+        classification = parse_dtek_notice(body)
+        if classification:
+            messages.append((published, int(identifier.split('/')[1]), body, classification, identifier))
+    messages.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    result = {}
+    for loc in ('city', 'dacha'):
+        for published, post_id, body, notice, identifier in messages:
+            if loc == 'city' and not notice['city']:
+                continue
+            if loc == 'dacha' and (not notice['oblast'] or not notice['dacha_affected']):
+                continue
+            if notice['kind'] == 'clear':
+                result[loc] = None
+            else:
+                partial = notice['city_partial'] if loc == 'city' else notice['oblast_partial']
+                result[loc] = {
+                    'level': 'partial' if partial else 'active',
+                    'text': body[:300],
+                    'url': 'https://t.me/' + identifier,
+                    'published_at': published.isoformat(timespec='minutes'),
+                    'source': 'ДТЕК, офіційний Telegram',
+                    'source_checked': True
+                }
+            break
+    return result
+
+
+def select_emergency(parsed, key, previous, now, fetched):
+    """Keep an unverified recent operator notice through a transient fetch failure."""
+    if fetched:
+        return parsed.get(key)
+    if not isinstance(previous, dict):
+        return None
+    try:
+        published = datetime.fromisoformat(previous['published_at']).astimezone(KYIV)
+    except (KeyError, TypeError, ValueError):
+        return None
+    if now - published > EMERGENCY_FALLBACK_AGE:
+        return None
+    return {**previous, 'source_checked': False}
+
+
 def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвітла',allow_early=False):
     votes=defaultdict(set)
     if koly is not None:votes[koly].add('КолиСвітло')
@@ -500,6 +610,7 @@ def main():
         'region_html':(KYIVSHCHYNA,'Київщина.info'),
         'region_alerts':(ALERTS_REGION,'Alerts Energy Київська область'),
         'map_region_html':(MAP_REGION,'Карта світла Київська область 3.1'),
+        'dtek_telegram':(DTEK_TELEGRAM,'ДТЕК оперативні повідомлення'),
     }
     with ThreadPoolExecutor(max_workers=len(sources)+1) as pool:
         jobs={key:pool.submit(fetch,url,label,errors) for key,(url,label) in sources.items()}
@@ -509,6 +620,16 @@ def main():
     koly,bude,official=results['koly'],results['bude'],results['official']
     region_html=results['region_html']
     region_alerts,map_region_html=results['region_alerts'],results['map_region_html']
+    telegram_html=results['dtek_telegram']
+    emergency_posts=parse_dtek_telegram(telegram_html,now)
+    old_dacha=old.get('emergency')
+    dacha_emergency=select_emergency(emergency_posts,'dacha',old_dacha,now,telegram_html is not None)
+    old_city_locations=old.get('locations',{})
+    for city_key,city_location in city.items():
+        previous=old_city_locations.get(city_key,{}).get('emergency')
+        city_location['emergency']=select_emergency(
+            emergency_posts,'city',previous,now,telegram_html is not None)
+
     days={};logs=list(old.get('logs',[]))
     for target in (today,tomorrow):
         bez=parse_mapasvitla(map_region_html,target,today,'3.1')
@@ -532,6 +653,7 @@ def main():
     save={'days':{k:v for k,v in old.get('days',{}).items() if k>=(today-timedelta(days=2)).isoformat()},'logs':logs}
     save['days'].update(days)
     save['locations']=city
+    save['emergency']=dacha_emergency
     hb=old.get('last_heartbeat','')
     save['last_heartbeat']=today.isoformat() if not hb or hb<=(today-timedelta(days=7)).isoformat() else hb
     STATE.parent.mkdir(exist_ok=True,parents=True)
@@ -543,7 +665,7 @@ def main():
     visible_days={k:v for k,v in old.get('days',{}).items()
                   if k==(today-timedelta(days=1)).isoformat()}
     visible_days.update(days)
-    payload={'updated_at':now.isoformat(timespec='seconds'),'today_date':today.isoformat(),'tomorrow_date':tomorrow.isoformat(),'days':visible_days,'logs':logs,'locations':{'dacha':{'name':'Дача','group':'3.1','address_verified':True,'days':visible_days,'logs':logs,'operator':'ДТЕК Київські регіональні електромережі'},**city},'source_health':{'dtek_reachable':official is not None,'issues':errors}}
+    payload={'updated_at':now.isoformat(timespec='seconds'),'today_date':today.isoformat(),'tomorrow_date':tomorrow.isoformat(),'days':visible_days,'logs':logs,'locations':{'dacha':{'name':'Дача','group':'3.1','address_verified':True,'days':visible_days,'logs':logs,'emergency':dacha_emergency,'operator':'ДТЕК Київські регіональні електромережі'},**city},'source_health':{'dtek_reachable':official is not None,'issues':errors}}
     OUTPUT.parent.mkdir(exist_ok=True,parents=True)
     OUTPUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print('Checked:',now.isoformat(timespec='minutes'),[(d,e['status'],e['outages']) for d,e in days.items()])
