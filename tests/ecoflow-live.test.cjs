@@ -22,7 +22,7 @@ function fixture() {
     document: { addEventListener() {}, visibilityState: 'visible' }
   };
   const context = {
-    window, Date: FakeDate, EventSource: FakeEvents, console,
+    window, Date: FakeDate, URL, EventSource: FakeEvents, console,
     setInterval() {},
     async fetch(url) {
       if (url === './ecoflow-live-config.json') return {
