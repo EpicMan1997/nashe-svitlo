@@ -114,7 +114,8 @@ test('partially connected live location shows unknown data, not sample values', 
   assert.match(m.get('eco-devices').innerHTML, /40%/);
   assert.doesNotMatch(m.get('eco-devices').innerHTML, /36%/);
   assert.doesNotMatch(m.get('eco-devices').innerHTML, />84%/);
-  assert.equal(m.get('eco-demo-total').textContent, '—');
+  assert.equal(m.get('eco-demo-total').textContent, '40%');
+  assert.equal(m.get('eco-location-charge-label').textContent, 'Середній заряд підключених');
   assert.match(m.get('eco-devices').innerHTML, /500 W/);
   assert.match(m.get('eco-status').innerHTML, /1\/4/);
   // Simulate a disconnected gateway; stale numbers must never linger.
@@ -175,7 +176,7 @@ test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassign
   assert.match(m.get('eco-devices').innerHTML, /Локації не підтверджено/);
   assert.match(m.get('eco-devices').innerHTML, /DELTA 2 №3/);
   assert.match(m.get('eco-devices').innerHTML, /Заряд <b>0%<\/b>/);
-  assert.equal(m.get('eco-demo-total').textContent, '—');
+  assert.equal(m.get('eco-demo-total').textContent, '62%');
   m.events['svitlo:location-change']({detail:{id:'home'}});
   assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
   assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);

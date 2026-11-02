@@ -362,7 +362,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
     def test_expanded_overview_retains_per_battery_charge_and_capacity(self):
         self.assertIn('id="eco-overview-details"', HTML)
         self.assertIn("function metricBreakdown(kind)", JS)
-        self.assertIn("device.capacityWh * device.pct / total", JS)
+        self.assertIn("device.capacityWh * device.pct / knownWh", JS)
         self.assertIn('class="eco-detail-percent" data-level="', JS)
         self.assertIn("'<div class=\"eco-detail-grid\">' + rows", JS)
         self.assertNotIn("data-eco-tooltip=", JS)
@@ -521,9 +521,9 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("kind === 'capacity'", JS)
         self.assertIn("kind === 'charge'", JS)
         self.assertIn("kind === 'count'", JS)
-        self.assertIn("const stored = allSocKnown ?", JS)
-        self.assertIn("const weighted = stored !== null && total", JS)
-        self.assertIn("device.capacityWh * device.pct / total", JS)
+        self.assertIn("const stored = knownWh ?", JS)
+        self.assertIn("const weighted = stored !== null && knownWh", JS)
+        self.assertIn("device.capacityWh * device.pct / knownWh", JS)
         self.assertIn("Внески в середній заряд</span>", JS)
         self.assertIn("exactCapacity(total)", JS)
         self.assertIn("physicalDevices(inventory[activeEcoLocation].devices).length + '</strong></div>'", JS)
@@ -651,8 +651,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertNotIn("Вт", HTML)
         self.assertIn("4 800 Wh", HTML)
         self.assertIn("maximumFractionDigits: 2", JS)
-        self.assertIn("device.capacityWh * device.pct / total", JS)
-        self.assertIn("const weighted = stored !== null && total", JS)
+        self.assertIn("device.capacityWh * device.pct / knownWh", JS)
+        self.assertIn("const weighted = stored !== null && knownWh", JS)
 
     def test_solar_generation_is_read_only_and_dacha_only(self):
         self.assertIn('id="eco-solar"', HTML)

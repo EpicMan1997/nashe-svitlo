@@ -517,7 +517,7 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   <div class="eco-devices" id="eco-devices" aria-live="polite"></div>
   <div class="eco-location-summary" id="eco-location-summary" aria-label="Загальний заряд батарей у локації">
     <div class="eco-location-summary-heading">
-      <strong>Середній заряд локації</strong>
+      <strong id="eco-location-charge-label">Середній заряд локації</strong>
       <strong class="eco-location-summary-value" id="eco-location-charge-value">—</strong>
     </div>
     <div class="eco-location-charge-track" id="eco-location-charge-track" data-level="unknown"
@@ -532,7 +532,7 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       <div class="eco-metrics-area" id="eco-metrics-area">
         <div class="eco-metrics">
           <button type="button" class="eco-metric" data-eco-metric="capacity" aria-expanded="false" aria-controls="eco-metric-detail"><span class="eco-metric-label">Ємність локації</span><strong class="eco-metric-value" id="eco-capacity">—</strong><span class="eco-metric-more" aria-hidden="true">Детальніше <span class="eco-metric-arrow"></span></span></button>
-          <button type="button" class="eco-metric" data-eco-metric="charge" aria-expanded="false" aria-controls="eco-metric-detail"><span class="eco-metric-label">Середній заряд локації</span><strong class="eco-metric-value" id="eco-demo-total" data-level="unknown">—</strong><span class="eco-metric-more" aria-hidden="true">Детальніше <span class="eco-metric-arrow"></span></span></button>
+          <button type="button" class="eco-metric" data-eco-metric="charge" aria-expanded="false" aria-controls="eco-metric-detail"><span class="eco-metric-label" id="eco-metric-charge-label">Середній заряд локації</span><strong class="eco-metric-value" id="eco-demo-total" data-level="unknown">—</strong><span class="eco-metric-more" aria-hidden="true">Детальніше <span class="eco-metric-arrow"></span></span></button>
           <button type="button" class="eco-metric" data-eco-metric="count" aria-expanded="false" aria-controls="eco-metric-detail"><span class="eco-metric-label">Кількість акумуляторів та станцій</span><strong class="eco-metric-value" id="eco-count">—</strong><span class="eco-metric-more" aria-hidden="true">Детальніше <span class="eco-metric-arrow"></span></span></button>
         </div>
         <div class="eco-metric-detail" id="eco-metric-detail" aria-live="polite" hidden></div>

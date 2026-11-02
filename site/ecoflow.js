@@ -607,16 +607,17 @@
   function metricBreakdown(kind) {
     const devices = batterySystems(inventory[activeEcoLocation].devices);
     const total = devices.reduce((sum, item) => sum + item.capacityWh, 0);
-    const allSocKnown = devices.every(d => Number.isFinite(d.pct));
-    const stored = allSocKnown ? devices.reduce((sum, item) => sum + item.capacityWh * item.pct / 100, 0) : null;
-    const weighted = stored !== null && total ? stored / total * 100 : null;
+    const known = devices.filter(d => Number.isFinite(d.pct));
+    const knownWh = known.reduce((sum,d) => sum+d.capacityWh, 0);
+    const stored = knownWh ? known.reduce((sum,d) => sum+d.capacityWh*d.pct/100, 0) : null;
+    const weighted = stored !== null && knownWh ? stored/knownWh*100 : null;
     const fmtPercent = value => percentValue.format(value) + '%';
     const deviceShare = device => total ? device.capacityWh / total * 100 : 0;
     // Percent contribution to the location-wide weighted charge, not device SOC.
-    const chargeContribution = device => total && Number.isFinite(device.pct) ? device.capacityWh * device.pct / total : null;
+    const chargeContribution = device => knownWh && Number.isFinite(device.pct) ? device.capacityWh * device.pct / knownWh : null;
     const storedEnergyWh = device => Number.isFinite(device.pct) ? device.capacityWh * device.pct / 100 : null;
     const title = kind === 'capacity' ? 'Розподіл ємності локації'
-      : kind === 'charge' ? 'Внесок станцій у середній заряд'
+      : kind === 'charge' ? (knownWh < total ? 'Внесок підключених станцій у середній заряд' : 'Внесок станцій у середній заряд')
       : 'Станції та акумулятори локації';
 
     const rows = devices.map((device, i) => {
@@ -676,17 +677,19 @@
         exactCapacity(total) + ' = 100%</strong></div>'
       : kind === 'charge'
         ? '<div class="eco-detail-formula"><span>Внески в середній заряд</span>' +
-          '<strong>' + (weighted === null ? 'Очікуємо даних від усіх акумуляторів' :
-          devices.map(device => fmtPercent(chargeContribution(device))).join(' + ') +
-          ' = ' + fmtPercent(weighted) + ' ≈ ' + Math.round(weighted) + '%') + '</strong></div>'
+          '<strong>' + (weighted === null ? 'Поки немає даних про заряд' :
+          known.map(device => fmtPercent(chargeContribution(device))).join(' + ') +
+          ' = ' + fmtPercent(weighted) +
+          (knownWh < total ? ' · тільки ' + known.length + ' із ' + devices.length + ' систем' : '')) + '</strong></div>'
         : '<div class="eco-detail-total"><span>Усього акумуляторів і станцій</span><strong>' +
           physicalDevices(inventory[activeEcoLocation].devices).length + '</strong></div>';
 
     const note = kind === 'capacity'
       ? 'Частка від загальної номінальної ємності, незалежно від поточного заряду'
       : kind === 'charge'
-        ? (weighted === null ? 'Не всі акумулятори передали заряд' :
-          'Внесок у загальні ' + Math.round(weighted) + '%: враховано і ємність, і заряд')
+        ? (weighted === null ? 'Заряд ще недоступний' : knownWh < total
+          ? 'Розрахунок лише для систем із доступним зарядом. Інші не вважаємо розрядженими.'
+          : 'Внесок у загальні ' + Math.round(weighted) + '%: враховано і ємність, і заряд')
         : 'Перелік пристроїв, їхній заряд, ємність та стан';
     return '<div class="eco-detail-heading"><strong>' + title +
       '</strong><span>' + textEscape(note) + '</span></div>' +
@@ -910,9 +913,11 @@
     const systems = batterySystems(place.devices);
     const totalWh = systems.reduce((v, d) => v + (d.capacityWh || 0), 0);
     const allKnown = systems.every(d => Number.isFinite(d.capacityWh));
-    const allChargesKnown = systems.every(d => Number.isFinite(d.pct));
-    const weighted = allKnown && allChargesKnown && totalWh
-      ? Math.round((systems.reduce((v, d) => v + d.capacityWh * d.pct, 0) / totalWh) * 10) / 10
+    const knownSystems = systems.filter(d=>Number.isFinite(d.pct));
+    const knownCapacityWh = knownSystems.reduce((sum,d)=>sum+d.capacityWh,0);
+    const allChargesKnown = knownSystems.length === systems.length;
+    const weighted = knownCapacityWh
+      ? Math.round(knownSystems.reduce((sum,d)=>sum+d.capacityWh*d.pct,0)/knownCapacityWh*10)/10
       : null;
     if (adminDraft.scope === 'current' && activeEcoLocation !== id) {
       Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
@@ -938,13 +943,18 @@
         niceWh(available.reduce((sum,d)=>sum+d.capacityWh,0)) + ' із ' + niceWh(totalWh) +
         '. Заряд решти невідомий.'
       : 'Моніторинг усіх систем';
-    const hasEstimates = systems.some(d => d.estimated === true);
+    const partial = liveMode && !allChargesKnown;
+    const averageLabel = partial ? 'Середній заряд підключених' : 'Середній заряд локації';
+    if ($('eco-location-charge-label')) $('eco-location-charge-label').textContent = averageLabel;
+    if ($('eco-metric-charge-label')) $('eco-metric-charge-label').textContent = averageLabel;
+    const hasEstimates = knownSystems.some(d => d.estimated === true);
     $('eco-demo-total').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
     // One bar represents the capacity-weighted average charge across physical batteries.
     const overallTrack = $('eco-location-charge-track');
     $('eco-location-charge-value').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     overallTrack.dataset.level = weighted === null ? 'unknown' : level(weighted);
+    overallTrack.setAttribute('aria-label', averageLabel);
     $('eco-location-charge-fill').style.width = weighted === null ? '0%' : weighted + '%';
     if (weighted === null) {
       overallTrack.removeAttribute('aria-valuenow');
