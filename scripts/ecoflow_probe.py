@@ -43,8 +43,9 @@ def signed_headers(access_key, secret_key, query=None, *, nonce=None, timestamp=
     nonce = str(nonce if nonce is not None else secrets.randbelow(900000) + 100000)
     timestamp = str(timestamp if timestamp is not None else int(time.time() * 1000))
     data = {"accessKey": access_key, "nonce": nonce, "timestamp": timestamp}
-    items = {**data, **(query or {})}
-    sign_string = "&".join(f"{key}={items[key]}" for key in sorted(items))
+    header_string = "&".join(f"{key}={data[key]}" for key in sorted(data))
+    param_string = "&".join(f"{key}={query[key]}" for key in sorted(query or {}))
+    sign_string = (param_string + "&" if param_string else "") + header_string
     signature = hmac.new(secret_key.encode("utf-8"), sign_string.encode("utf-8"),
                          hashlib.sha256).hexdigest()
     return {**data, "sign": signature}
