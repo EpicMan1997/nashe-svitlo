@@ -100,6 +100,10 @@
           "2026-11-01": {
             "events": [],
             "observed": true
+          },
+          "2026-11-02": {
+            "events": [],
+            "observed": true
           }
         },
         "naumenky": {
@@ -154,6 +158,10 @@
           "2026-11-01": {
             "events": [],
             "observed": true
+          },
+          "2026-11-02": {
+            "events": [],
+            "observed": true
           }
         },
         "solovky": {
@@ -201,6 +209,10 @@
             "observed": true
           },
           "2026-11-01": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-02": {
             "events": [],
             "observed": true
           }
