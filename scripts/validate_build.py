@@ -137,8 +137,9 @@ def check_payload(payload, season, config, site, now):
             raise ValueError('EcoFlow snapshot timestamp invalid') from error
         require(-timedelta(minutes=5) <= now - snap_time <= timedelta(minutes=25),
                 'EcoFlow snapshot expired or timestamp in future')
-        permitted = {'dacha:dp3', 'unassigned:delta2-1',
-                     'unassigned:delta2-2', 'unassigned:delta2-3'}
+        permitted = {'dacha:dp3', 'dacha:dp3eb', 'dacha:d2',
+                     'solovky:d2', 'solovky:d2eb', 'naumenky:d2',
+                     'unassigned:delta2-1', 'unassigned:delta2-2', 'unassigned:delta2-3'}
         readings = snap.get('devices', {})
         require(isinstance(readings, dict) and set(readings).issubset(permitted),
                 'Unexpected identity in public EcoFlow snapshot')
@@ -146,15 +147,18 @@ def check_payload(payload, season, config, site, now):
         for key, reading in readings.items():
             require(isinstance(reading, dict), 'Malformed EcoFlow public reading')
             require(set(reading).issubset({'updatedAt', 'socPercent', 'inputW',
-                                           'outputW', 'operation'}),
+                                           'outputW', 'operation', 'estimated'}),
                     'Sensitive or unapproved EcoFlow field published')
+            require('estimated' not in reading or type(reading['estimated']) is bool,
+                    'Invalid estimated battery SOC flag')
             for field, upper in (('socPercent', 100), ('inputW', 20000), ('outputW', 20000)):
                 value = reading.get(field)
                 if value is not None:
                     require(type(value) in (int, float) and math.isfinite(value)
                             and 0 <= value <= upper, 'Incorrect EcoFlow reading ' + field)
         require(isinstance(snap.get('unassigned'), list) and
-                set(snap['unassigned']).issubset(permitted - {'dacha:dp3'}),
+                set(snap['unassigned']).issubset({
+                    'unassigned:delta2-1','unassigned:delta2-2','unassigned:delta2-3'}),
                 'Unapproved unassigned EcoFlow keys')
         require(set(snap).issubset({'version', 'mode', 'emittedAt',
                                    'devices', 'availability', 'unassigned', 'connection'}),
