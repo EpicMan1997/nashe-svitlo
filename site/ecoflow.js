@@ -576,7 +576,7 @@
           '</span><span class="eco-detail-device-name">' + name + '<small>' + type + '</small></span></div>' +
           '<div class="eco-detail-inventory-stats"><span><b>' + capacity + '</b> ємність</span>' +
           '<span><b class="eco-detail-percent" data-level="' + level(device.pct) + '">' +
-          pctLabel(device.pct) + '</b> заряд</span>' +
+          (device.estimated ? '≈ ' : '') + pctLabel(device.pct) + '</b> заряд</span>' +
           '<span>' + textEscape(operation.label) + '</span>' + powerLine + '</div></div>';
       }
       if (kind === 'capacity') {
