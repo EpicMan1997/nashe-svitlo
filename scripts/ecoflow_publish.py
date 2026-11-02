@@ -120,56 +120,27 @@ def build_snapshot(access, secret, now=None, bindings=None):
             continue
 
         if key == "dacha:dp3":
-            # CMS reports the combined SOC of both 4096 Wh packs. BMS reports
-            # the physical main battery SOC. The EB SOC is not exposed directly
-            # in the approved field inventory, so its SOC is labelled estimated.
+            # EcoFlow CMS SOC already covers the complete 8192 Wh system.
+            # Never infer or publish separate main/extra battery percentages.
             combined = read_number(nested_get(quota, "cmsBattSoc"), "socPercent")
-            primary = read_number(nested_get(quota, "bmsBattSoc"), "socPercent")
-            total_capacity = nested_get(quota, "cmsBattFullEnergy")
-            if primary is not None:
-                reading["socPercent"] = round(primary, 1)
-            elif combined is not None:
-                reading["socPercent"] = round(combined, 1)
-                reading["estimated"] = True  # System rather than physical main SOC
-            else:
+            if combined is None:
                 reading.pop("socPercent", None)
+            else:
+                reading["socPercent"] = round(combined, 1)
             result["devices"][key] = reading
             availability[key] = "readable"
-            if (combined is not None and primary is not None and
-                isinstance(total_capacity, (int, float)) and not isinstance(total_capacity, bool) and
-                abs(total_capacity - 8192) <= 50):
-                # Equal battery nominal Wh allows a linear *approximation* only.
-                inferred = 2 * combined - primary
-                if 0 <= inferred <= 100:
-                    result["devices"]["dacha:dp3eb"] = {
-                        "updatedAt": reading["updatedAt"],
-                        "socPercent": round(inferred, 1),
-                        "estimated": True,
-                        "operation": "unknown",
-                    }
-                    availability["dacha:dp3eb"] = "readable"
             continue
 
-        # Each DELTA 2 returns its own main physical battery SOC.
-        primary = read_number(nested_get(quota, "bms_bmsStatus.soc"), "socPercent")
-        if primary is not None:
-            reading["socPercent"] = round(primary, 1)
+        # pd.soc is the station-reported combined SOC. On Solovky this one
+        # value belongs to the complete 2048 Wh station + expansion system.
+        combined = read_number(nested_get(quota, "pd.soc"), "socPercent")
+        if combined is None:
+            reading.pop("socPercent", None)
+        else:
+            reading["socPercent"] = round(combined, 1)
         result["devices"][key] = reading
         if key in availability:
             availability[key] = "readable"
-
-        # Owner confirmed that only Solovky DELTA 2 has a 1024 Wh extra pack.
-        # Other units may expose a stale bms_slave field, which is not proof
-        # of a physically attached battery.
-        if key == "solovky:d2":
-            addon = read_number(nested_get(quota, "bms_slave.soc"), "socPercent")
-            if addon is not None:
-                result["devices"]["solovky:d2eb"] = {
-                    "updatedAt": reading["updatedAt"],
-                    "socPercent": round(addon, 1),
-                    "operation": "unknown",
-                }
-                availability["solovky:d2eb"] = "readable"
     return result
 
 
