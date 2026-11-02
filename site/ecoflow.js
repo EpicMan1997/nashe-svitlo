@@ -101,7 +101,7 @@
     const at = live?.summary()?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
     element.innerHTML = '<i aria-hidden="true"></i>' + (mode === 'published'
-      ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
+      ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm + ' · ≈10 хв')
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
     root.dataset.telemetryState = stateHere;
@@ -339,8 +339,9 @@
       Math.round((main.capacityWh * main.pct + addon.capacityWh * addon.pct) / capacityWh) : null;
     const batteryPart = (d, role) => {
       const name = role === 'Основна' ? 'основної станції' : 'додаткової батареї';
+      const roleLabel = liveMode && main.id === 'dp3' && role === 'Основна' ? 'Заряд системи' : role;
       return '<div class="eco-system-part charge-' + level(d.pct) + '">' +
-        '<div class="eco-system-part-top"><span class="eco-system-part-label">' + role + '</span>' +
+        '<div class="eco-system-part-top"><span class="eco-system-part-label">' + roleLabel + '</span>' +
         '<strong class="eco-system-percent">' + pctLabel(d.pct) + '</strong></div>' +
         (role === 'Додаткова' && main.id === 'dp3'
           ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
