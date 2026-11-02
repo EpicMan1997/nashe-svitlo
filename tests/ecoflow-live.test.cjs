@@ -109,6 +109,7 @@ test('scheduled EcoFlow snapshot is never called live and expires after 25 min',
   f.configure({ enabled: true, mode: 'published', snapshotUrl: './ecoflow-snapshot.json', streamUrl: '' });
   await f.api.start();
   assert.equal(f.socket.length, 0);
+  f.advance(10 * 60000);
   const at = new Date(f.now() - 10 * 60000).toISOString();
   const read = f.api.acceptFrame({
     version: 1, mode: 'scheduled', emittedAt: at,
