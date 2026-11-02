@@ -50,19 +50,41 @@
   const fmtSoc = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
   const pctLabel = value => Number.isFinite(value) ? fmtSoc.format(value) + '%' : '—';
   const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
-  // Small loads can report 0 W; infer discharge only after an observed SOC decline.
+  // Local-only SOC trend survives page refreshes; it never invents an output wattage.
   const socBaseline = new Map();
-  function operationFromReading(key, value) {
-    if (!value) return {state:'unknown', inferred:false};
-    const state = value.operation || 'unknown', at = value.updatedMs || Date.parse(value.updatedAt || '') || Date.now();
-    const soc = value.socPercent, prev = socBaseline.get(key);
-    if (!Number.isFinite(soc)) return {state, inferred:false};
-    const idleWatts = value.inputW === 0 && value.outputW === 0;
-    const falling = idleWatts && prev && at > prev.at + 300000 && at - prev.at <= 10800000 && prev.soc - soc >= 0.5;
-    if (!prev || at > prev.at && (soc > prev.soc || !idleWatts || at-prev.at>10800000))
-      socBaseline.set(key, {soc,at});
-    return falling && ['holding','unknown'].includes(state)
-      ? {state:'discharging', inferred:true} : {state,inferred:false};
+  const socMemoryKey = key => 'nashe-svitlo-ecoflow-soc-v1:' + key;
+  function readSocBaseline(key) {
+    if (socBaseline.has(key)) return socBaseline.get(key);
+    try {
+      const saved = JSON.parse(window.localStorage?.getItem(socMemoryKey(key)) || 'null');
+      if (saved && Number.isFinite(saved.soc) && Number.isFinite(saved.at) &&
+          Date.now()>=saved.at && Date.now()-saved.at<=3*3600000) {
+        socBaseline.set(key,saved);
+        return saved;
+      }
+    } catch (_) {}
+    return null;
+  }
+  function rememberSoc(key,reading) {
+    socBaseline.set(key,reading);
+    try { window.localStorage?.setItem(socMemoryKey(key),JSON.stringify(reading)); } catch (_) {}
+  }
+  function operationFromReading(key,value) {
+    if (!value) return {state:'unknown',inferred:false};
+    const state=value.operation||'unknown',at=value.updatedMs||Date.parse(value.updatedAt||'')||Date.now();
+    const soc=value.socPercent;
+    if (!Number.isFinite(soc)||!Number.isFinite(at)) return {state,inferred:false};
+    const prev=readSocBaseline(key),idleWatts=value.inputW===0&&value.outputW===0;
+    const falling=idleWatts&&prev&&at>prev.at+5*60000&&at-prev.at<=3*3600000&&prev.soc-soc>=0.5;
+    if (!prev||at>prev.at&&(soc>prev.soc+0.1||!idleWatts||at-prev.at>3*3600000))
+      rememberSoc(key,{soc,at});
+    if (falling&&['holding','unknown'].includes(state))
+      return {state:'discharging',inferred:true};
+    // The known Dacha DELTA 2 feeds a router and converter. 0 W alone
+    // is insufficient evidence that its charge is actually holding steady.
+    if (key==='dacha:d2'&&idleWatts&&state==='holding')
+      return {state:'unknown',inferred:false,lowLoad:true};
+    return {state,inferred:false};
   }
   function applyReadings() {
     const state = live?.summary()?.status || 'preview';
@@ -82,8 +104,10 @@
             value.moduleSocPercent.reduce((sum, p) => sum + p, 0) / device.batteryCount : null),
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
+          runtimeMinutes: value?.runtimeMinutes ?? null,
           operation: flow.state,
           inferredOperation: flow.inferred,
+          lowLoad: flow.lowLoad===true,
           estimated: value?.estimated === true,
           availability: live.availabilityFor?.(key + ':' + device.id) || 'unavailable',
           // Unknown module SOC is never invented from a primary BMS value.
@@ -193,7 +217,8 @@
   function operationBadge(device) {
     const status = Object.prototype.hasOwnProperty.call(operationMeta, device.operation)
       ? device.operation : 'unknown';
-    const { label, sign } = operationMeta[status];
+    const { label, sign } = device.lowLoad
+      ? {label:'Низьке навантаження',sign:'~'} : operationMeta[status];
     return '<span class="eco-operation eco-operation-' + status + '"' +
       (device.inferredOperation ? ' title="Розряджання визначено за зменшенням заряду"' : '') + '>' +
       '<span class="eco-operation-icon" aria-hidden="true">' + sign + '</span>' +
@@ -201,25 +226,46 @@
   }
 
   function formatAutonomy(capacityWh, chargePct, outputW) {
-    if (!Number.isFinite(outputW) || outputW <= 0 || !Number.isFinite(chargePct)) return '—';
-    // Approximation using an 85% available energy factor.
-    const estimatedMinutes = Math.round(capacityWh * chargePct / 100 * 0.85 / outputW * 60 / 5) * 5;
-    const hours = Math.floor(estimatedMinutes / 60);
-    const mins = estimatedMinutes % 60;
-    return (hours ? hours + ' год' : '') + (mins ? (hours ? ' ' : '') + mins + ' хв' : '');
+    if (!Number.isFinite(outputW)||outputW<=0||!Number.isFinite(chargePct)) return '—';
+    // Fallback only; EcoFlow's own time-to-empty is preferred when available.
+    const estimatedMinutes=Math.round(capacityWh*chargePct/100*0.85/outputW*60/5)*5;
+    return timeText(estimatedMinutes);
   }
-
-  // Uses the confirmed outage schedule of the selected location, never assumes 3 hours.
-  function autonomyComparison(capacityWh, pct, outputW) {
-    const outage = window.NasheSvitloOutageContext?.(activeEcoLocation);
-    const runtime = Number.isFinite(outputW) && outputW > 0 && Number.isFinite(pct)
-      ? capacityWh * pct / 100 * 0.85 / outputW * 60 : null;
-    if (!outage || !Number.isFinite(outage.minutes) || outage.minutes <= 0 || runtime === null)
-      return {color:'unknown',hint:'Немає підтвердженої тривалості відключення'};
-    const m = Math.ceil(outage.minutes);
-    return {color:runtime < outage.minutes ? 'danger' : runtime < outage.minutes*1.25 ? 'warning' : 'safe',
-      hint:(outage.current ? 'До відновлення: ' : 'Наступне відключення: ') +
-        Math.floor(m/60) + ' год' + (m%60?' '+m%60+' хв':'') + ' за графіком'};
+  function timeText(minutes) {
+    if (!Number.isFinite(minutes)||minutes<0) return '—';
+    const value=Math.round(minutes),hours=Math.floor(value/60),mins=value%60;
+    return (hours?hours+' год':'')+(mins?(hours?' ':'')+mins+' хв':'')||'0 хв';
+  }
+  function remainingEnergy(capacityWh,pct) {
+    return Number.isFinite(pct)&&Number.isFinite(capacityWh)
+      ? '≈ '+niceWh(Math.round(capacityWh*pct/100))+' із '+niceWh(capacityWh)
+      : 'Заряд невідомий';
+  }
+  function runtimeReading(d,capWh,pct) {
+    if (Number.isFinite(d.runtimeMinutes)&&d.runtimeMinutes>0)
+      return {minutes:d.runtimeMinutes,source:'Прогноз EcoFlow'};
+    const estimate=Number.isFinite(d.outputW)&&d.outputW>0&&Number.isFinite(pct)
+      ? Math.round(capWh*pct/100*0.85/d.outputW*60/5)*5:null;
+    return {minutes:estimate,source:estimate===null?'Немає прогнозу':'Оцінка за потужністю'};
+  }
+  function autonomyComparison(runtime) {
+    const outage=window.NasheSvitloOutageContext?.(activeEcoLocation);
+    if (!outage||!Number.isFinite(outage.minutes)||outage.minutes<=0)
+      return {color:'unknown',value:'—',hint:'Немає підтвердженого графіка'};
+    const label=(outage.current?'До відновлення: ':'Наступне відключення: ')+timeText(outage.minutes);
+    if (!Number.isFinite(runtime.minutes))
+      return {color:'unknown',value:'—',hint:label+' · прогноз недоступний'};
+    const diff=runtime.minutes-outage.minutes;
+    return {color:diff<0?'danger':diff<outage.minutes*0.25?'warning':'safe',
+      value:diff<0?'Не вистачить':'Вистачить',
+      hint:label+' · '+(diff<0?'бракує ':'запас ')+timeText(Math.abs(diff))};
+  }
+  function autonomyCards(d,capWh,pct) {
+    const runtime=runtimeReading(d,capWh,pct),comp=autonomyComparison(runtime);
+    return '<div class="eco-device-stat eco-autonomy-runtime"><span>За навантаженням</span>' +
+      '<strong>'+timeText(runtime.minutes)+'</strong><small>'+runtime.source+'</small></div>' +
+      '<div class="eco-device-stat eco-autonomy eco-autonomy-'+comp.color+'"><span>За графіком</span>' +
+      '<strong>'+comp.value+'</strong><small>'+comp.hint+'</small></div>';
   }
   const powerSeen = new Map();
   function powerReading(d,kind) {
@@ -238,12 +284,10 @@
 
   function energyStats(d, capWh, pct) {
     const output = d.outputW;
-    const autonomy = formatAutonomy(capWh, pct, output), compare=autonomyComparison(capWh,pct,output);
     return '<div class="eco-device-stats eco-common-stats">' +
       '<div class="eco-device-stat"><span>Вхід</span>' + powerReading(d,'in') + '</div>' +
       '<div class="eco-device-stat"><span>Вихід</span>' + powerReading(d,'out') + '</div>' +
-      '<div class="eco-device-stat eco-autonomy eco-autonomy-' + compare.color + '"><span>Автономність</span><strong>' + autonomy + '</strong><small>' + compare.hint + '</small></div>' +
-      '</div>';
+      autonomyCards(d,capWh,pct) + '</div>';
   }
 
   // Draft-only settings. No API writes, credentials, or actual device configuration.
@@ -362,7 +406,7 @@
       '</span><span class="eco-battery-art" aria-hidden="true"><i style="width:' +
       (Number.isFinite(d.pct) ? d.pct : 0) + '%"></i></span></div>' +
       chargeTrack(d.pct, d.name) +
-      '<div class="eco-capacity-line"><strong>' + capacity + '</strong></div>' +
+      '<div class="eco-capacity-line"><strong>' + capacity + '</strong><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
       energyStats(d, d.capacityWh, d.pct) +
       solarDisclosure(d) +
       availabilityNote(d) +
@@ -378,12 +422,11 @@
       '</span></div>' + operationBadge(d) + '</div>' +
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
       '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) + '</span></div>' +
-      chargeTrack(d.pct, d.name) + '<span>' + cap + '</span></div>' +
+      chargeTrack(d.pct, d.name) + '<span>' + cap + '</span><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
       '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span>' + powerReading(d,'in') + '</div>' +
       '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span>' +
       powerReading(d,'out') + '</div></div></div>' +
-      '<div class="eco-ocean-autonomy eco-autonomy-' + autonomyComparison(d.capacityWh,d.pct,d.outputW).color + '"><span>Орієнтовна автономність</span><strong>' +
-      formatAutonomy(d.capacityWh, d.pct, d.outputW) + '</strong><small>' + autonomyComparison(d.capacityWh,d.pct,d.outputW).hint + '</small></div>' +
+      '<div class="eco-ocean-autonomy eco-ocean-autonomy-split">' + autonomyCards(d,d.capacityWh,d.pct) + '</div>' +
       availabilityNote(d) +
       powerOceanAdmin(d) + '</article>';
   }
@@ -403,6 +446,7 @@
       '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
       '<span>Заряд усієї системи</span><strong class="eco-system-combined-percent">' +
       pctLabel(soc) + '</strong></div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
+      '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc) + '</small>' +
       '</div>' +
       '<div class="eco-system-modules" aria-label="Склад системи">' +
       '<div class="eco-system-module"><span>Основна станція</span><strong>' +

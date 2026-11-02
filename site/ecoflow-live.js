@@ -50,6 +50,7 @@
       socPercent: number(raw.socPercent, 0, 100),
       inputW: number(raw.inputW, 0, 20000),
       outputW: number(raw.outputW, 0, 20000),
+      runtimeMinutes: number(raw.runtimeMinutes, 1, 10080),
       operation: VALID_OPERATIONS.has(raw.operation) ? raw.operation : 'unknown',
       estimated: raw.estimated === true,
       moduleSocPercent: null

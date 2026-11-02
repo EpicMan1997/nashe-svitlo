@@ -15,11 +15,13 @@ FIELDS = {
         "socPercent": ("cmsBattSoc",),
         "inputW": ("powInSumW",),
         "outputW": ("powOutSumW",),
+        "runtimeMinutes": ("cmsDsgRemTime",),
     },
     "delta_2": {
         "socPercent": ("pd.soc",),
         "inputW": ("pd.wattsInSum",),
         "outputW": ("pd.wattsOutSum",),
+        "runtimeMinutes": ("pd.remainTime", "bms_emsStatus.dsgRemainTime"),
     },
 }
 FIELD_AGES_SECONDS = 30.0
@@ -30,6 +32,7 @@ RANGES = {
     "socPercent": (0, 100),
     "inputW": (0, 20000),
     "outputW": (0, 20000),
+    "runtimeMinutes": (1, 10080),
 }
 
 

@@ -185,7 +185,7 @@ test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassign
 
 test('expanded batteries have one rounded provider SOC and clearly doubled capacities', () => {
   const readings = {
-    'dacha:dp3': { socPercent: 90.37937, inputW: 0, outputW: 171, operation: 'discharging' },
+    'dacha:dp3': { socPercent: 90.37937, inputW: 0, outputW: 171, runtimeMinutes: 1245, operation: 'discharging' },
     'dacha:d2': { socPercent: 98, inputW: 0, outputW: 0, operation: 'holding' },
     'solovky:d2': { socPercent: 80.46, inputW: 0, outputW: 30, operation: 'discharging' }
   };
@@ -200,6 +200,10 @@ test('expanded batteries have one rounded provider SOC and clearly doubled capac
   let markup = m.get('eco-devices').innerHTML;
   assert.match(markup, /Заряд усієї системи/);
   assert.match(markup, /90,4%/);
+  assert.match(markup, /Залишок: ≈/);
+  assert.match(markup, /7[\s\u00a0\u202f]404 Wh/);
+  assert.match(markup, /20 год 45 хв/);
+  assert.match(markup, /За графіком/);
   assert.match(markup, /class="eco-operation eco-operation-discharging"/);
   assert.match(markup, /Розряджається/);
   assert.match(markup, /8[\s\u00a0\u202f]192 Wh/);
@@ -232,4 +236,19 @@ test('partial monitor keeps physical capacity and pending devices grouped',()=>{
  assert.match(m.get('eco-devices').innerHTML,/Підключення в процесі/);
  assert.match(m.get('eco-devices').innerHTML,/eco-autonomy-unknown/);
  assert.match(m.get('eco-data-coverage').textContent,/Моніторинг 1\/4 систем/);
+});
+
+test('Delta 2 router load of 0 W is not incorrectly called maintaining charge',()=>{
+ const readings={'dacha:d2':{socPercent:77,inputW:0,outputW:0,
+   runtimeMinutes:320,operation:'holding',updatedMs:Date.now()}};
+ const live={summary:()=>({status:'published',lastFrameMs:Date.now(),unassigned:[]}),
+  reading:key=>readings[key]??null,
+  statusFor:key=>readings[key]?'published':'waiting',
+  availabilityFor:key=>readings[key]?'readable':'unsupported',
+  subscribe(){},start(){}};
+ const m=mount(live);
+ const html=m.get('eco-devices').innerHTML;
+ assert.match(html,/Низьке навантаження/);
+ assert.match(html,/5 год 20 хв/);
+ assert.doesNotMatch(html,/Підтримує заряд/);
 });

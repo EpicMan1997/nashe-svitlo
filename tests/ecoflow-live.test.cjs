@@ -57,11 +57,12 @@ test('live stream accepts valid zero values without swapping locations', async (
   assert.equal(f.socket[0].options.withCredentials, false);
   const at = new Date(f.now()).toISOString();
   const received = f.api.acceptFrame({ version: 1, emittedAt: at, devices: {
-    'dacha:dp3': { socPercent: 0, inputW: 0, outputW: 1024, operation: 'discharging' },
+    'dacha:dp3': { socPercent: 0, inputW: 0, outputW: 1024, runtimeMinutes: 145, operation: 'discharging' },
     'home:po': { moduleSocPercent: [56, 57], inputW: 200, outputW: 451, operation: 'discharging' }
   } });
   assert.equal(received, true);
   assert.equal(f.api.reading('dacha:dp3').socPercent, 0);
+  assert.equal(f.api.reading('dacha:dp3').runtimeMinutes, 145);
   assert.equal(f.api.reading('dacha:dp3').outputW, 1024);
   assert.equal(f.api.reading('home:po').moduleSocPercent.length, 2);
   assert.equal(f.api.reading('solovky:d2'), null);

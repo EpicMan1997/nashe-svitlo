@@ -29,11 +29,11 @@ class PublishedEcoFlowTests(unittest.TestCase):
         if path == pub.DEVICE_QUOTA:
             sn = query["sn"]
             if sn == "PRIVATE-DP3":
-                return {"cmsBattSoc": 73, "powInSumW": 0, "powOutSumW": 250}
+                return {"cmsBattSoc": 73, "powInSumW": 0, "powOutSumW": 250, "cmsDsgRemTime": 612}
             if sn.startswith("PRIVATE-D2"):
                 return {"pd.soc": {"PRIVATE-D2-1": 30, "PRIVATE-D2-2": 80,
                                    "PRIVATE-D2-3": 0}[sn],
-                        "pd.wattsInSum": 0, "pd.wattsOutSum": 175}
+                        "pd.wattsInSum": 0, "pd.wattsOutSum": 175, "pd.remainTime": 111}
         raise pub.ProbeError("unsupported model")
 
     def test_snapshot_is_sanitized_and_never_maps_unknown_delta2_location(self):
@@ -42,6 +42,8 @@ class PublishedEcoFlowTests(unittest.TestCase):
                                      datetime(2026, 11, 2, 10, 0, tzinfo=timezone.utc), bindings={})
         self.assertEqual(len(doc["devices"]), 4)
         self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 73)
+        self.assertEqual(doc["devices"]["dacha:dp3"]["runtimeMinutes"], 612)
+        self.assertEqual(doc["devices"]["unassigned:delta2-1"]["runtimeMinutes"], 111)
         self.assertEqual(doc["devices"]["unassigned:delta2-3"]["socPercent"], 0)
         self.assertEqual(doc["availability"]["dacha:d2"], "unassigned")
         self.assertEqual(doc["availability"]["dacha:d3p"], "unsupported")
