@@ -344,7 +344,7 @@
       const roleLabel = role;
       return '<div class="eco-system-part charge-' + level(d.pct) + '">' +
         '<div class="eco-system-part-top"><span class="eco-system-part-label">' + roleLabel + '</span>' +
-        '<strong class="eco-system-percent">' + pctLabel(d.pct) + '</strong></div>' +
+        '<strong class="eco-system-percent">' + (d.estimated ? '≈ ' : '') + pctLabel(d.pct) + '</strong></div>' +
         (role === 'Додаткова' && main.id === 'dp3'
           ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
         operationBadge(d) +
