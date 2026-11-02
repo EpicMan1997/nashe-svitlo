@@ -147,15 +147,17 @@ def check_payload(payload, season, config, site, now):
         for key, reading in readings.items():
             require(isinstance(reading, dict), 'Malformed EcoFlow public reading')
             require(set(reading).issubset({'updatedAt', 'socPercent', 'inputW',
-                                           'outputW', 'operation', 'estimated'}),
+                                           'outputW', 'runtimeMinutes', 'operation', 'estimated'}),
                     'Sensitive or unapproved EcoFlow field published')
             require('estimated' not in reading or type(reading['estimated']) is bool,
                     'Invalid estimated battery SOC flag')
-            for field, upper in (('socPercent', 100), ('inputW', 20000), ('outputW', 20000)):
+            for field, upper in (('socPercent', 100), ('inputW', 20000), ('outputW', 20000),
+                                 ('runtimeMinutes', 10080)):
                 value = reading.get(field)
                 if value is not None:
                     require(type(value) in (int, float) and math.isfinite(value)
-                            and 0 <= value <= upper, 'Incorrect EcoFlow reading ' + field)
+                            and (1 if field == 'runtimeMinutes' else 0) <= value <= upper,
+                            'Incorrect EcoFlow reading ' + field)
         require(isinstance(snap.get('unassigned'), list) and
                 set(snap['unassigned']).issubset({
                     'unassigned:delta2-1','unassigned:delta2-2','unassigned:delta2-3'}),
