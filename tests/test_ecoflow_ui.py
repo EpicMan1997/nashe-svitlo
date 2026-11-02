@@ -56,8 +56,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("new CustomEvent('svitlo:location-change'", HTML)
         self.assertNotIn('href="#ecoflow"', HTML)
         self.assertIn('<section class="eco-shell"', HTML)
-        self.assertIn('"./ecoflow.css?v=54"', SW)
-        self.assertIn('"./ecoflow.js?v=54"', SW)
+        self.assertIn('"./ecoflow.css?v=55"', SW)
+        self.assertIn('"./ecoflow.js?v=55"', SW)
 
 
     def test_device_section_first_and_header_rearranged(self):
@@ -284,6 +284,9 @@ class EcoFlowPreviewContract(unittest.TestCase):
         for classname in ("charging", "discharging", "holding", "unknown"):
             self.assertIn(".eco-operation-" + classname, CSS)
         self.assertIn(".eco-system-part .eco-operation", CSS)
+        self.assertIn(".eco-system-total > span:not(.eco-operation)", CSS)
+        self.assertIn(".eco-system-total > .eco-operation-discharging{color:#fecaca", CSS)
+        self.assertNotIn(".eco-system-total span{color:var(--charge)", CSS)
 
     def test_reserve_presets_replaced_charge_limit(self):
         self.assertIn("const reservePresets = [0, 5, 20, 50, 80, 100]", JS)
@@ -347,10 +350,10 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('eco-title-monogram', HTML)
         self.assertIn('<path d="M14 20H26" stroke="currentColor"', HTML)
         self.assertNotIn('stroke="#67E8F9"', HTML)
-        self.assertIn('href="./ecoflow.css?v=54"', HTML)
-        self.assertIn('src="./ecoflow.js?v=54"', HTML)
+        self.assertIn('href="./ecoflow.css?v=55"', HTML)
+        self.assertIn('src="./ecoflow.js?v=55"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v54', SW)
+        self.assertIn('nashe-svitlo-static-v55', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)

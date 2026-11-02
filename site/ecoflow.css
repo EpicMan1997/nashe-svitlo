@@ -481,7 +481,7 @@ main > nav.tabs > button[data-tab="tomorrow"]{justify-self:end;margin:0}
 .eco-system-tag{border:1px solid #536e8b;border-radius:8px;background:#30455d;color:#b7d7f2;padding:5px 9px;font-size:11px;font-weight:700}
 .eco-system-total{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .eco-system-total strong{font-size:17px;font-weight:850;color:#f8fafc;white-space:nowrap}
-.eco-system-total span{color:var(--charge);font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.eco-system-total > span:not(.eco-operation){color:var(--charge);font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
 .eco-system-parts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border:1px solid #405877;border-radius:12px;overflow:hidden;background:#21354d}
 .eco-system-part{--charge:#22c55e;min-width:0;padding:18px 16px 16px;display:flex;flex-direction:column}
 .eco-system-part + .eco-system-part{border-left:1px solid #547290;background:#1a2e46}
@@ -2124,6 +2124,10 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
 /* SOC stays independently color-coded. Discharge is red; autonomy uses confirmed outage duration. */
 .eco-operation-discharging{--operation-border:#c53030;--operation-bg:#54232a;--operation-text:#fecaca}
 .eco-operation-discharging .eco-operation-icon{color:#fecaca!important}
+/* Keep operating-status text independent of the green battery SOC. */
+.eco-system-total > .eco-operation{color:var(--operation-text,#dbeafe)}
+.eco-system-total > .eco-operation-discharging{color:#fecaca;border-color:#c53030;background:#54232a}
+.eco-system-total > .eco-operation .eco-operation-icon{color:inherit!important}
 .eco-common-stats .eco-autonomy,.eco-ocean-autonomy{background:#29374a;color:#cbd5e1}
 .eco-common-stats .eco-autonomy strong,.eco-ocean-autonomy strong{color:inherit}
 .eco-autonomy-safe{background:#163d34!important;color:#a7f3d0!important}
