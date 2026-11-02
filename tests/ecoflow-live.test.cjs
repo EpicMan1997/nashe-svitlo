@@ -18,7 +18,7 @@ function fixture() {
     close() {}
   }
   const window = {
-    location: { href: 'https://epicman1997.github.io/nashe-svitlo/' },
+    location: { href: 'https://epicman1997.github.io/nashe-svitlo/', origin:'https://epicman1997.github.io' },
     document: { addEventListener() {}, visibilityState: 'visible' }
   };
   const context = {
@@ -99,7 +99,33 @@ test('empty or malformed frames never invent a charge', async () => {
 test('no secret or serial number appears in the public device contract', async () => {
   const f = fixture();
   for (const key of f.api.deviceKeys) {
-    assert.match(key, /^(dacha|home|solovky|naumenky):[a-z0-9]+$/);
+    assert.match(key, /^(dacha|home|solovky|naumenky|unassigned):[a-z0-9-]+$/);
   }
-  assert.equal(f.api.deviceKeys.length, 10);
+  assert.equal(f.api.deviceKeys.length, 13);
+});
+
+test('scheduled EcoFlow snapshot is never called live and expires after 25 min', async () => {
+  const f = fixture();
+  f.configure({ enabled: true, mode: 'published', snapshotUrl: './ecoflow-snapshot.json', streamUrl: '' });
+  await f.api.start();
+  assert.equal(f.socket.length, 0);
+  const at = new Date(f.now() - 10 * 60000).toISOString();
+  const read = f.api.acceptFrame({
+    version: 1, mode: 'scheduled', emittedAt: at,
+    availability: { 'dacha:d3p': 'unsupported', 'dacha:d2': 'unassigned' },
+    unassigned: ['unassigned:delta2-1'],
+    devices: {
+      'dacha:dp3': { updatedAt: at, socPercent: 45, inputW: 0, outputW: 150 },
+      'unassigned:delta2-1': { updatedAt: at, socPercent: 80, inputW: 90, outputW: 0 }
+    }
+  });
+  assert.equal(read, true);
+  assert.equal(f.api.summary().status, 'published');
+  assert.equal(f.api.statusFor('dacha:dp3'), 'published');
+  assert.equal(f.api.availabilityFor('dacha:d3p'), 'unsupported');
+  assert.equal(f.api.reading('unassigned:delta2-1').socPercent, 80);
+  assert.equal(f.api.reading('dacha:d2'), null);
+  f.advance(16 * 60000);
+  assert.equal(f.api.reading('dacha:dp3'), null);
+  assert.equal(f.api.statusFor('dacha:dp3'), 'stale');
 });
