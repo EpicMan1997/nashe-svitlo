@@ -152,3 +152,33 @@ test('opened battery metric details are recalculated in place on new readings', 
   assert.doesNotMatch(detail.innerHTML, /74%/);
   assert.doesNotMatch(detail.innerHTML, /NaN|undefined|null/);
 });
+
+test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassigned DELTA 2', () => {
+  const map = {
+    'dacha:dp3': { socPercent: 62, inputW: 0, outputW: 224, operation: 'discharging' },
+    'unassigned:delta2-1': { socPercent: 23, inputW: 120, outputW: 0, operation: 'charging' },
+    'unassigned:delta2-2': { socPercent: 52, inputW: 0, outputW: 52, operation: 'discharging' },
+    'unassigned:delta2-3': { socPercent: 0, inputW: 0, outputW: 0, operation: 'holding' }
+  };
+  const live = {
+    summary: () => ({ status: 'published', lastFrameMs: Date.now(),
+      unassigned: ['unassigned:delta2-1', 'unassigned:delta2-2', 'unassigned:delta2-3'] }),
+    reading: key => map[key] ?? null,
+    statusFor: key => map[key] ? 'published' : 'waiting',
+    availabilityFor: key => key === 'dacha:d2' ? 'unassigned' : 'unsupported',
+    subscribe() {}, start() {}
+  };
+  const m = mount(live);
+  assert.match(m.get('eco-status').innerHTML, /API · 1\/5/);
+  assert.match(m.get('eco-devices').innerHTML, /62%/);
+  assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
+  assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
+  assert.match(m.get('eco-devices').innerHTML, /Локації не підтверджено/);
+  assert.match(m.get('eco-devices').innerHTML, /DELTA 2 №3/);
+  assert.match(m.get('eco-devices').innerHTML, /Заряд <b>0%<\/b>/);
+  assert.equal(m.get('eco-demo-total').textContent, '—');
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
+  assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
+  assert.equal(m.get('eco-demo-total').textContent, '—');
+});
