@@ -47,7 +47,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("function powerOceanView(d)", JS)
         self.assertIn("powerOceanAdmin(d)", JS)
         self.assertIn("const packs = physicalDevices(place.devices)", JS)
-        self.assertIn("systems.reduce((v, d) => v + d.capacityWh * d.pct, 0)", JS)
+        self.assertIn("knownSystems.reduce((sum,d)=>sum+d.capacityWh*d.pct,0)", JS)
         self.assertIn('id="eco-location-charge-track"', HTML)
         self.assertNotIn('id="eco-capacity-strip"', HTML)
 
@@ -205,7 +205,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("device.capacityWh / device.batteryCount", JS)
         self.assertIn("const packs = physicalDevices(place.devices)", JS)
         self.assertIn("const totalWh = systems.reduce", JS)
-        self.assertIn("d.capacityWh * d.pct", JS)
+        self.assertIn("d.capacityWh*d.pct", JS)
         self.assertNotIn("flex-grow:' + system.wh", JS)
 
     def test_admin_shared_actions_and_independent_targets(self):
@@ -769,7 +769,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
 
     def test_average_charge_uses_percent_contributions_and_real_energy_units(self):
         self.assertIn("Внесок станцій у середній заряд", JS)
-        self.assertIn("const chargeContribution = device => total && Number.isFinite(device.pct)", JS)
+        self.assertIn("const chargeContribution = device => knownWh && Number.isFinite(device.pct)", JS)
         self.assertIn("const storedEnergyWh = device => Number.isFinite(device.pct)", JS)
         self.assertIn("const savedEnergy = storedEnergyWh(device);", JS)
         self.assertIn("eco-detail-contribution", JS)
