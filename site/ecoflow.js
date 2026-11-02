@@ -341,7 +341,7 @@
       Math.round((main.capacityWh * main.pct + addon.capacityWh * addon.pct) / capacityWh) : null;
     const batteryPart = (d, role) => {
       const name = role === 'Основна' ? 'основної станції' : 'додаткової батареї';
-      const roleLabel = liveMode && main.id === 'dp3' && role === 'Основна' ? 'Заряд системи' : role;
+      const roleLabel = role;
       return '<div class="eco-system-part charge-' + level(d.pct) + '">' +
         '<div class="eco-system-part-top"><span class="eco-system-part-label">' + roleLabel + '</span>' +
         '<strong class="eco-system-percent">' + pctLabel(d.pct) + '</strong></div>' +
