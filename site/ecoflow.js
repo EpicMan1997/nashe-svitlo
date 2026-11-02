@@ -349,6 +349,7 @@
           ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
         operationBadge(d) +
         chargeTrack(d.pct, name) +
+        (d.estimated ? '<small class="eco-estimated-soc">Оцінка за загальним зарядом системи, не окремий показник API</small>' : '') +
         '<span class="eco-system-part-cap">' + niceWh(d.capacityWh) + '</span>' + availabilityNote(d) +
         '</div>';
     };
