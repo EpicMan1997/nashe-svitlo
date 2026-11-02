@@ -309,13 +309,14 @@
       '<div class="eco-capacity-line"><strong>' + capacity + '</strong></div>' +
       energyStats(d, d.capacityWh, d.pct) +
       solarDisclosure(d) +
+      availabilityNote(d) +
       adminControls(d) +
       '</article>';
   }
 
   function powerOceanView(d) {
     const cap = niceWh(d.capacityWh);
-    return '<article class="eco-powerocean charge-' + level(d.pct) + '" aria-label="PowerOcean, домашня система, заряд ' + pctLabel(d.pct) + '">' +
+    return '<article class="eco-powerocean charge-' + level(d.pct) + (liveMode && !Number.isFinite(d.pct) ? ' eco-api-unavailable' : '') + '" aria-label="PowerOcean, домашня система, заряд ' + pctLabel(d.pct) + '">' +
       '<div class="eco-ocean-top"><div><span class="eco-ocean-overline">Домашня енергосистема</span>' +
       '<h3>PowerOcean</h3><span class="eco-ocean-cap">' + d.batteryCount + ' акумулятори · ' + cap + ' · інвертор ' + uk.format(d.inverterKw * 1000) + ' W' +
       '</span></div>' + operationBadge(d) + '</div>' +
@@ -327,6 +328,7 @@
       wattsLabel(d.outputW) + '</strong></div></div></div>' +
       '<div class="eco-ocean-autonomy"><span>Орієнтовна автономність</span><strong>' +
       formatAutonomy(d.capacityWh, d.pct, d.outputW) + '</strong></div>' +
+      availabilityNote(d) +
       powerOceanAdmin(d) + '</article>';
   }
 
@@ -343,10 +345,11 @@
           ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
         operationBadge(d) +
         chargeTrack(d.pct, name) +
-        '<span class="eco-system-part-cap">' + niceWh(d.capacityWh) + '</span>' +
+        '<span class="eco-system-part-cap">' + niceWh(d.capacityWh) + '</span>' + availabilityNote(d) +
         '</div>';
     };
     return '<article class="eco-system eco-system-paired charge-' + level(weighted) +
+      (liveMode && !Number.isFinite(main.pct) && !Number.isFinite(addon.pct) ? ' eco-api-unavailable' : '') +
       '" aria-label="' + main.name + ' із додатковою батареєю, загалом ' + niceWh(capacityWh) + '">' +
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
       '</strong><span class="eco-system-tag">' + (main.id === 'dp3' ? '+ Smart Extra Battery' : '+ додаткова батарея') + '</span></div>' +
@@ -875,7 +878,8 @@
       overallTrack.setAttribute('aria-valuenow', String(weighted));
       overallTrack.setAttribute('aria-valuetext', weighted + ' відсотків');
     }
-    $('eco-devices').innerHTML = place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>';
+    $('eco-devices').innerHTML = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>') +
+      (id === 'dacha' ? unassignedSection() : '');
     renderSolar(place);
     renderBulkPanel();
     if (id === 'dacha') renderGeneratorPlanner();
