@@ -17,4 +17,4 @@ jobs:
         env:
           ECOFLOW_ACCESS_KEY: ${{ secrets.ECOFLOW_ACCESS_KEY }}
           ECOFLOW_SECRET_KEY: ${{ secrets.ECOFLOW_SECRET_KEY }}
-        run: python scripts/ecoflow_model_audit.py
+        run: python scripts/ecoflow_probe.py
