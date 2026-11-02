@@ -776,7 +776,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("niceWh(Math.round(savedEnergy))", JS)
         self.assertIn("fmtPercent(contribution)) + '</strong>'", JS)
         self.assertIn("fmtPercent(contribution) + ' загального заряду", JS)
-        self.assertIn("Заряд ' + (device.estimated ? '≈ ' : '') + pctLabel(device.pct)", JS)
+        self.assertIn("'<small>Заряд ' + pctLabel(device.pct)", JS)
         self.assertIn("Внески в середній заряд</span>", JS)
         self.assertIn("devices.map(device => fmtPercent(chargeContribution(device)))", JS)
         self.assertNotIn("в.п.", JS)
