@@ -68,6 +68,7 @@
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
           operation: value?.operation || 'unknown',
+          estimated: value?.estimated === true,
           availability: live.availabilityFor?.(key + ':' + device.id) || 'unavailable',
           // Unknown module SOC is never invented from a primary BMS value.
           modulePercentages: device.type === 'system' ? (value?.moduleSocPercent ?? []) : undefined
