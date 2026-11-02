@@ -199,6 +199,8 @@ test('expanded batteries have one rounded provider SOC and clearly doubled capac
   let markup = m.get('eco-devices').innerHTML;
   assert.match(markup, /Заряд усієї системи/);
   assert.match(markup, /90,4%/);
+  assert.match(markup, /class="eco-operation eco-operation-discharging"/);
+  assert.match(markup, /Розряджається/);
   assert.match(markup, /8[\s\u00a0\u202f]192 Wh/);
   assert.match(markup, /4[\s\u00a0\u202f]096 Wh/);
   assert.equal((markup.match(/class="eco-system-combined-percent"/g) || []).length, 1);
@@ -206,6 +208,7 @@ test('expanded batteries have one rounded provider SOC and clearly doubled capac
   m.events['svitlo:location-change']({detail:{id:'solovky'}});
   markup = m.get('eco-devices').innerHTML;
   assert.match(markup, /80,5%/);
+  assert.match(markup, /class="eco-operation eco-operation-discharging"/);
   assert.match(markup, /2[\s\u00a0\u202f]048 Wh/);
   assert.match(markup, /1[\s\u00a0\u202f]024 Wh/);
   assert.equal((markup.match(/class="eco-system-combined-percent"/g) || []).length, 1);

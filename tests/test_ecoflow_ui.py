@@ -278,6 +278,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("holding: { label: 'Підтримує заряд'", JS)
         self.assertIn("unknown: { label: 'Статус невідомий'", JS)
         self.assertIn("function operationBadge(device)", JS)
+        system_view = JS.split("function systemView(main, addon) {", 1)[1].split("function renderDeviceGrid(devices) {", 1)[0]
+        self.assertIn("operationBadge(main)", system_view)
         self.assertIn("operationBadge(d)", JS)
         for classname in ("charging", "discharging", "holding", "unknown"):
             self.assertIn(".eco-operation-" + classname, CSS)

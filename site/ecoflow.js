@@ -362,7 +362,7 @@
       ', загальний заряд ' + pctLabel(soc) + '">' +
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
       '</strong><span class="eco-system-tag">+ ' + label + '</span></div>' +
-      '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong></div></div>' +
+      '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' + operationBadge(main) + '</div></div>' +
       '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
       '<span>Заряд усієї системи</span><strong class="eco-system-combined-percent">' +
       pctLabel(soc) + '</strong></div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
