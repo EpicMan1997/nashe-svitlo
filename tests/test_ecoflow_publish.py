@@ -39,7 +39,7 @@ class PublishedEcoFlowTests(unittest.TestCase):
     def test_snapshot_is_sanitized_and_never_maps_unknown_delta2_location(self):
         with patch.object(pub, "request_api", self.mock_api):
             doc = pub.build_snapshot("ACCESS-PRIVATE", "SECRET-PRIVATE",
-                                     datetime(2026, 11, 2, 10, 0, tzinfo=timezone.utc))
+                                     datetime(2026, 11, 2, 10, 0, tzinfo=timezone.utc), bindings={})
         self.assertEqual(len(doc["devices"]), 4)
         self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 73)
         self.assertEqual(doc["devices"]["unassigned:delta2-3"]["socPercent"], 0)
@@ -61,15 +61,55 @@ class PublishedEcoFlowTests(unittest.TestCase):
                 return {"cmsBattSoc": -30, "powInSumW": None}
             raise pub.ProbeError("1006")
         with patch.object(pub, "request_api", api):
-            doc = pub.build_snapshot("A", "B")
+            doc = pub.build_snapshot("A", "B", bindings={})
         self.assertEqual(doc["devices"], {})
         self.assertEqual(doc["availability"]["dacha:dp3"], "unavailable")
         self.assertEqual(len(doc["unassigned"]), 3)
 
+    def test_verified_location_bindings_and_expansion_battery_soc(self):
+        secret = "TEST_SECRET_ONLY"
+        stable = {key: pub.fingerprint(serial, secret) for key, serial in (
+            ("dacha:d2", "PRIVATE-D2-3"),
+            ("solovky:d2", "PRIVATE-D2-1"),
+            ("naumenky:d2", "PRIVATE-D2-2"),
+        )}
+        def api(path, access, secret_key, query=None):
+            if path == pub.DEVICE_LIST:
+                return list(reversed(self.DEVICES))
+            if path == pub.DEVICE_QUOTA:
+                sn = query["sn"]
+                if sn == "PRIVATE-DP3":
+                    return {"cmsBattSoc": 89.3, "bmsBattSoc": 90.4,
+                            "cmsBattFullEnergy": 8192, "powInSumW": 0, "powOutSumW": 172}
+                if sn.startswith("PRIVATE-D2"):
+                    soc = {"PRIVATE-D2-1": 80, "PRIVATE-D2-2": 91, "PRIVATE-D2-3": 98}[sn]
+                    return {"pd.soc": soc, "bms_bmsStatus.soc": soc,
+                            "bms_slave.soc": {"PRIVATE-D2-1": 80,
+                                              "PRIVATE-D2-2": 46,
+                                              "PRIVATE-D2-3": None}[sn],
+                            "pd.wattsInSum": 0, "pd.wattsOutSum": 100}
+            raise pub.ProbeError("1006")
+        with patch.object(pub, "request_api", api):
+            doc = pub.build_snapshot("ACCESS", secret, bindings=stable)
+        self.assertEqual(doc["unassigned"], [])
+        self.assertEqual(doc["devices"]["dacha:d2"]["socPercent"], 98)
+        self.assertEqual(doc["devices"]["solovky:d2"]["socPercent"], 80)
+        self.assertEqual(doc["devices"]["solovky:d2eb"]["socPercent"], 80)
+        self.assertEqual(doc["devices"]["naumenky:d2"]["socPercent"], 91)
+        self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 90.4)
+        self.assertEqual(doc["devices"]["dacha:dp3eb"]["socPercent"], 88.2)
+        self.assertTrue(doc["devices"]["dacha:dp3eb"]["estimated"])
+        self.assertNotIn("naumenky:d2eb", doc["devices"])
+        for key in ("dacha:d2", "solovky:d2", "solovky:d2eb",
+                    "naumenky:d2", "dacha:dp3", "dacha:dp3eb"):
+            self.assertEqual(doc["availability"][key], "readable")
+        self.assertNotIn("PRIVATE", json.dumps(doc))
+        self.assertNotIn(secret, json.dumps(doc))
+
     def test_ambiguous_delta_pro_3_serial_never_claims_location(self):
         devices = [self.DEVICES[1], {"sn": "OTHER-DP3", "deviceName": "DELTA Pro 3"}]
         with patch.object(pub, "request_api", return_value=devices):
-            doc = pub.build_snapshot("A", "B")
+            doc = pub.build_snapshot("A", "B", bindings={})
         self.assertNotIn("dacha:dp3", doc["devices"])
 
 
