@@ -2081,3 +2081,42 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
 
 .eco-status.is-published{color:#bfe3ff;border-color:#4885b5;background:#203c58}
 .eco-status.is-published i{background:#61b5ff;box-shadow:0 0 0 3px #61b5ff29}
+
+/* One system SOC, two visible battery capacities. Expanded systems are deliberately
+   visually distinct from the single-pack DELTA 2 tile. */
+.eco-system-combined{border-color:#597894;background:#1c3149}
+.eco-system-combined-charge{
+  border:1px solid #486582;background:#223b56;border-radius:13px;
+  padding:16px 18px 14px;min-width:0;
+}
+.eco-system-combined-heading{
+  display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  flex-wrap:wrap;color:#c7dbef;font-size:14px;font-weight:700
+}
+.eco-system-combined-percent{
+  color:var(--charge);font-size:clamp(28px,4vw,42px);font-weight:850;
+  line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap
+}
+.eco-system-combined-charge .eco-charge-track{margin:13px 0 0}
+.eco-system-modules{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+  margin:12px 0 14px
+}
+.eco-system-module{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-width:0;border:1px solid #4a6784;border-radius:11px;
+  padding:11px 14px;background:#1e3249
+}
+.eco-system-module::before{
+  content:'';width:9px;height:17px;flex:none;
+  border:2px solid #85a5bf;border-radius:3px;box-sizing:border-box
+}
+.eco-system-module span{flex:1;min-width:0;color:#b7cde4;font-size:12px;font-weight:700}
+.eco-system-module strong{font-size:14px;color:#eaf5ff;font-weight:800;white-space:nowrap}
+.eco-system-combined.eco-api-unavailable .eco-system-combined-percent{color:#aab6c6}
+@media(max-width:560px){
+  .eco-system-combined-charge{padding:12px}
+  .eco-system-modules{grid-template-columns:1fr;gap:7px}
+  .eco-system-module{padding:9px 11px}
+  .eco-system-combined-heading{font-size:12px}
+}
