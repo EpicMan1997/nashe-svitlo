@@ -51,6 +51,7 @@
       inputW: number(raw.inputW, 0, 20000),
       outputW: number(raw.outputW, 0, 20000),
       operation: VALID_OPERATIONS.has(raw.operation) ? raw.operation : 'unknown',
+      estimated: raw.estimated === true,
       moduleSocPercent: null
     };
     if (Array.isArray(raw.moduleSocPercent) && raw.moduleSocPercent.length <= 10) {
