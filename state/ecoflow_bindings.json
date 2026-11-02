@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "type": "hmac-sha256",
+  "devices": {
+    "dacha:d2": "aa358ffa99bc686ecd078e4e811065adf0803526dd13e66dad24f9004eeddf30",
+    "solovky:d2": "d24c12954582cbdf8ccb5620662ea2967a0c7be83b0d2cd0364ec4d8adebfe16",
+    "naumenky:d2": "0bef920a44996b365ef81e3d6bd38c7c4e37a2e089e8abf41a6af218222d4013"
+  }
+}
