@@ -874,7 +874,7 @@
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
     // One bar represents the capacity-weighted average charge across physical batteries.
     const overallTrack = $('eco-location-charge-track');
-    $('eco-location-charge-value').textContent = weighted === null ? '—' : weighted + '%';
+    $('eco-location-charge-value').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     overallTrack.dataset.level = weighted === null ? 'unknown' : level(weighted);
     $('eco-location-charge-fill').style.width = weighted === null ? '0%' : weighted + '%';
     if (weighted === null) {
