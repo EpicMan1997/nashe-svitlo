@@ -2120,3 +2120,31 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
   .eco-system-module{padding:9px 11px}
   .eco-system-combined-heading{font-size:12px}
 }
+
+/* SOC stays independently color-coded. Discharge is red; autonomy uses confirmed outage duration. */
+.eco-operation-discharging{--operation-border:#c53030;--operation-bg:#54232a;--operation-text:#fecaca}
+.eco-operation-discharging .eco-operation-icon{color:#fecaca!important}
+.eco-common-stats .eco-autonomy,.eco-ocean-autonomy{background:#29374a;color:#cbd5e1}
+.eco-common-stats .eco-autonomy strong,.eco-ocean-autonomy strong{color:inherit}
+.eco-autonomy-safe{background:#163d34!important;color:#a7f3d0!important}
+.eco-autonomy-warning{background:#483917!important;color:#fde68a!important}
+.eco-autonomy-danger{background:#4a212a!important;color:#fecaca!important}
+.eco-autonomy-unknown{background:#29374a!important;color:#cbd5e1!important}
+.eco-autonomy small,.eco-ocean-autonomy small{display:block;margin-top:6px;font:500 11px/1.4 system-ui;opacity:.85}
+.eco-power-reading{display:inline-block;font-variant-numeric:tabular-nums}
+.eco-power-changed{animation:eco-watts-flash .55s ease-out}
+@keyframes eco-watts-flash{0%{filter:brightness(2);transform:translateY(-2px)}100%{filter:brightness(1);transform:none}}
+@media(prefers-reduced-motion:reduce){.eco-power-changed{animation:none}}
+.eco-pending{grid-column:1/-1;border:1px solid #485a71;border-radius:13px;background:#1b293b;overflow:hidden;min-width:0}
+.eco-pending>summary{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 17px;cursor:pointer;list-style:none}
+.eco-pending>summary::-webkit-details-marker{display:none}
+.eco-pending>summary strong{color:#dce6f2;font-size:15px}
+.eco-pending>summary small{display:block;color:#b3c2d5;font-size:12px;margin-top:4px}
+.eco-pending-chevron{font-size:23px;color:#b3c8de;transition:transform .18s}
+.eco-pending[open] .eco-pending-chevron{transform:rotate(180deg)}
+.eco-pending-list{padding:0 12px 12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:9px}
+.eco-pending-device{padding:12px 13px;border:1px solid #52647b;border-radius:10px;background:#243147;display:flex;flex-direction:column;gap:5px}
+.eco-pending-device strong{font-size:14px;color:#e2e8f0}
+.eco-pending-device span{font-size:12px;font-weight:750;color:#bed1e7}
+.eco-pending-device small{font-size:11px;color:#a8b5c7}
+.eco-data-coverage{font-size:12px;color:#b4c4da;margin:9px 0 0;line-height:1.4}

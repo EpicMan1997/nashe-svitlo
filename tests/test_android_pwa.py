@@ -30,7 +30,7 @@ class AndroidPwaTests(unittest.TestCase):
         worker = (SITE / 'sw.js').read_text(encoding='utf-8')
         self.assertIn('<link rel="manifest" href="./manifest.webmanifest">', html)
         self.assertIn("navigator.serviceWorker.register('./sw.js'", html)
-        self.assertIn('nashe-svitlo-static-v53', worker)
+        self.assertIn('nashe-svitlo-static-v54', worker)
         self.assertIn('"./pwa-icon-192.svg"', worker)
         self.assertIn('"./pwa-icon-512.svg"', worker)
         self.assertNotIn('svitlo-dubechnya', html)

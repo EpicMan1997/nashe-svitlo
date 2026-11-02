@@ -50,6 +50,20 @@
   const fmtSoc = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
   const pctLabel = value => Number.isFinite(value) ? fmtSoc.format(value) + '%' : '—';
   const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
+  // Small loads can report 0 W; infer discharge only after an observed SOC decline.
+  const socBaseline = new Map();
+  function operationFromReading(key, value) {
+    if (!value) return {state:'unknown', inferred:false};
+    const state = value.operation || 'unknown', at = value.updatedMs || Date.parse(value.updatedAt || '') || Date.now();
+    const soc = value.socPercent, prev = socBaseline.get(key);
+    if (!Number.isFinite(soc)) return {state, inferred:false};
+    const idleWatts = value.inputW === 0 && value.outputW === 0;
+    const falling = idleWatts && prev && at > prev.at + 300000 && at - prev.at <= 10800000 && prev.soc - soc >= 0.5;
+    if (!prev || at > prev.at && (soc > prev.soc || !idleWatts || at-prev.at>10800000))
+      socBaseline.set(key, {soc,at});
+    return falling && ['holding','unknown'].includes(state)
+      ? {state:'discharging', inferred:true} : {state,inferred:false};
+  }
   function applyReadings() {
     const state = live?.summary()?.status || 'preview';
     liveMode = state !== 'preview';
@@ -60,6 +74,7 @@
     inventory = Object.fromEntries(Object.entries(demoInventory).map(([key, place]) => [
       key, { ...place, devices: place.devices.map(device => {
         const value = live.reading(key + ':' + device.id);
+        const flow = operationFromReading(key + ':' + device.id, value);
         return {
           ...device,
           pct: value?.socPercent ?? (device.type === 'system' &&
@@ -67,7 +82,8 @@
             value.moduleSocPercent.reduce((sum, p) => sum + p, 0) / device.batteryCount : null),
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
-          operation: value?.operation || 'unknown',
+          operation: flow.state,
+          inferredOperation: flow.inferred,
           estimated: value?.estimated === true,
           availability: live.availabilityFor?.(key + ':' + device.id) || 'unavailable',
           // Unknown module SOC is never invented from a primary BMS value.
@@ -178,7 +194,8 @@
     const status = Object.prototype.hasOwnProperty.call(operationMeta, device.operation)
       ? device.operation : 'unknown';
     const { label, sign } = operationMeta[status];
-    return '<span class="eco-operation eco-operation-' + status + '">' +
+    return '<span class="eco-operation eco-operation-' + status + '"' +
+      (device.inferredOperation ? ' title="Розряджання визначено за зменшенням заряду"' : '') + '>' +
       '<span class="eco-operation-icon" aria-hidden="true">' + sign + '</span>' +
       label + '</span>';
   }
@@ -192,6 +209,26 @@
     return (hours ? hours + ' год' : '') + (mins ? (hours ? ' ' : '') + mins + ' хв' : '');
   }
 
+  // Uses the confirmed outage schedule of the selected location, never assumes 3 hours.
+  function autonomyComparison(capacityWh, pct, outputW) {
+    const outage = window.NasheSvitloOutageContext?.(activeEcoLocation);
+    const runtime = Number.isFinite(outputW) && outputW > 0 && Number.isFinite(pct)
+      ? capacityWh * pct / 100 * 0.85 / outputW * 60 : null;
+    if (!outage || !Number.isFinite(outage.minutes) || outage.minutes <= 0 || runtime === null)
+      return {color:'unknown',hint:'Немає підтвердженої тривалості відключення'};
+    const m = Math.ceil(outage.minutes);
+    return {color:runtime < outage.minutes ? 'danger' : runtime < outage.minutes*1.25 ? 'warning' : 'safe',
+      hint:(outage.current ? 'До відновлення: ' : 'Наступне відключення: ') +
+        Math.floor(m/60) + ' год' + (m%60?' '+m%60+' хв':'') + ' за графіком'};
+  }
+  const powerSeen = new Map();
+  function powerReading(d,kind) {
+    const value = kind==='in'?d.inputW:d.outputW;
+    const key=activeEcoLocation+':'+d.id+':'+kind,old=powerSeen.get(key);
+    const changed=liveMode && Number.isFinite(value) && Number.isFinite(old) && value!==old;
+    powerSeen.set(key,value);
+    return '<strong class="eco-power-reading' + (changed?' eco-power-changed':'') + '">' + wattsLabel(value) + '</strong>';
+  }
   function chargeTrack(pct, name) {
     return '<div class="eco-charge-track" role="progressbar" aria-label="Заряд ' + name +
       '" aria-valuemin="0" aria-valuemax="100"' +
@@ -201,11 +238,11 @@
 
   function energyStats(d, capWh, pct) {
     const output = d.outputW;
-    const autonomy = formatAutonomy(capWh, pct, output);
+    const autonomy = formatAutonomy(capWh, pct, output), compare=autonomyComparison(capWh,pct,output);
     return '<div class="eco-device-stats eco-common-stats">' +
-      '<div class="eco-device-stat"><span>Вхід</span><strong>' + wattsLabel(d.inputW) + '</strong></div>' +
-      '<div class="eco-device-stat"><span>Вихід</span><strong>' + wattsLabel(output) + '</strong></div>' +
-      '<div class="eco-device-stat eco-autonomy"><span>Автономність</span><strong>' + autonomy + '</strong></div>' +
+      '<div class="eco-device-stat"><span>Вхід</span>' + powerReading(d,'in') + '</div>' +
+      '<div class="eco-device-stat"><span>Вихід</span>' + powerReading(d,'out') + '</div>' +
+      '<div class="eco-device-stat eco-autonomy eco-autonomy-' + compare.color + '"><span>Автономність</span><strong>' + autonomy + '</strong><small>' + compare.hint + '</small></div>' +
       '</div>';
   }
 
@@ -342,11 +379,11 @@
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
       '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) + '</span></div>' +
       chargeTrack(d.pct, d.name) + '<span>' + cap + '</span></div>' +
-      '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span><strong>' + wattsLabel(d.inputW) + '</strong></div>' +
-      '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span><strong>' +
-      wattsLabel(d.outputW) + '</strong></div></div></div>' +
-      '<div class="eco-ocean-autonomy"><span>Орієнтовна автономність</span><strong>' +
-      formatAutonomy(d.capacityWh, d.pct, d.outputW) + '</strong></div>' +
+      '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span>' + powerReading(d,'in') + '</div>' +
+      '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span>' +
+      powerReading(d,'out') + '</div></div></div>' +
+      '<div class="eco-ocean-autonomy eco-autonomy-' + autonomyComparison(d.capacityWh,d.pct,d.outputW).color + '"><span>Орієнтовна автономність</span><strong>' +
+      formatAutonomy(d.capacityWh, d.pct, d.outputW) + '</strong><small>' + autonomyComparison(d.capacityWh,d.pct,d.outputW).hint + '</small></div>' +
       availabilityNote(d) +
       powerOceanAdmin(d) + '</article>';
   }
@@ -379,15 +416,28 @@
       '</article>';
   }
 
-  // Each primary station and its expansion battery form ONE visual system.
+  // Keep total capacity accurate while putting unsupported stations in one disclosure.
+  const pendingExpanded = new Set();
   function renderDeviceGrid(devices) {
     const addons = new Map(devices.filter(d => d.type === 'battery' && d.parentId).map(d => [d.parentId, d]));
     const ids = new Set(devices.map(d => d.id));
-    return devices.map(d => {
-      if (d.type === 'battery' && d.parentId && ids.has(d.parentId)) return '';
-      const addon = addons.get(d.id);
-      return addon ? systemView(d, addon) : d.type === 'system' ? powerOceanView(d) : deviceView(d);
-    }).join('');
+    const active=[], pending=[];
+    for (const d of devices) {
+      if (d.type==='battery' && d.parentId && ids.has(d.parentId)) continue;
+      const addon=addons.get(d.id);
+      if (liveMode && !Number.isFinite(d.pct)) {
+        pending.push('<div class="eco-pending-device eco-api-unavailable"><strong>' + textEscape(d.name) +
+          '</strong><span>' + niceWh(d.capacityWh+(addon?.capacityWh||0)) + '</span><small>' +
+          (d.availability==='unsupported'?'EcoFlow API повертає 1006':'Очікуємо даних') +
+          ' · Підключення в процесі</small></div>');
+      } else active.push(addon?systemView(d,addon):d.type==='system'?powerOceanView(d):deviceView(d));
+    }
+    return active.join('') + (pending.length ?
+      '<details class="eco-pending"' + (pendingExpanded.has(activeEcoLocation)?' open':'') +
+      ' data-eco-pending="' + activeEcoLocation + '"><summary><span><strong>Підключення в процесі</strong>' +
+      '<small>' + pending.length + ' станцій поки без моніторингу</small></span>' +
+      '<span class="eco-pending-chevron" aria-hidden="true">⌄</span></summary>' +
+      '<div class="eco-pending-list">' + pending.join('') + '</div></details>' : '');
   }
 
   // Drafts are session-local UI state. No device commands or authentication exist yet.
@@ -881,6 +931,13 @@
     $('eco-space-name').textContent = place.space;
     $('eco-count').textContent = String(packs.length);
     $('eco-capacity').textContent = !packs.length ? '—' : allKnown ? niceWh(totalWh) : 'Уточнюється';
+    const available=systems.filter(d=>Number.isFinite(d.pct));
+    const coverage=$('eco-data-coverage');
+    if (coverage) coverage.textContent=liveMode && available.length<systems.length
+      ? 'Моніторинг ' + available.length + '/' + systems.length + ' систем · ' +
+        niceWh(available.reduce((sum,d)=>sum+d.capacityWh,0)) + ' із ' + niceWh(totalWh) +
+        '. Заряд решти невідомий.'
+      : 'Моніторинг усіх систем';
     const hasEstimates = systems.some(d => d.estimated === true);
     $('eco-demo-total').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
@@ -936,6 +993,12 @@
     const output = target.closest('.eco-ocean-watts')?.querySelector('output');
     if (output) output.textContent = watts + ' W';
   });
+  root.addEventListener('toggle', event => {
+    const item=event.target;
+    if (!item?.matches?.('details.eco-pending')) return;
+    const key=item.dataset.ecoPending;
+    if (item.open) pendingExpanded.add(key); else pendingExpanded.delete(key);
+  },true);
   root.addEventListener('change', event => {
     const target = event.target;
     if (target.matches?.('[data-eco-ocean-self-powered]')) {
@@ -990,4 +1053,5 @@
   });
   live?.start();
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
+  window.addEventListener('svitlo:outage-update', () => updateLocation(activeEcoLocation,true));
 })();

@@ -219,3 +219,16 @@ test('expanded batteries have one rounded provider SOC and clearly doubled capac
   assert.match(text, /1[\s\u00a0\u202f]024 Wh/);
   assert.match(text, /98%/);
 });
+
+
+test('partial monitor keeps physical capacity and pending devices grouped',()=>{
+ const live={summary:()=>({status:'published',lastFrameMs:Date.now()}),
+  statusFor:key=>key==='dacha:dp3'?'published':'waiting',
+  reading:key=>key==='dacha:dp3'?{socPercent:83,inputW:0,outputW:123,operation:'discharging'}:null,
+  availabilityFor:()=> 'unsupported',subscribe(){},start(){}};
+ const m=mount(live);
+ assert.match(m.get('eco-devices').innerHTML,/class="eco-pending"/);
+ assert.match(m.get('eco-devices').innerHTML,/Підключення в процесі/);
+ assert.match(m.get('eco-devices').innerHTML,/eco-autonomy-unknown/);
+ assert.match(m.get('eco-data-coverage').textContent,/Моніторинг 1\/4 систем/);
+});
