@@ -1,0 +1,20 @@
+name: EcoFlow | read-only API check
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  discovery:
+    name: Check EcoFlow EU devices (secrets never printed)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test EcoFlow developer access and read-only telemetry
+        env:
+          ECOFLOW_ACCESS_KEY: ${{ secrets.ECOFLOW_ACCESS_KEY }}
+          ECOFLOW_SECRET_KEY: ${{ secrets.ECOFLOW_SECRET_KEY }}
+        run: python scripts/ecoflow_probe.py
