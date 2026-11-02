@@ -47,7 +47,8 @@
   const live = window.NasheSvitloEcoFlowLive || null;
   let inventory = demoInventory;
   let liveMode = false;
-  const pctLabel = value => Number.isFinite(value) ? value + '%' : '—';
+  const fmtSoc = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
+  const pctLabel = value => Number.isFinite(value) ? fmtSoc.format(value) + '%' : '—';
   const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
   function applyReadings() {
     const state = live?.summary()?.status || 'preview';
