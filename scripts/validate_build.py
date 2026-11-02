@@ -125,6 +125,40 @@ def check_payload(payload, season, config, site, now):
         and isinstance(config.get("snapshotUrl"), str)
         and isinstance(config.get("streamUrl"), str)),
         "EcoFlow live configuration is malformed")
+    if config.get('mode') == 'published':
+        snap = json.loads((site / 'ecoflow-snapshot.json').read_text(encoding='utf-8'))
+        require(snap.get('version') == 1 and snap.get('mode') == 'scheduled',
+                'Incorrect EcoFlow published snapshot version')
+        require(snap.get('connection') in (None, 'ok', 'unavailable'),
+                'Unexpected EcoFlow provider state')
+        try:
+            snap_time = datetime.fromisoformat(snap['emittedAt']).astimezone(KYIV)
+        except (KeyError, ValueError, TypeError) as error:
+            raise ValueError('EcoFlow snapshot timestamp invalid') from error
+        require(-timedelta(minutes=5) <= now - snap_time <= timedelta(minutes=25),
+                'EcoFlow snapshot expired or timestamp in future')
+        permitted = {'dacha:dp3', 'unassigned:delta2-1',
+                     'unassigned:delta2-2', 'unassigned:delta2-3'}
+        readings = snap.get('devices', {})
+        require(isinstance(readings, dict) and set(readings).issubset(permitted),
+                'Unexpected identity in public EcoFlow snapshot')
+        import math
+        for key, reading in readings.items():
+            require(isinstance(reading, dict), 'Malformed EcoFlow public reading')
+            require(set(reading).issubset({'updatedAt', 'socPercent', 'inputW',
+                                           'outputW', 'operation'}),
+                    'Sensitive or unapproved EcoFlow field published')
+            for field, upper in (('socPercent', 100), ('inputW', 20000), ('outputW', 20000)):
+                value = reading.get(field)
+                if value is not None:
+                    require(type(value) in (int, float) and math.isfinite(value)
+                            and 0 <= value <= upper, 'Incorrect EcoFlow reading ' + field)
+        require(isinstance(snap.get('unassigned'), list) and
+                set(snap['unassigned']).issubset(permitted - {'dacha:dp3'}),
+                'Unapproved unassigned EcoFlow keys')
+        require(set(snap).issubset({'version', 'mode', 'emittedAt',
+                                   'devices', 'availability', 'unassigned', 'connection'}),
+                'Unexpected public EcoFlow snapshot metadata')
     manifest = json.loads((site / "manifest.webmanifest").read_text(encoding="utf-8"))
     require(manifest.get("display") == "standalone" and all(
         manifest.get(k) == "./" for k in ("scope", "id", "start_url")),
