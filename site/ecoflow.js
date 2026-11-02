@@ -67,6 +67,7 @@
           inputW: value?.inputW ?? null,
           outputW: value?.outputW ?? null,
           operation: value?.operation || 'unknown',
+          availability: live.availabilityFor?.(key + ':' + device.id) || 'unavailable',
           // Unknown module SOC is never invented from a primary BMS value.
           modulePercentages: device.type === 'system' ? (value?.moduleSocPercent ?? []) : undefined
         };
@@ -81,21 +82,26 @@
       preview: 'Демо · API не підключено',
       connecting: 'Підключення…',
       live: 'Live · EcoFlow',
+      published: 'EcoFlow API · за розкладом',
       stale: 'Дані застаріли',
       error: 'Налаштування відсутнє'
     };
     const devicesHere = demoInventory[activeEcoLocation]?.devices || [];
     const liveHere = devicesHere.filter(device =>
-      live?.statusFor(activeEcoLocation + ':' + device.id) === 'live').length;
-    const stateHere = mode === 'live' && liveHere === 0 ? 'stale' : mode;
-    element.classList.toggle('is-live', stateHere === 'live');
+      ['live','published'].includes(live?.statusFor(activeEcoLocation + ':' + device.id))).length;
+    const stateHere = ['live','published'].includes(mode) && liveHere === 0 ? 'stale' : mode;
+    element.classList.toggle('is-live', stateHere === 'live' || stateHere === 'published');
     element.classList.toggle('is-stale', stateHere === 'stale');
     element.title = mode === 'preview' ?
       'Тестові показники, не реальна телеметрія EcoFlow' :
       mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
+      mode === 'published' ? 'Реальні показники з EcoFlow API, GitHub Actions оновлює приблизно кожні 10 хвилин. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
-    element.innerHTML = '<i aria-hidden="true"></i>' + (mode === 'live'
-      ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
+    const at = live?.summary()?.lastFrameMs;
+    const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
+    element.innerHTML = '<i aria-hidden="true"></i>' + (mode === 'published'
+      ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
+      : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
     root.dataset.telemetryState = stateHere;
   }
@@ -254,12 +260,44 @@
       source.innerHTML + '</details>';
   }
 
+  function availabilityNote(d) {
+    if (!liveMode || Number.isFinite(d.pct)) return '';
+    const explanation = d.availability === 'unsupported'
+      ? 'EcoFlow API повертає 1006'
+      : d.availability === 'unassigned'
+        ? 'Дані є, але станцію ще не прив’язано до локації'
+        : d.type === 'battery'
+          ? 'Окремих даних батареї поки немає'
+          : 'Немає актуальних даних';
+    return '<div class="eco-api-note"><span class="eco-api-dot" aria-hidden="true"></span>' +
+      explanation + '</div>';
+  }
+  function unassignedSection() {
+    if (!liveMode) return '';
+    const keys = live?.summary()?.unassigned || [];
+    if (!keys.length) return '';
+    const rows = keys.map((key, i) => {
+      const reading = live.reading(key);
+      const soc = reading?.socPercent;
+      return '<div class="eco-unassigned-row' + (reading ? '' : ' is-unavailable') + '">' +
+        '<strong>DELTA 2 №' + (i + 1) + '</strong>' +
+        '<span>Заряд <b>' + pctLabel(soc) + '</b></span>' +
+        '<span>Вхід <b>' + wattsLabel(reading?.inputW) + '</b></span>' +
+        '<span>Вихід <b>' + wattsLabel(reading?.outputW) + '</b></span></div>';
+    }).join('');
+    return '<section class="eco-unassigned" aria-label="DELTA 2 без прив’язки">' +
+      '<div class="eco-unassigned-header"><strong>Доступні через API · DELTA 2</strong>' +
+      '<span>Локації не підтверджено</span></div><p>Ці три станції передають реальні дані, але поки не зіставлені з локаціями. До середнього заряду локацій не включені.</p>' +
+      '<div class="eco-unassigned-list">' + rows + '</div></section>';
+  }
+
   function deviceView(d) {
     const size = capClass(d.capacityWh);
     const charge = level(d.pct);
     const capacity = niceWh(d.capacityWh);
     const titleNote = 'Зарядна станція';
     return '<article class="eco-device eco-standalone ' + size + ' charge-' + charge +
+      (liveMode && !Number.isFinite(d.pct) ? ' eco-api-unavailable' : '') +
       '" aria-label="' + d.name + ', заряд ' + pctLabel(d.pct) + '">' +
       '<div class="eco-device-head"><div class="eco-device-ident">' +
       '<strong class="eco-device-name">' + d.name + '</strong>' +
