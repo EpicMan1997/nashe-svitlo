@@ -90,7 +90,8 @@
     const liveHere = devicesHere.filter(device =>
       ['live','published'].includes(live?.statusFor(activeEcoLocation + ':' + device.id))).length;
     const stateHere = ['live','published'].includes(mode) && liveHere === 0 ? 'stale' : mode;
-    element.classList.toggle('is-live', stateHere === 'live' || stateHere === 'published');
+    element.classList.toggle('is-live', stateHere === 'live');
+    element.classList.toggle('is-published', stateHere === 'published');
     element.classList.toggle('is-stale', stateHere === 'stale');
     element.title = mode === 'preview' ?
       'Тестові показники, не реальна телеметрія EcoFlow' :
