@@ -112,7 +112,7 @@ test('partially connected live location shows unknown data, not sample values', 
   };
   const m = mount(live);
   assert.match(m.get('eco-devices').innerHTML, /40%/);
-  assert.match(m.get('eco-devices').innerHTML, /36%/);
+  assert.doesNotMatch(m.get('eco-devices').innerHTML, /36%/);
   assert.doesNotMatch(m.get('eco-devices').innerHTML, />84%/);
   assert.equal(m.get('eco-demo-total').textContent, '—');
   assert.match(m.get('eco-devices').innerHTML, /500 W/);
