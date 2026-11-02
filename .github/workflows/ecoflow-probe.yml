@@ -1,6 +1,10 @@
 name: EcoFlow | read-only API check
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ecoflow-probe.yml'
 permissions:
   contents: read
 jobs:
