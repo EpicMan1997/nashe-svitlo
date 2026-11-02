@@ -2078,3 +2078,6 @@ main > header .clock-view #clock{grid-column:auto;grid-row:auto;justify-self:aut
  .eco-unassigned-row span{font-size:11px}
  .eco-unassigned-row b{display:block;font-size:13px}
 }
+
+.eco-status.is-published{color:#bfe3ff;border-color:#4885b5;background:#203c58}
+.eco-status.is-published i{background:#61b5ff;box-shadow:0 0 0 3px #61b5ff29}
