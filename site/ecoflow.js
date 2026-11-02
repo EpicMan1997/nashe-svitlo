@@ -88,7 +88,7 @@
       stale: 'Дані застаріли',
       error: 'Налаштування відсутнє'
     };
-    const devicesHere = demoInventory[activeEcoLocation]?.devices || [];
+    const devicesHere = batterySystems(demoInventory[activeEcoLocation]?.devices || []);
     const liveHere = devicesHere.filter(device =>
       ['live','published'].includes(live?.statusFor(activeEcoLocation + ':' + device.id))).length;
     const stateHere = ['live','published'].includes(mode) && liveHere === 0 ? 'stale' : mode;
@@ -123,6 +123,22 @@
         pct: Array.isArray(device.modulePercentages) && Number.isFinite(device.modulePercentages[i])
           ? device.modulePercentages[i] : (liveMode ? null : device.pct)
       }));
+    });
+  }
+
+  // A station with an extra battery is ONE energy system with ONE provider SOC.
+  // Sum physical capacities, but never manufacture per-module percentages.
+  function batterySystems(devices) {
+    const addons = new Map(devices.filter(d => d.type === 'battery' && d.parentId)
+      .map(d => [d.parentId, d]));
+    const ids = new Set(devices.map(d => d.id));
+    return devices.filter(d => !(d.type === 'battery' && ids.has(d.parentId))).map(d => {
+      const addon = addons.get(d.id);
+      return addon ? {
+        ...d, name: d.name + ' + ' + (d.id === 'dp3' ? 'Smart Extra Battery' : 'додаткова батарея'),
+        capacityWh: d.capacityWh + addon.capacityWh,
+        batteryCount: 2, hasAddon: true, addonName: addon.name
+      } : d;
     });
   }
 
@@ -337,31 +353,27 @@
 
   function systemView(main, addon) {
     const capacityWh = main.capacityWh + addon.capacityWh;
-    const weighted = Number.isFinite(main.pct) && Number.isFinite(addon.pct) ?
-      Math.round((main.capacityWh * main.pct + addon.capacityWh * addon.pct) / capacityWh) : null;
-    const batteryPart = (d, role) => {
-      const name = role === 'Основна' ? 'основної станції' : 'додаткової батареї';
-      const roleLabel = role;
-      return '<div class="eco-system-part charge-' + level(d.pct) + '">' +
-        '<div class="eco-system-part-top"><span class="eco-system-part-label">' + roleLabel + '</span>' +
-        '<strong class="eco-system-percent">' + (d.estimated ? '≈ ' : '') + pctLabel(d.pct) + '</strong></div>' +
-        (role === 'Додаткова' && main.id === 'dp3'
-          ? '<span class="eco-system-part-model">Smart Extra Battery</span>' : '') +
-        operationBadge(d) +
-        chargeTrack(d.pct, name) +
-        (d.estimated ? '<small class="eco-estimated-soc">Оцінка за загальним зарядом системи, не окремий показник API</small>' : '') +
-        '<span class="eco-system-part-cap">' + niceWh(d.capacityWh) + '</span>' + availabilityNote(d) +
-        '</div>';
-    };
-    return '<article class="eco-system eco-system-paired charge-' + level(weighted) +
-      (liveMode && !Number.isFinite(main.pct) && !Number.isFinite(addon.pct) ? ' eco-api-unavailable' : '') +
-      '" aria-label="' + main.name + ' із додатковою батареєю, загалом ' + niceWh(capacityWh) + '">' +
+    const soc = main.pct; // Single provider-reported SOC for the complete battery system.
+    const label = main.id === 'dp3' ? 'Smart Extra Battery' : 'Додаткова батарея';
+    const charge = level(soc);
+    return '<article class="eco-system eco-system-paired eco-system-combined charge-' + charge +
+      (liveMode && !Number.isFinite(soc) ? ' eco-api-unavailable' : '') +
+      '" aria-label="' + main.name + ' із додатковою батареєю, ємність ' + niceWh(capacityWh) +
+      ', загальний заряд ' + pctLabel(soc) + '">' +
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
-      '</strong><span class="eco-system-tag">' + (main.id === 'dp3' ? '+ Smart Extra Battery' : '+ додаткова батарея') + '</span></div>' +
-      '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' +
-      '<span>' + (Number.isFinite(weighted) ? ((main.estimated || addon.estimated ? '≈ ' : '') + pctLabel(weighted) + ' загалом') : 'Заряд невідомий') + '</span></div></div>' +
-      '<div class="eco-system-parts">' + batteryPart(main, 'Основна') + batteryPart(addon, 'Додаткова') + '</div>' +
-      energyStats(main, capacityWh, weighted) +
+      '</strong><span class="eco-system-tag">+ ' + label + '</span></div>' +
+      '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong></div></div>' +
+      '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
+      '<span>Заряд усієї системи</span><strong class="eco-system-combined-percent">' +
+      pctLabel(soc) + '</strong></div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
+      '</div>' +
+      '<div class="eco-system-modules" aria-label="Склад системи">' +
+      '<div class="eco-system-module"><span>Основна станція</span><strong>' +
+      niceWh(main.capacityWh) + '</strong></div>' +
+      '<div class="eco-system-module"><span>' + label + '</span><strong>' +
+      niceWh(addon.capacityWh) + '</strong></div></div>' +
+      (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
+      energyStats(main, capacityWh, soc) +
       solarDisclosure(main) +
       adminControls(main) +
       '</article>';
@@ -535,7 +547,7 @@
   const detailArea = $('eco-metrics-area');
   const detailPanel = $('eco-metric-detail');
   const preciseWh = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 3 });
-  const percentValue = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 2 });
+  const percentValue = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
   const textEscape = value => String(value).replace(/[&<>"']/g, char =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const exactCapacity = wh => Number.isFinite(wh)
@@ -543,7 +555,7 @@
   let metricOpen = null;
 
   function metricBreakdown(kind) {
-    const devices = physicalDevices(inventory[activeEcoLocation].devices);
+    const devices = batterySystems(inventory[activeEcoLocation].devices);
     const total = devices.reduce((sum, item) => sum + item.capacityWh, 0);
     const allSocKnown = devices.every(d => Number.isFinite(d.pct));
     const stored = allSocKnown ? devices.reduce((sum, item) => sum + item.capacityWh * item.pct / 100, 0) : null;
@@ -618,7 +630,7 @@
           devices.map(device => fmtPercent(chargeContribution(device))).join(' + ') +
           ' = ' + fmtPercent(weighted) + ' ≈ ' + Math.round(weighted) + '%') + '</strong></div>'
         : '<div class="eco-detail-total"><span>Усього акумуляторів і станцій</span><strong>' +
-          devices.length + '</strong></div>';
+          physicalDevices(inventory[activeEcoLocation].devices).length + '</strong></div>';
 
     const note = kind === 'capacity'
       ? 'Частка від загальної номінальної ємності, незалежно від поточного заряду'
@@ -730,8 +742,7 @@
   const generatorNum = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
 
   function generatorBatteryPacks() {
-    return inventory.dacha.devices.filter(device =>
-      device.type === 'station' || device.type === 'battery');
+    return batterySystems(inventory.dacha.devices).filter(device => device.type === 'station');
   }
   function generatorSOC(device) {
     const stored = generatorPlan.soc.get(device.id);
@@ -761,7 +772,7 @@
     const area = $('eco-generator-planner');
     if (!area) return;
     const packs = generatorBatteryPacks();
-    const dp3 = packs.filter(d => d.id === 'dp3' || d.parentId === 'dp3');
+    const dp3 = packs.filter(d => d.id === 'dp3');
     if (!area.dataset.initialized) {
       $('eco-gen-soc-fields').innerHTML = packs.map(device =>
         '<label class="eco-generator-soc-item"><span>' + textEscape(device.name) +
@@ -846,11 +857,12 @@
     if (!Object.prototype.hasOwnProperty.call(inventory, id)) return;
     const place = inventory[id];
     const packs = physicalDevices(place.devices);
-    const totalWh = packs.reduce((v, d) => v + (d.capacityWh || 0), 0);
-    const allKnown = packs.every(d => Number.isFinite(d.capacityWh));
-    const allChargesKnown = packs.every(d => Number.isFinite(d.pct));
+    const systems = batterySystems(place.devices);
+    const totalWh = systems.reduce((v, d) => v + (d.capacityWh || 0), 0);
+    const allKnown = systems.every(d => Number.isFinite(d.capacityWh));
+    const allChargesKnown = systems.every(d => Number.isFinite(d.pct));
     const weighted = allKnown && allChargesKnown && totalWh
-      ? Math.round(packs.reduce((v, d) => v + d.capacityWh * d.pct, 0) / totalWh)
+      ? Math.round((systems.reduce((v, d) => v + d.capacityWh * d.pct, 0) / totalWh) * 10) / 10
       : null;
     if (adminDraft.scope === 'current' && activeEcoLocation !== id) {
       Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
@@ -869,7 +881,7 @@
     $('eco-space-name').textContent = place.space;
     $('eco-count').textContent = String(packs.length);
     $('eco-capacity').textContent = !packs.length ? '—' : allKnown ? niceWh(totalWh) : 'Уточнюється';
-    const hasEstimates = packs.some(d => d.estimated === true);
+    const hasEstimates = systems.some(d => d.estimated === true);
     $('eco-demo-total').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
     // One bar represents the capacity-weighted average charge across physical batteries.
