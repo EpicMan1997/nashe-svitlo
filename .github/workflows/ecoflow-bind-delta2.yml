@@ -1,0 +1,35 @@
+name: EcoFlow | one-time DELTA 2 location binding
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/ecoflow-bind-delta2.yml']
+permissions:
+  contents: write
+jobs:
+  bind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Match 98, 80, 92 percent and persist irreversible private-keyed identities
+        env:
+          ECOFLOW_ACCESS_KEY: ${{ secrets.ECOFLOW_ACCESS_KEY }}
+          ECOFLOW_SECRET_KEY: ${{ secrets.ECOFLOW_SECRET_KEY }}
+        run: python scripts/ecoflow_bind_delta2.py
+      - name: Persist device mapping (no serial numbers)
+        run: |
+          if [ -f state/ecoflow_bindings.json ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add state/ecoflow_bindings.json
+            if ! git diff --cached --quiet; then
+              git commit -m 'Bind DELTA 2 locations with private-keyed device IDs'
+              git push
+            fi
+          fi
