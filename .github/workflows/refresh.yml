@@ -36,6 +36,11 @@ jobs:
       - run: node --test tests/page-runtime-smoke.test.cjs
       - run: python -m unittest discover -s tests -v
       - run: python scripts/refresh.py
+      - name: Fetch supported EcoFlow stations (read-only, ~10-minute snapshots)
+        env:
+          ECOFLOW_ACCESS_KEY: ${{ secrets.ECOFLOW_ACCESS_KEY }}
+          ECOFLOW_SECRET_KEY: ${{ secrets.ECOFLOW_SECRET_KEY }}
+        run: python scripts/ecoflow_publish.py
       - run: python scripts/validate_build.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
