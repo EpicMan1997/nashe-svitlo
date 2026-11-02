@@ -86,7 +86,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("function renderDeviceGrid(devices)", JS)
         self.assertIn("const addons = new Map(", JS)
         self.assertIn("ids.has(d.parentId)", JS)
-        self.assertIn("return addon ? systemView(d, addon) : d.type === 'system' ? powerOceanView(d) : deviceView(d);", JS)
+        self.assertIn("addon?systemView(d,addon):d.type==='system'?powerOceanView(d):deviceView(d)", JS)
         self.assertIn('class="eco-system eco-system-paired', JS)
         self.assertIn('class="eco-system-modules"', JS)
         self.assertIn("Заряд усієї системи", JS)

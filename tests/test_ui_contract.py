@@ -71,7 +71,7 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn('&&isFresh;', HTML)
         self.assertIn("if(!chip||tab!=='today')return;", HTML)
         self.assertIn('setInterval(tick,1000)', HTML)
-        self.assertIn('updateCurrentPower(n)}', HTML)
+        self.assertIn("updateCurrentPower(n);if(n.s===0)window.dispatchEvent(new CustomEvent('svitlo:outage-update'))}", HTML)
         self.assertIn('.power-remaining[hidden]{display:none!important}', HTML)
 
     def test_yesterday_archive_and_comparison(self):
