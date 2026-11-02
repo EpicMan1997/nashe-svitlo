@@ -89,7 +89,7 @@ test('all four locations render and switch without DOM exceptions', () => {
   assert.match(m.get('eco-devices').innerHTML, /PowerOcean/);
   assert.equal(m.get('eco-count').textContent, '2');
   m.events['svitlo:location-change']({detail:{id:'solovky'}});
-  assert.match(m.get('eco-devices').innerHTML, /\+ додаткова батарея/);
+  assert.match(m.get('eco-devices').innerHTML, /\+ Додаткова батарея/);
   assert.equal(m.get('eco-count').textContent, '3');
   m.events['svitlo:location-change']({detail:{id:'naumenky'}});
   assert.match(m.get('eco-devices').innerHTML, /DELTA 2/);
@@ -116,7 +116,7 @@ test('partially connected live location shows unknown data, not sample values', 
   assert.doesNotMatch(m.get('eco-devices').innerHTML, />84%/);
   assert.equal(m.get('eco-demo-total').textContent, '—');
   assert.match(m.get('eco-devices').innerHTML, /500 W/);
-  assert.match(m.get('eco-status').innerHTML, /2\/5/);
+  assert.match(m.get('eco-status').innerHTML, /1\/4/);
   // Simulate a disconnected gateway; stale numbers must never linger.
   mode = 'stale';
   online = {};
@@ -141,15 +141,14 @@ test('opened battery metric details are recalculated in place on new readings', 
   m.get('eco-metrics-area').listeners.click({target:btn});
   const detail = m.get('eco-metric-detail');
   assert.equal(detail.hidden,false);
-  assert.match(detail.innerHTML, /60%/);
+  assert.match(detail.innerHTML, /67%/);
   reading = {'home:po': {
     socPercent:50,moduleSocPercent:[40,60], inputW:120,outputW:600,operation:'charging'
   }};
   notify();
   assert.equal(detail.hidden,false);
-  assert.match(detail.innerHTML, /40%/);
-  assert.match(detail.innerHTML, /60%/);
-  assert.doesNotMatch(detail.innerHTML, /74%/);
+  assert.match(detail.innerHTML, /50%/);
+  assert.doesNotMatch(detail.innerHTML, /40%|60%|74%/);
   assert.doesNotMatch(detail.innerHTML, /NaN|undefined|null/);
 });
 
@@ -169,7 +168,7 @@ test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassign
     subscribe() {}, start() {}
   };
   const m = mount(live);
-  assert.match(m.get('eco-status').innerHTML, /API · 1\/5/);
+  assert.match(m.get('eco-status').innerHTML, /API · 1\/4/);
   assert.match(m.get('eco-devices').innerHTML, /62%/);
   assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
   assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
@@ -181,4 +180,39 @@ test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassign
   assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
   assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
   assert.equal(m.get('eco-demo-total').textContent, '—');
+});
+
+test('expanded batteries have one rounded provider SOC and clearly doubled capacities', () => {
+  const readings = {
+    'dacha:dp3': { socPercent: 90.37937, inputW: 0, outputW: 171, operation: 'discharging' },
+    'dacha:d2': { socPercent: 98, inputW: 0, outputW: 0, operation: 'holding' },
+    'solovky:d2': { socPercent: 80.46, inputW: 0, outputW: 30, operation: 'discharging' }
+  };
+  const live = {
+    summary: () => ({status: 'published', lastFrameMs: Date.now(), unassigned: []}),
+    reading: key => readings[key] ?? null,
+    statusFor: key => readings[key] ? 'published' : 'waiting',
+    availabilityFor: key => readings[key] ? 'readable' : 'unsupported',
+    subscribe() {}, start() {}
+  };
+  const m = mount(live);
+  let markup = m.get('eco-devices').innerHTML;
+  assert.match(markup, /Заряд усієї системи/);
+  assert.match(markup, /90,4%/);
+  assert.match(markup, /8[\s\u00a0\u202f]192 Wh/);
+  assert.match(markup, /4[\s\u00a0\u202f]096 Wh/);
+  assert.equal((markup.match(/class="eco-system-combined-percent"/g) || []).length, 1);
+  assert.doesNotMatch(markup, /88,2%|bmsBattSoc/);
+  m.events['svitlo:location-change']({detail:{id:'solovky'}});
+  markup = m.get('eco-devices').innerHTML;
+  assert.match(markup, /80,5%/);
+  assert.match(markup, /2[\s\u00a0\u202f]048 Wh/);
+  assert.match(markup, /1[\s\u00a0\u202f]024 Wh/);
+  assert.equal((markup.match(/class="eco-system-combined-percent"/g) || []).length, 1);
+  assert.doesNotMatch(markup, /70%|60%/);
+  m.events['svitlo:location-change']({detail:{id:'dacha'}});
+  const text = m.get('eco-devices').innerHTML;
+  assert.match(text, /DELTA 2/);
+  assert.match(text, /1[\s\u00a0\u202f]024 Wh/);
+  assert.match(text, /98%/);
 });
