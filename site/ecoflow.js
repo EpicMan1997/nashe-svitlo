@@ -869,7 +869,8 @@
     $('eco-space-name').textContent = place.space;
     $('eco-count').textContent = String(packs.length);
     $('eco-capacity').textContent = !packs.length ? '—' : allKnown ? niceWh(totalWh) : 'Уточнюється';
-    $('eco-demo-total').textContent = weighted === null ? '—' : weighted + '%';
+    const hasEstimates = packs.some(d => d.estimated === true);
+    $('eco-demo-total').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
     // One bar represents the capacity-weighted average charge across physical batteries.
     const overallTrack = $('eco-location-charge-track');
