@@ -359,7 +359,7 @@
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
       '</strong><span class="eco-system-tag">' + (main.id === 'dp3' ? '+ Smart Extra Battery' : '+ додаткова батарея') + '</span></div>' +
       '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' +
-      '<span>' + (Number.isFinite(weighted) ? weighted + '% загалом' : 'Заряд невідомий') + '</span></div></div>' +
+      '<span>' + (Number.isFinite(weighted) ? ((main.estimated || addon.estimated ? '≈ ' : '') + pctLabel(weighted) + ' загалом') : 'Заряд невідомий') + '</span></div></div>' +
       '<div class="eco-system-parts">' + batteryPart(main, 'Основна') + batteryPart(addon, 'Додаткова') + '</div>' +
       energyStats(main, capacityWh, weighted) +
       solarDisclosure(main) +
