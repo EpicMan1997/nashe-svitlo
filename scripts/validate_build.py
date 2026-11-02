@@ -117,7 +117,10 @@ def check_payload(payload, season, config, site, now):
     for key, location in season["locations"].items():
         require(isinstance(location.get("recorded_days"), int) and location["recorded_days"] >= 0,
                 "Invalid season recorded days for " + key)
-    require(config == {"enabled": False, "snapshotUrl": "", "streamUrl": ""} or (
+    require((config.get('enabled') is True and config.get('mode') == 'published' and
+             config.get('snapshotUrl') == './ecoflow-snapshot.json' and
+             config.get('streamUrl') == '') or
+            config == {"enabled": False, "snapshotUrl": "", "streamUrl": ""} or (
         config.get("enabled") is True
         and isinstance(config.get("snapshotUrl"), str)
         and isinstance(config.get("streamUrl"), str)),
