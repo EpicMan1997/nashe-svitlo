@@ -4,16 +4,18 @@
 
 Перевірка: [GitHub Actions #41419045979](https://github.com/EpicMan1997/nashe-svitlo/actions/runs/41419045979).
 
+Моделі #3 (DELTA 3 Plus) та #8 (RIVER 3 Plus) визначені окремою одноразовою **приватною** перевіркою сімейства серійного номера без виведення номера чи префікса. Це не офіційне підтвердження EcoFlow; RIVER 3 Plus Wireless є варіантом цієї родини. [Журнал визначення моделей](https://github.com/EpicMan1997/nashe-svitlo/actions/runs/41419466419). Відповідність конкретним локаціям за серійними номерами не публікується.
+
 | № | Модель | Відповідь API | Повернутих безпечних полів |
 |---|---|---|---:|
 | 1 | PowerOcean | ERROR (EcoFlow rejected request (code 1006)) | 0 |
 | 2 | DELTA Pro 3 | OK / 163 safe flattened fields / 160 root keys | 160 |
-| 3 | Модель не визначена | ERROR (EcoFlow rejected request (code 1006)) | 0 |
+| 3 | DELTA 3 Plus (класифікація за сімейством) | ERROR (EcoFlow rejected request (code 1006)) | 0 |
 | 4 | DELTA 2 | OK / 339 safe flattened fields / 332 root keys | 337 |
 | 5 | DELTA 2 | OK / 340 safe flattened fields / 333 root keys | 338 |
 | 6 | DELTA 2 | OK / 270 safe flattened fields / 262 root keys | 269 |
 | 7 | RIVER 2 | ERROR (EcoFlow rejected request (code 1006)) | 0 |
-| 8 | Модель не визначена | ERROR (EcoFlow rejected request (code 1006)) | 0 |
+| 8 | RIVER 3 Plus (класифікація за сімейством) | ERROR (EcoFlow rejected request (code 1006)) | 0 |
 
 Важливо: поле в quota означає доступність **читання**. Воно не підтверджує, що сервер прийме команду запису. Показники `number` можуть мати різні одиниці й масштаби; перед використанням їх у UI слід перевірити модельну схему й фактичні значення.
 
@@ -215,7 +217,7 @@ plugInInfo5p8DsgPowMax  [number]
 pcsFanLevel  [number]
 ```
 
-## 3. Модель не визначена
+## 3. DELTA 3 Plus
 
 **ERROR (EcoFlow rejected request (code 1006))**
 
@@ -1254,7 +1256,7 @@ pd.typec2Temp  [number]
 
 **ERROR (EcoFlow rejected request (code 1006))**
 
-## 8. Модель не визначена
+## 8. RIVER 3 Plus
 
 **ERROR (EcoFlow rejected request (code 1006))**
 
