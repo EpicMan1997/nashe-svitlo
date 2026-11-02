@@ -94,17 +94,49 @@ class PublishedEcoFlowTests(unittest.TestCase):
         self.assertEqual(doc["unassigned"], [])
         self.assertEqual(doc["devices"]["dacha:d2"]["socPercent"], 98)
         self.assertEqual(doc["devices"]["solovky:d2"]["socPercent"], 80)
-        self.assertEqual(doc["devices"]["solovky:d2eb"]["socPercent"], 80)
+        self.assertNotIn("solovky:d2eb", doc["devices"])
         self.assertEqual(doc["devices"]["naumenky:d2"]["socPercent"], 91)
-        self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 90.4)
-        self.assertEqual(doc["devices"]["dacha:dp3eb"]["socPercent"], 88.2)
-        self.assertTrue(doc["devices"]["dacha:dp3eb"]["estimated"])
+        self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 89.3)
+        self.assertNotIn("dacha:dp3eb", doc["devices"])
+        self.assertFalse(doc["devices"]["dacha:dp3"].get("estimated", False))
         self.assertNotIn("naumenky:d2eb", doc["devices"])
-        for key in ("dacha:d2", "solovky:d2", "solovky:d2eb",
-                    "naumenky:d2", "dacha:dp3", "dacha:dp3eb"):
+        self.assertEqual(doc["availability"]["solovky:d2eb"], "unavailable")
+        self.assertEqual(doc["availability"]["dacha:dp3eb"], "unavailable")
+        for key in ("dacha:d2", "solovky:d2", "naumenky:d2", "dacha:dp3"):
             self.assertEqual(doc["availability"][key], "readable")
         self.assertNotIn("PRIVATE", json.dumps(doc))
         self.assertNotIn(secret, json.dumps(doc))
+
+    def test_reported_system_charge_not_individual_pack_estimate(self):
+        secret = "TEST_ONLY"
+        stable = {key: pub.fingerprint(serial, secret) for key, serial in (
+            ("dacha:d2", "PRIVATE-D2-3"),
+            ("solovky:d2", "PRIVATE-D2-1"),
+            ("naumenky:d2", "PRIVATE-D2-2"),
+        )}
+        def api(path, access, secret_key, query=None):
+            if path == pub.DEVICE_LIST:
+                return self.DEVICES
+            if path == pub.DEVICE_QUOTA:
+                sn = query["sn"]
+                if sn == "PRIVATE-DP3":
+                    return {"cmsBattSoc": 90.37937, "bmsBattSoc": 96,
+                            "cmsBattFullEnergy": 8192, "powInSumW": 0,
+                            "powOutSumW": 171}
+                if sn == "PRIVATE-D2-1":
+                    return {"pd.soc": 80.46, "bms_bmsStatus.soc": 70,
+                            "bms_slave.soc": 60,
+                            "pd.wattsInSum": 0, "pd.wattsOutSum": 40}
+                if sn.startswith("PRIVATE-D2"):
+                    return {"pd.soc": 91, "pd.wattsInSum": 0, "pd.wattsOutSum": 0}
+            raise pub.ProbeError("1006")
+        with patch.object(pub, "request_api", api):
+            doc = pub.build_snapshot("ACCESS", secret, bindings=stable)
+        self.assertEqual(doc["devices"]["dacha:dp3"]["socPercent"], 90.4)
+        self.assertEqual(doc["devices"]["solovky:d2"]["socPercent"], 80.5)
+        self.assertNotIn("dacha:dp3eb", doc["devices"])
+        self.assertNotIn("solovky:d2eb", doc["devices"])
+        self.assertNotIn("estimated", json.dumps(doc))
 
     def test_ambiguous_delta_pro_3_serial_never_claims_location(self):
         devices = [self.DEVICES[1], {"sn": "OTHER-DP3", "deviceName": "DELTA Pro 3"}]
