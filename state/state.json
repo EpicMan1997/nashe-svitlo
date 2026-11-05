@@ -278,6 +278,10 @@
           "fingerprint": "[[\"00:30\", \"04:30\"], [\"11:00\", \"18:30\"], [\"21:30\", \"24:00\"]]",
           "first_seen": "2026-11-05T20:10+02:00"
         },
+        "Київщина.info": {
+          "fingerprint": "[[\"00:30\", \"04:30\"], [\"11:00\", \"18:30\"], [\"21:30\", \"24:00\"]]",
+          "first_seen": "2026-11-06T00:10+02:00"
+        },
         "КолиБуде": {
           "fingerprint": "[[\"00:30\", \"04:30\"], [\"11:00\", \"18:30\"], [\"21:30\", \"24:00\"]]",
           "first_seen": "2026-11-06T00:01+02:00"
@@ -315,10 +319,22 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "00:30",
+              "04:30"
+            ],
+            [
+              "11:00",
+              "18:30"
+            ],
+            [
+              "21:30",
+              "24:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -363,6 +379,7 @@
       "source_updated": "",
       "sources": [
         "Alerts Energy",
+        "Київщина.info",
         "КолиБуде",
         "КолиСвітло"
       ],
