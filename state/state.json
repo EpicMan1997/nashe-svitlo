@@ -414,16 +414,34 @@
       "alternatives": [],
       "date": "2026-11-08",
       "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
-      "outages": [],
+      "outages": [
+        [
+          "05:00",
+          "12:30"
+        ],
+        [
+          "15:30",
+          "22:00"
+        ]
+      ],
       "source_observations": {
         "Alerts Energy": {
-          "fingerprint": "[]",
-          "first_seen": "2026-11-07T21:20+02:00"
+          "fingerprint": "[[\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
+          "first_seen": "2026-11-07T22:31+02:00"
         }
       },
       "source_reports": {
         "Alerts Energy": {
-          "outages": [],
+          "outages": [
+            [
+              "05:00",
+              "12:30"
+            ],
+            [
+              "15:30",
+              "22:00"
+            ]
+          ],
           "partial": [],
           "status": "preliminary",
           "url": "https://alerts.energy/kyivska-oblast"
@@ -3017,6 +3035,25 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "05:00",
+          "12:30"
+        ],
+        [
+          "15:30",
+          "22:00"
+        ]
+      ],
+      "at": "2026-11-07T22:31+02:00",
+      "before": null,
+      "date": "2026-11-08",
+      "first_observed_source": "Alerts Energy",
+      "kind": "preliminary",
+      "message": "Попередній графік: 05:00–12:30, 15:30–22:00",
+      "sources_confirmed": []
+    },
     {
       "after": [],
       "at": "2026-11-07T21:20+02:00",
