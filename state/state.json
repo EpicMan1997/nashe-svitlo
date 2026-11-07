@@ -302,7 +302,7 @@
     },
     "2026-11-08": {
       "date": "2026-11-08",
-      "detail": "Зіставлено незалежні джерела",
+      "detail": "Суперечливі джерела",
       "outages": [
         [
           "00:00",
@@ -323,8 +323,8 @@
           "first_seen": "2026-11-07T23:50+02:00"
         },
         "Київщина.info": {
-          "fingerprint": "[[\"00:00\", \"01:00\"], [\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
-          "first_seen": "2026-11-08T00:01+02:00"
+          "fingerprint": "[[\"00:00\", \"02:00\"], [\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
+          "first_seen": "2026-11-08T01:01+02:00"
         },
         "КолиБуде": {
           "fingerprint": "[[\"00:00\", \"01:00\"], [\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
@@ -352,7 +352,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -366,7 +366,7 @@
           "outages": [
             [
               "00:00",
-              "01:00"
+              "02:00"
             ],
             [
               "05:00",
@@ -378,7 +378,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -397,7 +397,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -426,7 +426,7 @@
         "Київщина.info",
         "КолиБуде"
       ],
-      "status": "normal",
+      "status": "stale",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-09": {
