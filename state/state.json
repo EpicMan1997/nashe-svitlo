@@ -682,8 +682,8 @@
               "first_seen": "2026-11-07T13:50+02:00"
             },
             "КолиСвітло": {
-              "fingerprint": "[[\"01:30\", \"09:30\"], [\"12:00\", \"20:00\"], [\"22:30\", \"24:00\"]]",
-              "first_seen": "2026-11-07T00:50+02:00"
+              "fingerprint": "[[\"01:30\", \"09:30\"], [\"12:00\", \"20:30\"], [\"22:00\", \"24:00\"]]",
+              "first_seen": "2026-11-07T14:01+02:00"
             }
           },
           "source_reports": {
@@ -739,22 +739,23 @@
                 ],
                 [
                   "12:00",
-                  "20:00"
+                  "20:30"
                 ],
                 [
-                  "22:30",
+                  "22:00",
                   "24:00"
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
           "sources": [
             "Alerts Energy",
-            "КолиБуде"
+            "КолиБуде",
+            "КолиСвітло"
           ],
           "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
@@ -1517,8 +1518,8 @@
               "first_seen": "2026-11-07T13:50+02:00"
             },
             "КолиСвітло": {
-              "fingerprint": "[[\"00:00\", \"04:00\"], [\"07:00\", \"14:30\"], [\"17:30\", \"24:00\"]]",
-              "first_seen": "2026-11-07T00:50+02:00"
+              "fingerprint": "[[\"00:00\", \"04:00\"], [\"07:00\", \"15:00\"], [\"17:00\", \"24:00\"]]",
+              "first_seen": "2026-11-07T14:01+02:00"
             }
           },
           "source_reports": {
@@ -1574,22 +1575,23 @@
                 ],
                 [
                   "07:00",
-                  "14:30"
+                  "15:00"
                 ],
                 [
-                  "17:30",
+                  "17:00",
                   "24:00"
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
           "sources": [
             "Alerts Energy",
-            "КолиБуде"
+            "КолиБуде",
+            "КолиСвітло"
           ],
           "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
@@ -2368,8 +2370,8 @@
               "first_seen": "2026-11-07T13:50+02:00"
             },
             "КолиСвітло": {
-              "fingerprint": "[[\"01:30\", \"09:30\"], [\"12:00\", \"20:00\"], [\"22:30\", \"24:00\"]]",
-              "first_seen": "2026-11-07T00:50+02:00"
+              "fingerprint": "[[\"01:30\", \"09:30\"], [\"12:00\", \"20:30\"], [\"22:00\", \"24:00\"]]",
+              "first_seen": "2026-11-07T14:01+02:00"
             }
           },
           "source_reports": {
@@ -2425,22 +2427,23 @@
                 ],
                 [
                   "12:00",
-                  "20:00"
+                  "20:30"
                 ],
                 [
-                  "22:30",
+                  "22:00",
                   "24:00"
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
           "sources": [
             "Alerts Energy",
-            "КолиБуде"
+            "КолиБуде",
+            "КолиСвітло"
           ],
           "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
