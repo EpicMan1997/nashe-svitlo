@@ -458,14 +458,7 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
-  "emergency": {
-    "level": "active",
-    "published_at": "2026-11-07T13:13+02:00",
-    "source": "ДТЕК, офіційний Telegram",
-    "source_checked": true,
-    "text": "‼️ Київська область: за командою Укренерго запроваджені екстрені відключення Нагадаємо, під час екстрених відключень графіки не діють. ▪️ В разі змін будемо вас інформувати у нашому телеграм-каналі. ‼️ Підписуйтесь та поділіться з родичами і друзями.",
-    "url": "https://t.me/dtek_ua/4806"
-  },
+  "emergency": null,
   "last_heartbeat": "2026-11-07",
   "locations": {
     "home": {
