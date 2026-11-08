@@ -318,6 +318,10 @@
         ]
       ],
       "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"00:00\", \"02:00\"], [\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
+          "first_seen": "2026-11-08T05:10+02:00"
+        },
         "Київщина.info": {
           "fingerprint": "[[\"00:00\", \"02:00\"], [\"05:00\", \"12:30\"], [\"15:30\", \"22:00\"]]",
           "first_seen": "2026-11-08T01:01+02:00"
@@ -333,7 +337,6 @@
       },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
           "outages": [
             [
               "00:00",
@@ -349,7 +352,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -419,6 +422,7 @@
       },
       "source_updated": "",
       "sources": [
+        "Alerts Energy",
         "Київщина.info",
         "КолиСвітло"
       ],
@@ -695,7 +699,7 @@
         },
         "2026-11-08": {
           "date": "2026-11-08",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "4.1",
           "outages": [
             [
@@ -712,10 +716,6 @@
             ]
           ],
           "source_observations": {
-            "Alerts Energy": {
-              "fingerprint": "[[\"00:00\", \"05:30\"], [\"09:00\", \"17:00\"], [\"19:30\", \"24:00\"]]",
-              "first_seen": "2026-11-08T04:01+02:00"
-            },
             "КолиБуде": {
               "fingerprint": "[[\"00:00\", \"05:00\"], [\"09:00\", \"17:00\"], [\"19:30\", \"24:00\"]]",
               "first_seen": "2026-11-08T00:01+02:00"
@@ -742,7 +742,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -786,7 +786,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -795,7 +795,7 @@
             "Alerts Energy",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-09": {
@@ -1602,7 +1602,7 @@
         },
         "2026-11-08": {
           "date": "2026-11-08",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "10.1",
           "outages": [
             [
@@ -1615,10 +1615,6 @@
             ]
           ],
           "source_observations": {
-            "Alerts Energy": {
-              "fingerprint": "[[\"04:00\", \"11:30\"], [\"14:30\", \"22:00\"]]",
-              "first_seen": "2026-11-08T04:01+02:00"
-            },
             "КолиБуде": {
               "fingerprint": "[[\"05:00\", \"11:30\"], [\"14:30\", \"22:00\"]]",
               "first_seen": "2026-11-08T00:01+02:00"
@@ -1641,7 +1637,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -1677,7 +1673,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -1686,7 +1682,7 @@
             "Alerts Energy",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-09": {
@@ -2477,7 +2473,7 @@
         },
         "2026-11-08": {
           "date": "2026-11-08",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "4.1",
           "outages": [
             [
@@ -2494,10 +2490,6 @@
             ]
           ],
           "source_observations": {
-            "Alerts Energy": {
-              "fingerprint": "[[\"00:00\", \"05:30\"], [\"09:00\", \"17:00\"], [\"19:30\", \"24:00\"]]",
-              "first_seen": "2026-11-08T04:01+02:00"
-            },
             "КолиБуде": {
               "fingerprint": "[[\"00:00\", \"05:00\"], [\"09:00\", \"17:00\"], [\"19:30\", \"24:00\"]]",
               "first_seen": "2026-11-08T00:01+02:00"
@@ -2524,7 +2516,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -2568,7 +2560,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -2577,7 +2569,7 @@
             "Alerts Energy",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-09": {
