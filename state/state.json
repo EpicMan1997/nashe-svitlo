@@ -298,6 +298,10 @@
         ]
       ],
       "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"02:00\", \"06:30\"], [\"08:00\", \"10:30\"], [\"13:30\", \"21:00\"]]",
+          "first_seen": "2026-11-09T05:40+02:00"
+        },
         "Київщина.info": {
           "fingerprint": "[[\"02:00\", \"06:30\"], [\"08:00\", \"10:30\"], [\"13:30\", \"21:00\"]]",
           "first_seen": "2026-11-09T00:01+02:00"
@@ -313,7 +317,6 @@
       },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
           "outages": [
             [
               "02:00",
@@ -329,7 +332,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -399,6 +402,7 @@
       },
       "source_updated": "",
       "sources": [
+        "Alerts Energy",
         "Київщина.info",
         "КолиБуде",
         "КолиСвітло"
