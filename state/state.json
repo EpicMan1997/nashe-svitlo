@@ -411,16 +411,47 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-10": {
+      "alternatives": [],
       "date": "2026-11-10",
-      "detail": "Графік ще не опубліковано",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "outages": [
+        [
+          "00:00",
+          "06:30"
+        ],
+        [
+          "10:30",
+          "17:00"
+        ],
+        [
+          "20:00",
+          "24:00"
+        ]
+      ],
+      "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"00:00\", \"06:30\"], [\"10:30\", \"17:00\"], [\"20:00\", \"24:00\"]]",
+          "first_seen": "2026-11-09T20:31+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "00:00",
+              "06:30"
+            ],
+            [
+              "10:30",
+              "17:00"
+            ],
+            [
+              "20:00",
+              "24:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "preliminary",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -453,8 +484,10 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Alerts Energy"
+      ],
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -3291,6 +3324,29 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "00:00",
+          "06:30"
+        ],
+        [
+          "10:30",
+          "17:00"
+        ],
+        [
+          "20:00",
+          "24:00"
+        ]
+      ],
+      "at": "2026-11-09T20:31+02:00",
+      "before": null,
+      "date": "2026-11-10",
+      "first_observed_source": "Alerts Energy",
+      "kind": "preliminary",
+      "message": "Попередній графік: 00:00–06:30, 10:30–17:00, 20:00–24:00",
+      "sources_confirmed": []
+    },
     {
       "after": [
         [
