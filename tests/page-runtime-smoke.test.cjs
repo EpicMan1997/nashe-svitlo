@@ -49,7 +49,7 @@ function makePayload(today) {
   return {updated_at:new Date().toISOString(),today_date:todayIso,tomorrow_date:tomorrow,
     days:locations.dacha.days,logs:[],locations,source_health:{issues:[]}};
 }
-function runDashboard() {
+function runDashboard(customizePayload) {
   const nodes=new Map(),docEvents={},windowEvents={},storage=new Map(),tabs=[],siteViews=[],locations=[];
   const node=id=>{if(!nodes.has(id))nodes.set(id,new NodeStub(id));return nodes.get(id);};
   ['today','tomorrow'].forEach(tab=>{const e=new NodeStub('tab-'+tab);e.dataset.tab=tab;tabs.push(e);});
@@ -84,6 +84,7 @@ function runDashboard() {
   const f=Object.fromEntries(dateParts.map(x=>[x.type,x.value]));
   const current=`${f.year}-${f.month}-${f.day}`;
   const payload=makePayload(current);
+  if (customizePayload) customizePayload(payload);
   const events=[];
   const window={
     scrollY:0,location:{href:'https://epicman1997.github.io/nashe-svitlo/'},
@@ -137,4 +138,34 @@ test('season view can load records without crashing the scheduling view',async()
   assert.match(r.node('seasonContent').innerHTML,/Сезон/);
   r.siteViews[0].events.click();
   assert.equal(r.node('ecoflow').hidden,false);
+});
+
+test('tomorrow badge belongs to the selected location, not other preliminary schedules',async()=>{
+ const r=runDashboard(payload=>{
+   const day=payload.tomorrow_date;
+   for(const loc of ['home','solovky','naumenky']){
+     payload.locations[loc].days[day]={
+       status:'preliminary',date:day,outages:[['08:00','10:00']],
+       sources:['Alerts Energy'],source_reports:{'Alerts Energy':{status:'preliminary',outages:[['08:00','10:00']]}}
+     };
+   }
+ });
+ await new Promise(setImmediate);
+ assert.equal(r.tabs[1].classList.contains('available'),false);
+ assert.equal(r.tabs[1].classList.contains('unavailable'),true);
+ assert.equal(r.node('tomorrowUnread').hidden,true);
+ r.tabs[1].onclick();
+ assert.match(r.node('display').innerHTML,/Очікуємо графік/);
+ assert.match(r.node('display').innerHTML,/На завтра для цієї локації графік ще не підтверджено/);
+ assert.doesNotMatch(r.node('display').innerHTML,/class="off"/);
+ r.locations[1].onclick();
+ assert.equal(r.tabs[1].classList.contains('available'),true);
+ assert.match(r.node('display').innerHTML,/Попередній графік/);
+ assert.match(r.node('display').innerHTML,/08:00/);
+ assert.doesNotMatch(r.node('display').innerHTML,/schedule-awaiting/);
+ assert.equal(r.node('tomorrowUnread').hidden,true);
+ r.tabs[0].onclick();
+ r.locations[0].onclick();
+ assert.equal(r.tabs[1].classList.contains('available'),false);
+ assert.equal(r.node('tomorrowUnread').hidden,true);
 });

@@ -94,6 +94,13 @@ class VisualStatusContract(unittest.TestCase):
         self.assertNotIn("Графік за цей день не збережений", HTML)
         self.assertNotIn("Зміни графіка: '+count", HTML)
 
+    def test_tomorrow_indicator_is_location_scoped(self):
+        self.assertIn("const available=Boolean(f),unseen=available&&remembered('dubechnya-tomorrow-seen-'+locationId+'-'+f.iso)!==f.hash", HTML)
+        self.assertIn("button.classList.toggle('unavailable',!available)", HTML)
+        self.assertIn("if(dot)dot.hidden=!unseen", HTML)
+        self.assertIn("На завтра для цієї локації графік ще не підтверджено", HTML)
+        self.assertNotIn("!fresh&&!unseen.length", HTML)
+
     def test_open_tomorrow_tab_marks_every_new_version_as_seen(self):
         self.assertIn("if(tab==='tomorrow'&&tomorrowFingerprint()){markTomorrowSeen();updateTomorrowTab()}", HTML)
         self.assertIn("setInterval(reload,15000)", HTML)
