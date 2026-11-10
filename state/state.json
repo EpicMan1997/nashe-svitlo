@@ -291,8 +291,8 @@
           "first_seen": "2026-11-10T08:51+02:00"
         },
         "КолиСвітло": {
-          "fingerprint": "[[\"00:00\", \"06:30\"], [\"10:00\", \"17:30\"], [\"19:30\", \"24:00\"]]",
-          "first_seen": "2026-11-10T08:51+02:00"
+          "fingerprint": "[[\"00:00\", \"06:30\"], [\"09:30\", \"16:30\"], [\"20:00\", \"24:00\"]]",
+          "first_seen": "2026-11-10T09:31+02:00"
         }
       },
       "source_reports": {
@@ -367,16 +367,16 @@
               "06:30"
             ],
             [
-              "10:00",
-              "17:30"
+              "09:30",
+              "16:30"
             ],
             [
-              "19:30",
+              "20:00",
               "24:00"
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kolysvitlo.com/schedule/dtek_kyiv_oblast"
         }
       },
@@ -384,8 +384,7 @@
       "sources": [
         "Alerts Energy",
         "Київщина.info",
-        "КолиБуде",
-        "КолиСвітло"
+        "КолиБуде"
       ],
       "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
