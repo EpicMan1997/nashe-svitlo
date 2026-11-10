@@ -391,10 +391,25 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-11": {
+      "alternatives": [],
       "date": "2026-11-11",
-      "detail": "Немає підтверджених даних",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "outages": [
+        [
+          "07:00",
+          "14:00"
+        ],
+        [
+          "18:00",
+          "22:00"
+        ]
+      ],
+      "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[[\"07:00\", \"14:00\"], [\"18:00\", \"22:00\"]]",
+          "first_seen": "2026-11-10T23:36+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
           "fetch_failed": false,
@@ -411,10 +426,18 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "07:00",
+              "14:00"
+            ],
+            [
+              "18:00",
+              "22:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "preliminary",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -433,8 +456,10 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Київщина.info"
+      ],
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -3563,6 +3588,25 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "07:00",
+          "14:00"
+        ],
+        [
+          "18:00",
+          "22:00"
+        ]
+      ],
+      "at": "2026-11-10T23:36+02:00",
+      "before": null,
+      "date": "2026-11-11",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: 07:00–14:00, 18:00–22:00",
+      "sources_confirmed": []
+    },
     {
       "after": [
         [
