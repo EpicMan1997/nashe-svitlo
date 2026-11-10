@@ -27,6 +27,13 @@ DTEK = 'https://www.dtek-krem.com.ua/ua/shutdowns'
 ALERTS_REGION = 'https://alerts.energy/kyivska-oblast'
 ALERTS_CITY = 'https://alerts.energy/kyiv'
 KYIVSHCHYNA = 'https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/'
+KYIVSHCHYNA_ARTICLE = 'https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivshchyna-'
+MONTH_SLUGS = ('', 'sichnya','lyutoho','bereznya','kvitnya','travnya','chervnya',
+               'lypnya','serpnya','veresnya','zhovtnya','lystopada','hrudnya')
+
+def kyivshchyna_article_url(day):
+    return (KYIVSHCHYNA_ARTICLE + str(day.day) + '-' +
+            MONTH_SLUGS[day.month] + '-' + str(day.year) + '/')
 SVITLOLIVE = 'https://svitlo.live/selo-vischa-dubechnya'
 SVITLOLIVE_FALLBACK = 'https://svitlo.live/pirnivska-gromada'
 MONTHS = ['', 'січня', 'лютого', 'березня', 'квітня', 'травня', 'червня',
@@ -147,23 +154,102 @@ def parse_kolybude(html,target,today):
 
 
 def parse_kyivshchyna(html, target, today):
-    """Only a date-verified queue 3.1 block. Do not infer tomorrow's rows."""
-    if target != today:
+    """Read either dated section of the live DTEK KREM queue listing.
+
+    The page displays TODAY and TOMORROW simultaneously, followed by unrelated
+    historical articles. Never accept a row from the wrong date/queue.
+    """
+    if not html or target not in (today, today + timedelta(days=1)):
         return None
     page = plain(html)
-    # The site publishes the latest DTEK update and a local check timestamp.
-    # A previous-day source check is not sufficient evidence for today's graph.
-    if target.strftime('%d.%m.%Y') not in page and f'{target.day} {MONTHS[target.month]} {target.year}' not in page:
+    kind = 'сьогодні' if target == today else 'завтра'
+    label = f'{target.day} {MONTHS[target.month]}'
+    heading = re.search(
+        r'Графік відключення світла в Київській області:\s*' +
+        re.escape(kind) + r',\s*' + re.escape(label) + r'\b',
+        page, re.I)
+    if heading:
+        tail = page[heading.end():]
+        end = re.search(
+            r'Графік відключення світла в Київській області:\s*(?:сьогодні|завтра)'
+            r'|Новини про світло на Київщині|Графік для вашого міста', tail, re.I)
+        scoped_page = tail[:end.start()] if end else tail
+        # A visible placeholder is not evidence of no power cuts.
+        if re.search(r'Графік на завтра ще не опублікован|Очікуємо графік', scoped_page, re.I):
+            return None
+        row = re.search(r'Черга\s*3\.1\b(.*?)(?:Черга\s*3\.2\b|$)',
+                        scoped_page, re.I | re.S)
+        if not row:
+            return None
+        block = row.group(1)
+        if re.search(r'без відключень|відключень немає', block, re.I):
+            return tuple()
+        off = re.search(r'без світла:\s*(.*)', block, re.I)
+        if not off:
+            return None
+        ranges = pairs(off.group(1))
+        return normalize(ranges) if ranges else None
+
+    # Compatibility with the older, today-only layout.
+    if target != today:
         return None
-    row = re.search(r'Черга\s*3\.1\b(.*?)(?:Черга\s*3\.2\b|Черга\s*4\.1\b)',page,re.I|re.S)
+    if (target.strftime('%d.%m.%Y') not in page and
+            f'{target.day} {MONTHS[target.month]} {target.year}' not in page):
+        return None
+    row = re.search(r'Черга\s*3\.1\b(.*?)(?:Черга\s*3\.2\b|Черга\s*4\.1\b)',
+                    page, re.I | re.S)
     if not row:
         return None
-    cell = row.group(1)
-    if re.search(r'без відключень|відключень немає',cell,re.I):
+    block = row.group(1)
+    if re.search(r'без відключень|відключень немає', block, re.I):
         return tuple()
-    off = re.search(r'без світла:\s*(.*)',cell,re.I)
-    if not off: return None
+    off = re.search(r'без світла:\s*(.*)', block, re.I)
+    if not off:
+        return None
     ranges = pairs(off.group(1))
+    return normalize(ranges) if ranges else None
+
+
+def parse_kyivshchyna_article(html, target):
+    """Date-scoped article fallback, with 3.1 isolated before historical changes.
+
+    Editorial DTEK quotations count as only ONE Kyivshchyna.info source, not
+    independent corroboration of the live table.
+    """
+    if not html:
+        return None
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.h1.get_text(' ', strip=True) if soup.h1 else ''
+    label = f'{target.day} {MONTHS[target.month]}'
+    if not re.search(r'на\s+' + re.escape(label) + r'\b', title, re.I):
+        return None
+    page = plain(html)
+    # Require the correct publication year and a dated, queue-specific table.
+    if str(target.year) not in page[:2000]:
+        return None
+    start = re.search(r'Графік відключень на\s+' + re.escape(label) +
+                      r'\s+за чергами', page, re.I)
+    if not start:
+        return None
+    tail = page[start.end():]
+    end = re.search(r'\bОновлення\b|\bДе перевірити свою чергу\b', tail, re.I)
+    if end:
+        tail = tail[:end.start()]
+    row = re.search(r'Черга\s*3\.1\s*:\s*(.*?)(?:Черга\s*3\.2\s*:|$)',
+                    tail, re.I | re.S)
+    if not row:
+        return None
+    text = row.group(1)
+    if re.search(r'без відключень|відключень немає', text, re.I):
+        return tuple()
+    found = re.findall(
+        r'з\s+([01]\d|2[0-4]):([0-5]\d)\s+до\s+([01]\d|2[0-4]):([0-5]\d)',
+        text, re.I)
+    ranges = []
+    for a, b, c, d in found:
+        start_time, end_time = a + ':' + b, c + ':' + d
+        if minutes(start_time) < minutes(end_time):
+            ranges.append((start_time, end_time))
     return normalize(ranges) if ranges else None
 
 def parse_svitlolive(html, target, today):
@@ -226,7 +312,7 @@ def parse_alerts(html, target, group, operator):
     scan(state)
     return next(iter(outcomes)) if len(outcomes)==1 else None
 
-def source_reports(result,bez,koly,bude,region,live,old,alerts=None):
+def source_reports(result,bez,koly,bude,region,live,old,alerts=None,region_url=None):
     """Show what each distinct site actually reported, independently of consensus."""
     target = tuple(tuple(x) for x in result.get('outages',[]))
     raw = {
@@ -235,7 +321,7 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None):
             'partial':[], 'url':bez.get('url',MAP_REGION)},
         'КолиСвітло':{'ranges':koly,'partial':[],'url':KOLY},
         'КолиБуде':{'ranges':bude,'partial':[],'url':KOLBUDE},
-        'Київщина.info':{'ranges':region,'partial':[],'url':KYIVSHCHYNA},
+        'Київщина.info':{'ranges':region,'partial':[],'url':region_url or KYIVSHCHYNA},
         'Alerts Energy':{'ranges':alerts,'partial':[],'url':ALERTS_REGION},
     }
     output={}
@@ -255,13 +341,15 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None):
                           'outages':outage_list,'partial':part,'url':entry['url']}
     return output
 
-def fetch(url, label, errors):
+def fetch(url, label, errors, optional=False):
     try:
         r=requests.get(url,timeout=(8,15),headers={'User-Agent':'Mozilla/5.0 (compatible; SvitloDubechnya/1.0)','Accept-Language':'uk-UA,uk;q=0.9'})
         r.raise_for_status()
         return r.text
     except requests.RequestException as exc:
         code=exc.response.status_code if getattr(exc,'response',None) is not None else None
+        if optional and code == 404:
+            return None  # An unpublished date-scoped article is normal.
         errors.append(label+': '+type(exc).__name__+(f' HTTP {code}' if code is not None else ''))
         return None
 
@@ -401,7 +489,9 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
         for srcs in provisional_votes.values():srcs.discard(primary_source)
     provisional_votes={off:srcs for off,srcs in provisional_votes.items() if srcs}
     if allow_early and provisional_votes:
-        preferred=['Alerts Energy','Карта світла','КолиСвітло','КолиБуде','Київщина.info','БезСвітла']
+        # This site exposes tomorrow's operator-derived rows earlier than the
+        # delayed aggregators. Still provisional until an independent source agrees.
+        preferred=['Київщина.info','Alerts Energy','Карта світла','КолиСвітло','КолиБуде','БезСвітла']
         def rank(item):
             off,srcs=item
             first=min((preferred.index(src) if src in preferred else len(preferred)) for src in srcs)
@@ -616,8 +706,13 @@ def main():
     }
     with ThreadPoolExecutor(max_workers=len(sources)+1) as pool:
         jobs={key:pool.submit(fetch,url,label,errors) for key,(url,label) in sources.items()}
+        # Fetch a date-scoped editorial fallback in parallel, without treating
+        # an expected 404 before publication as an outage-source failure.
+        article_url = kyivshchyna_article_url(tomorrow)
+        article_job=pool.submit(fetch,article_url,'Київщина.info архівний графік',errors,True)
         city_job=pool.submit(update_city_locations,now,today,old,errors)
         results={key:job.result() for key,job in jobs.items()}
+        article_html=article_job.result()
         city=city_job.result()
     koly,bude,official=results['koly'],results['bude'],results['official']
     region_html=results['region_html']
@@ -640,11 +735,15 @@ def main():
         
         b=parse_kolybude(bude,target,today) if bude else None
         region=parse_kyivshchyna(region_html,target,today) if region_html else None
+        region_url=KYIVSHCHYNA
+        if region is None and target==tomorrow:
+            region=parse_kyivshchyna_article(article_html,target)
+            if region is not None: region_url=article_url
         live=None  # Svitlo.live is no longer treated as a current reference
         previous=old.get('days',{}).get(target.isoformat(),{})
         alerts=parse_alerts(region_alerts,target,'3.1','kyivska_oblast_oblenergo')
         entry=choose(target,bez,a,b,previous,{'Київщина.info':region,'Alerts Energy':alerts},primary_source='Карта світла',allow_early=target>today)
-        entry['source_reports']=source_reports(entry,bez,a,b,region,live,previous,alerts)
+        entry['source_reports']=source_reports(entry,bez,a,b,region,live,previous,alerts,region_url)
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry
         event=change(previous,entry)

@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 from datetime import date,datetime,timezone,timedelta
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from refresh import normalize,pairs,parse_bez,parse_kolysvitlo,parse_kolybude,parse_kyivshchyna,parse_svitlolive,source_reports,parse_alerts,parse_mapasvitla,choose,change,make_log_event,record_source_observations,earliest_observed_source,parse_city_bez,parse_city_koly,parse_city_bude,city_sources,CITY_LOCATIONS,parse_dtek_notice,parse_dtek_telegram,select_emergency
+from refresh import normalize,pairs,parse_bez,parse_kolysvitlo,parse_kolybude,parse_kyivshchyna,parse_svitlolive,source_reports,parse_alerts,parse_mapasvitla,choose,change,make_log_event,record_source_observations,earliest_observed_source,parse_city_bez,parse_city_koly,parse_city_bude,city_sources,CITY_LOCATIONS,kyivshchyna_article_url,parse_kyivshchyna_article,parse_dtek_notice,parse_dtek_telegram,select_emergency
 D=date(2026,10,24)
 E=(('08:00','12:00'),('18:30','22:30'))
 B='<h1>Вища Дубечня на 24.10.2026</h1><h3>Графік Черга 3.1</h3>00:00 – 08:00 08:00 – 12:00 12:00 – 18:30 18:30 – 22:30 22:30 – 24:00 Зберегти підчергу'
@@ -84,6 +84,70 @@ class Tests(unittest.TestCase):
  def test_region_refuse_tomorrow(self):
   page='24.10.2026 Черга 3.1 без світла: 08:00–12:00 Черга 3.2'
   self.assertIsNone(parse_kyivshchyna(page,date(2026,10,25),D))
+ def test_region_live_page_tomorrow_uses_only_date_scoped_queue(self):
+  today=date(2026,11,10)
+  tomorrow=date(2026,11,11)
+  page=(
+   '<h2>Графік відключення світла в Київській області: сьогодні, 10 листопада</h2>'
+   'Погодинний графік відключень, сьогодні, 10 листопада'
+   'Черга 3.1 17,5 год без світла без світла: 00:00–06:30 09:30–16:30 20:00–24:00 '
+   'Черга 3.2 16 год без світла '
+   '<h2>Графік відключення світла в Київській області: завтра, 11 листопада</h2>'
+   'Погодинний графік відключень, завтра, 11 листопада'
+   'Черга 3.1 11 год без світла без світла: 07:00–14:00 18:00–22:00 '
+   'Черга 3.2 14,5 год без світла без світла: 00:00–03:30 08:00–14:00'
+   '<h2>Новини про світло на Київщині</h2>'
+   'Черга 3.1: було 07:00–14:00 18:00–24:00'
+  )
+  self.assertEqual(parse_kyivshchyna(page,today,today),
+                   (('00:00','06:30'),('09:30','16:30'),('20:00','24:00')))
+  self.assertEqual(parse_kyivshchyna(page,tomorrow,today),
+                   (('07:00','14:00'),('18:00','22:00')))
+  self.assertIsNone(parse_kyivshchyna(page,date(2026,11,12),today))
+
+ def test_region_live_page_tomorrow_must_not_borrow_today(self):
+  today=date(2026,11,10)
+  page=(
+   '<h2>Графік відключення світла в Київській області: сьогодні, 10 листопада</h2>'
+   'Черга 3.1 17,5 год без світла без світла: 00:00–06:30 09:30–16:30 20:00–24:00 '
+   'Черга 3.2'
+   '<h2>Графік відключення світла в Київській області: завтра, 11 листопада</h2>'
+   'Очікуємо графік на завтра'
+   '<h2>Новини про світло на Київщині</h2>'
+  )
+  self.assertIsNone(parse_kyivshchyna(page,date(2026,11,11),today))
+
+ def test_news_article_fallback_is_date_scoped_and_ignores_older_revision(self):
+  target=date(2026,11,11)
+  page=(
+   '<h1>Графік відключень світла на Київщині на 11 листопада:'
+   ' до 15 год без світла</h1>'
+   '<p>Опубліковано: 10 Листопада, 2026 - 22:08</p>'
+   '<h2>Графік відключень на 11 листопада за чергами</h2>'
+   '<ul><li>Черга 2.2: з 04:00 до 11:30</li>'
+   '<li>Черга 3.1: з 07:00 до 14:00, з 18:00 до 22:00 (11 год без світла)</li>'
+   '<li>Черга 3.2: з 00:00 до 03:30</li></ul>'
+   '<h2>Оновлення</h2>'
+   '<p>Черга 3.1: було з 07:00 до 14:00, з 18:00 до 24:00</p>'
+  )
+  self.assertEqual(parse_kyivshchyna_article(page,target),
+                   (('07:00','14:00'),('18:00','22:00')))
+  self.assertIsNone(parse_kyivshchyna_article(page,date(2026,11,12)))
+  self.assertEqual(kyivshchyna_article_url(target),
+                   'https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivshchyna-11-lystopada-2026/')
+
+ def test_new_early_region_news_ranks_before_stale_aggregator(self):
+  tomorrow=date(2026,11,11)
+  news=(('07:00','14:00'),('18:00','22:00'))
+  stale=(('07:00','14:00'),('18:00','24:00'))
+  result=choose(tomorrow,{'candidates':[],'updated':'','unpublished':True},
+                None,None,{}, {'Київщина.info':news,'Alerts Energy':stale},
+                primary_source='Карта світла',allow_early=True)
+  self.assertEqual(result['status'],'preliminary')
+  self.assertEqual(result['outages'],[list(x) for x in news])
+  self.assertEqual(result['sources'],['Київщина.info'])
+  self.assertEqual(result['alternatives'][0]['outages'],[list(x) for x in stale])
+
  def test_svitlolive_partial_not_exact(self):
   cells=['●']*24
   for i in range(8,12):cells[i]='✕'
