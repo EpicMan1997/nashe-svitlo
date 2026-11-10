@@ -392,7 +392,7 @@
     },
     "2026-11-11": {
       "date": "2026-11-11",
-      "detail": "Графік ще не опубліковано",
+      "detail": "Немає підтверджених даних",
       "outages": [],
       "source_observations": {},
       "source_reports": {
@@ -758,16 +758,48 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-11": {
+          "alternatives": [],
           "date": "2026-11-11",
-          "detail": "Немає підтверджених даних",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "4.1",
-          "outages": [],
-          "source_observations": {},
+          "outages": [
+            [
+              "00:00",
+              "04:30"
+            ],
+            [
+              "08:00",
+              "15:00"
+            ],
+            [
+              "17:00",
+              "24:00"
+            ]
+          ],
+          "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"00:00\", \"04:30\"], [\"08:00\", \"15:00\"], [\"17:00\", \"24:00\"]]",
+              "first_seen": "2026-11-10T22:10+02:00"
+            }
+          },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "04:30"
+                ],
+                [
+                  "08:00",
+                  "15:00"
+                ],
+                [
+                  "17:00",
+                  "24:00"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "preliminary",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -790,8 +822,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "Alerts Energy"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         }
       },
@@ -805,6 +839,29 @@
       },
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "00:00",
+              "04:30"
+            ],
+            [
+              "08:00",
+              "15:00"
+            ],
+            [
+              "17:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-10T22:10+02:00",
+          "before": null,
+          "date": "2026-11-11",
+          "first_observed_source": "Alerts Energy",
+          "kind": "preliminary",
+          "message": "Попередній графік: 00:00–04:30, 08:00–15:00, 17:00–24:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
@@ -1715,16 +1772,56 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-11": {
+          "alternatives": [],
           "date": "2026-11-11",
-          "detail": "Немає підтверджених даних",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "10.1",
-          "outages": [],
-          "source_observations": {},
+          "outages": [
+            [
+              "00:00",
+              "01:00"
+            ],
+            [
+              "04:30",
+              "10:00"
+            ],
+            [
+              "13:00",
+              "19:00"
+            ],
+            [
+              "22:00",
+              "24:00"
+            ]
+          ],
+          "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"00:00\", \"01:00\"], [\"04:30\", \"10:00\"], [\"13:00\", \"19:00\"], [\"22:00\", \"24:00\"]]",
+              "first_seen": "2026-11-10T22:10+02:00"
+            }
+          },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "01:00"
+                ],
+                [
+                  "04:30",
+                  "10:00"
+                ],
+                [
+                  "13:00",
+                  "19:00"
+                ],
+                [
+                  "22:00",
+                  "24:00"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "preliminary",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -1747,8 +1844,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "Alerts Energy"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         }
       },
@@ -1762,6 +1861,33 @@
       },
       "group": "10.1",
       "logs": [
+        {
+          "after": [
+            [
+              "00:00",
+              "01:00"
+            ],
+            [
+              "04:30",
+              "10:00"
+            ],
+            [
+              "13:00",
+              "19:00"
+            ],
+            [
+              "22:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-10T22:10+02:00",
+          "before": null,
+          "date": "2026-11-11",
+          "first_observed_source": "Alerts Energy",
+          "kind": "preliminary",
+          "message": "Попередній графік: 00:00–01:00, 04:30–10:00, 13:00–19:00, 22:00–24:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
@@ -2707,16 +2833,48 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-11": {
+          "alternatives": [],
           "date": "2026-11-11",
-          "detail": "Немає підтверджених даних",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "4.1",
-          "outages": [],
-          "source_observations": {},
+          "outages": [
+            [
+              "00:00",
+              "04:30"
+            ],
+            [
+              "08:00",
+              "15:00"
+            ],
+            [
+              "17:00",
+              "24:00"
+            ]
+          ],
+          "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"00:00\", \"04:30\"], [\"08:00\", \"15:00\"], [\"17:00\", \"24:00\"]]",
+              "first_seen": "2026-11-10T22:10+02:00"
+            }
+          },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "04:30"
+                ],
+                [
+                  "08:00",
+                  "15:00"
+                ],
+                [
+                  "17:00",
+                  "24:00"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "preliminary",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -2739,8 +2897,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "Alerts Energy"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         }
       },
@@ -2754,6 +2914,29 @@
       },
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "00:00",
+              "04:30"
+            ],
+            [
+              "08:00",
+              "15:00"
+            ],
+            [
+              "17:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-10T22:10+02:00",
+          "before": null,
+          "date": "2026-11-11",
+          "first_observed_source": "Alerts Energy",
+          "kind": "preliminary",
+          "message": "Попередній графік: 00:00–04:30, 08:00–15:00, 17:00–24:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
