@@ -121,11 +121,11 @@ test('unknown tomorrow does not invent intervals, city tabs remain switchable',a
   const r=runDashboard();
   await new Promise(setImmediate);
   r.tabs[1].onclick();
-  assert.match(r.node('display').innerHTML,/Графіка немає/);
+  assert.match(r.node('display').innerHTML,/Очікуємо графік/);
   assert.doesNotMatch(r.node('display').innerHTML,/class="off"/);
   r.locations[3].onclick();
   assert.equal(r.node('locationLabel').textContent,'Науменки');
-  assert.match(r.node('display').innerHTML,/Графіка немає/);
+  assert.match(r.node('display').innerHTML,/Очікуємо графік/);
 });
 
 test('season view can load records without crashing the scheduling view',async()=>{
