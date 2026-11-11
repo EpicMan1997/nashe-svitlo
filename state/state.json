@@ -372,15 +372,41 @@
     },
     "2026-11-12": {
       "date": "2026-11-12",
-      "detail": "Графік ще не опубліковано",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Зіставлено незалежні джерела",
+      "outages": [
+        [
+          "03:30",
+          "10:30"
+        ],
+        [
+          "16:00",
+          "21:00"
+        ]
+      ],
+      "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"03:30\", \"10:30\"], [\"16:00\", \"21:00\"]]",
+          "first_seen": "2026-11-11T20:40+02:00"
+        },
+        "Київщина.info": {
+          "fingerprint": "[[\"03:30\", \"10:30\"], [\"16:00\", \"21:00\"]]",
+          "first_seen": "2026-11-11T20:40+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "03:30",
+              "10:30"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -391,10 +417,18 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "03:30",
+              "10:30"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -413,8 +447,11 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Alerts Energy",
+        "Київщина.info"
+      ],
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -3292,6 +3329,28 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "03:30",
+          "10:30"
+        ],
+        [
+          "16:00",
+          "21:00"
+        ]
+      ],
+      "at": "2026-11-11T20:40+02:00",
+      "before": null,
+      "date": "2026-11-12",
+      "first_observed_source": null,
+      "kind": "published",
+      "message": "Опубліковано графік: 03:30–10:30, 16:00–21:00",
+      "sources_confirmed": [
+        "Alerts Energy",
+        "Київщина.info"
+      ]
+    },
     {
       "after": [
         [
