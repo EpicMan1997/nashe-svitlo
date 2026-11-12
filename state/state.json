@@ -242,7 +242,7 @@
     },
     "2026-11-12": {
       "date": "2026-11-12",
-      "detail": "Зіставлено незалежні джерела",
+      "detail": "Суперечливі джерела",
       "outages": [
         [
           "03:30",
@@ -255,8 +255,8 @@
       ],
       "source_observations": {
         "Alerts Energy": {
-          "fingerprint": "[[\"03:30\", \"10:30\"], [\"16:00\", \"21:00\"]]",
-          "first_seen": "2026-11-11T20:40+02:00"
+          "fingerprint": "[[\"03:30\", \"10:30\"], [\"14:30\", \"20:30\"]]",
+          "first_seen": "2026-11-12T15:10+02:00"
         },
         "Київщина.info": {
           "fingerprint": "[[\"03:30\", \"10:30\"], [\"16:00\", \"21:00\"]]",
@@ -267,8 +267,8 @@
           "first_seen": "2026-11-12T00:01+02:00"
         },
         "КолиСвітло": {
-          "fingerprint": "[[\"03:30\", \"10:30\"], [\"16:00\", \"21:00\"]]",
-          "first_seen": "2026-11-12T00:01+02:00"
+          "fingerprint": "[[\"03:30\", \"10:30\"], [\"14:30\", \"20:30\"]]",
+          "first_seen": "2026-11-12T15:10+02:00"
         }
       },
       "source_reports": {
@@ -279,12 +279,12 @@
               "10:30"
             ],
             [
-              "16:00",
-              "21:00"
+              "14:30",
+              "20:30"
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -306,7 +306,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -321,7 +321,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -331,12 +331,12 @@
               "10:30"
             ],
             [
-              "16:00",
-              "21:00"
+              "14:30",
+              "20:30"
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kolysvitlo.com/schedule/dtek_kyiv_oblast"
         }
       },
@@ -347,7 +347,7 @@
         "КолиБуде",
         "КолиСвітло"
       ],
-      "status": "normal",
+      "status": "stale",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-13": {
