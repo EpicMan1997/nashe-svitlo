@@ -351,10 +351,29 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-13": {
+      "alternatives": [],
       "date": "2026-11-13",
-      "detail": "Графік ще не опубліковано",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "outages": [
+        [
+          "01:00",
+          "04:30"
+        ],
+        [
+          "10:30",
+          "15:30"
+        ],
+        [
+          "21:00",
+          "24:00"
+        ]
+      ],
+      "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[[\"01:00\", \"04:30\"], [\"10:30\", \"15:30\"], [\"21:00\", \"24:00\"]]",
+          "first_seen": "2026-11-12T21:01+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
           "fetch_failed": false,
@@ -371,10 +390,22 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "01:00",
+              "04:30"
+            ],
+            [
+              "10:30",
+              "15:30"
+            ],
+            [
+              "21:00",
+              "24:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "preliminary",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -393,8 +424,10 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Київщина.info"
+      ],
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -3331,6 +3364,29 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "01:00",
+          "04:30"
+        ],
+        [
+          "10:30",
+          "15:30"
+        ],
+        [
+          "21:00",
+          "24:00"
+        ]
+      ],
+      "at": "2026-11-12T21:01+02:00",
+      "before": null,
+      "date": "2026-11-13",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: 01:00–04:30, 10:30–15:30, 21:00–24:00",
+      "sources_confirmed": []
+    },
     {
       "after": [
         [
