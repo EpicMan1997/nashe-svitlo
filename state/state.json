@@ -351,9 +351,8 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-13": {
-      "alternatives": [],
       "date": "2026-11-13",
-      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "detail": "Зіставлено незалежні джерела",
       "outages": [
         [
           "01:00",
@@ -369,6 +368,10 @@
         ]
       ],
       "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"01:00\", \"04:30\"], [\"10:30\", \"15:30\"], [\"21:00\", \"24:00\"]]",
+          "first_seen": "2026-11-12T21:20+02:00"
+        },
         "Київщина.info": {
           "fingerprint": "[[\"01:00\", \"04:30\"], [\"10:30\", \"15:30\"], [\"21:00\", \"24:00\"]]",
           "first_seen": "2026-11-12T21:01+02:00"
@@ -376,10 +379,22 @@
       },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "01:00",
+              "04:30"
+            ],
+            [
+              "10:30",
+              "15:30"
+            ],
+            [
+              "21:00",
+              "24:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -405,7 +420,7 @@
             ]
           ],
           "partial": [],
-          "status": "preliminary",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -425,9 +440,10 @@
       },
       "source_updated": "",
       "sources": [
+        "Alerts Energy",
         "Київщина.info"
       ],
-      "status": "preliminary",
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -3364,6 +3380,32 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "01:00",
+          "04:30"
+        ],
+        [
+          "10:30",
+          "15:30"
+        ],
+        [
+          "21:00",
+          "24:00"
+        ]
+      ],
+      "at": "2026-11-12T21:20+02:00",
+      "before": null,
+      "date": "2026-11-13",
+      "first_observed_source": "Київщина.info",
+      "kind": "published",
+      "message": "Змінено графік: 01:00–04:30, 10:30–15:30, 21:00–24:00 → 01:00–04:30, 10:30–15:30, 21:00–24:00",
+      "sources_confirmed": [
+        "Alerts Energy",
+        "Київщина.info"
+      ]
+    },
     {
       "after": [
         [
