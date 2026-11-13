@@ -130,6 +130,10 @@
           "2026-11-13": {
             "events": [],
             "observed": true
+          },
+          "2026-11-14": {
+            "events": [],
+            "observed": true
           }
         },
         "home": {
@@ -240,6 +244,10 @@
             "observed": true
           },
           "2026-11-13": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-14": {
             "events": [],
             "observed": true
           }
@@ -360,6 +368,10 @@
           "2026-11-13": {
             "events": [],
             "observed": true
+          },
+          "2026-11-14": {
+            "events": [],
+            "observed": true
           }
         },
         "solovky": {
@@ -470,6 +482,10 @@
             "observed": true
           },
           "2026-11-13": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-14": {
             "events": [],
             "observed": true
           }
@@ -1150,6 +1166,28 @@
               ]
             ],
             "total_minutes": 780
+          },
+          "2026-11-13": {
+            "longest_interval": [
+              "10:30",
+              "15:30"
+            ],
+            "longest_minutes": 300,
+            "outages": [
+              [
+                "01:00",
+                "04:30"
+              ],
+              [
+                "10:30",
+                "15:30"
+              ],
+              [
+                "21:00",
+                "24:00"
+              ]
+            ],
+            "total_minutes": 690
           }
         },
         "home": {
@@ -1593,6 +1631,28 @@
               ]
             ],
             "total_minutes": 870
+          },
+          "2026-11-13": {
+            "longest_interval": [
+              "08:30",
+              "14:30"
+            ],
+            "longest_minutes": 360,
+            "outages": [
+              [
+                "00:00",
+                "02:00"
+              ],
+              [
+                "08:30",
+                "14:30"
+              ],
+              [
+                "16:30",
+                "22:30"
+              ]
+            ],
+            "total_minutes": 840
           }
         },
         "naumenky": {
@@ -2023,6 +2083,28 @@
               [
                 "16:30",
                 "22:00"
+              ]
+            ],
+            "total_minutes": 930
+          },
+          "2026-11-13": {
+            "longest_interval": [
+              "03:30",
+              "09:30"
+            ],
+            "longest_minutes": 360,
+            "outages": [
+              [
+                "03:30",
+                "09:30"
+              ],
+              [
+                "12:00",
+                "18:00"
+              ],
+              [
+                "20:30",
+                "24:00"
               ]
             ],
             "total_minutes": 930
@@ -2469,6 +2551,28 @@
               ]
             ],
             "total_minutes": 870
+          },
+          "2026-11-13": {
+            "longest_interval": [
+              "08:30",
+              "14:30"
+            ],
+            "longest_minutes": 360,
+            "outages": [
+              [
+                "00:00",
+                "02:00"
+              ],
+              [
+                "08:30",
+                "14:30"
+              ],
+              [
+                "16:30",
+                "22:30"
+              ]
+            ],
+            "total_minutes": 840
           }
         }
       },
