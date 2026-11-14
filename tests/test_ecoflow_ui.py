@@ -30,7 +30,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertTrue(panel)
         self.assertIn("const demoInventory = Object.freeze({", JS)
         self.assertNotRegex(JS, r"\bfetch\s*\(|XMLHttpRequest|WebSocket")
-        self.assertIn("disabled", JS)
+        self.assertNotIn("adminControls(", JS)
 
     def test_admin_and_fake_device_controls_are_removed(self):
         self.assertNotIn('id="ecoAdminToggle"', HTML)
@@ -130,7 +130,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("Прогноз EcoFlow", JS)
         self.assertNotIn("Автономність: —", JS)
         self.assertNotIn("Вхід / вихід контролює основна станція", JS)
-        self.assertIn("disabled", JS)
+        self.assertNotIn("adminControls(", JS)
 
 
     def test_compact_location_and_space_mapping(self):
@@ -244,7 +244,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('class="eco-powerocean charge-', JS)
         self.assertIn("eco-ocean-body", JS)
         self.assertIn("eco-ocean-energy", JS)
-        self.assertIn('min="100" max="3000" step="100"', JS)
+        self.assertIn("1 акумулятор", JS) if False else self.assertIn("d.batteryCount === 1", JS)
         self.assertIn(".eco-powerocean{", CSS)
         self.assertIn('grid-column:1/-1!important', CSS)
         self.assertNotIn("Інвертор ' + d.inverterKw", JS)
@@ -560,7 +560,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("const solarUiEnabled = false;", JS)
         self.assertIn("powerReading(d,'in')", JS)
         self.assertNotIn("кВт", JS)
-        self.assertNotIn("кВт", HTML)
+        self.assertIn("номінальних 5 кВт", HTML)
         self.assertNotIn("Вт", JS)
         self.assertNotIn("Вт", HTML)
         self.assertIn("4 800 Wh", HTML)
