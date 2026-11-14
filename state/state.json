@@ -254,6 +254,10 @@
         ]
       ],
       "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[[\"00:00\", \"01:00\"], [\"07:30\", \"11:30\"], [\"18:00\", \"22:00\"]]",
+          "first_seen": "2026-11-14T20:40+02:00"
+        },
         "КолиБуде": {
           "fingerprint": "[[\"00:00\", \"01:00\"], [\"07:30\", \"11:30\"], [\"18:00\", \"22:00\"]]",
           "first_seen": "2026-11-14T00:01+02:00"
@@ -292,7 +296,6 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
           "outages": [
             [
               "00:00",
@@ -308,7 +311,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -352,6 +355,7 @@
       },
       "source_updated": "",
       "sources": [
+        "Київщина.info",
         "КолиБуде",
         "КолиСвітло"
       ],
@@ -360,14 +364,19 @@
     },
     "2026-11-15": {
       "date": "2026-11-15",
-      "detail": "Немає підтверджених даних",
+      "detail": "Очікуємо незалежне підтвердження",
       "outages": [
         [
           "16:00",
           "20:00"
         ]
       ],
-      "source_observations": {},
+      "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[[\"16:00\", \"20:00\"]]",
+          "first_seen": "2026-11-14T20:40+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
           "fetch_failed": false,
@@ -389,7 +398,6 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
           "outages": [
             [
               "16:00",
@@ -397,7 +405,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "diff",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -724,7 +732,7 @@
         },
         "2026-11-15": {
           "date": "2026-11-15",
-          "detail": "Графік ще не опубліковано",
+          "detail": "Немає підтверджених даних",
           "group": "4.1",
           "outages": [],
           "source_observations": {},
@@ -1529,7 +1537,7 @@
         },
         "2026-11-15": {
           "date": "2026-11-15",
-          "detail": "Графік ще не опубліковано",
+          "detail": "Немає підтверджених даних",
           "group": "10.1",
           "outages": [],
           "source_observations": {},
@@ -2357,7 +2365,7 @@
         },
         "2026-11-15": {
           "date": "2026-11-15",
-          "detail": "Графік ще не опубліковано",
+          "detail": "Немає підтверджених даних",
           "group": "4.1",
           "outages": [],
           "source_observations": {},
