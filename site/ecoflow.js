@@ -23,7 +23,7 @@
     home: {
       name: 'Дім', space: 'Квартира',
       devices: [
-        { name: 'PowerOcean', capacityWh: 10000, inverterKw: 6, systemPowerKw: 6, batteryCount: 2, pct: 67, inputW: 300, outputW: 760, type: 'system', id: 'po', operation: 'discharging' }
+        { name: 'PowerOcean', capacityWh: 5000, inverterKw: 6, systemPowerKw: 6, batteryCount: 1, pct: 67, inputW: 300, outputW: 760, type: 'system', id: 'po', operation: 'discharging' }
       ]
     },
     solovky: {
@@ -149,7 +149,7 @@
     root.dataset.telemetryState = stateHere;
   }
 
-  // Physical battery inventory for overview metrics (PowerOcean has two 5000 Wh modules).
+  // Physical battery inventory for overview metrics (PowerOcean has one 5000 Wh module).
   function physicalDevices(devices) {
     return devices.flatMap(device => {
       if (device.type !== 'system' || device.batteryCount <= 1) return [device];
@@ -183,8 +183,7 @@
   }
 
   const root = document.getElementById('ecoflow');
-  const toggle = document.getElementById('ecoAdminToggle');
-  if (!root || !toggle) return;
+  if (!root) return;
 
   const $ = id => document.getElementById(id);
   // Power uses W; battery capacity and energy use Wh. Internal capacityWh values stay in watt-hours.
@@ -290,59 +289,6 @@
       autonomyCards(d,capWh,pct) + '</div>';
   }
 
-  // Draft-only settings. No API writes, credentials, or actual device configuration.
-  const reservePresets = [0, 5, 20, 50, 80, 100];
-  const individualReserves = new Map();
-  const powerOceanDraft = { reserve: 0, selfPowered: true, allDay: true, start: '00:00', end: '24:00', chargeW: 3000 };
-  const timeSteps = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0') + ':00');
-
-  function reserveOptions(device, key, selected, powerOcean = false) {
-    return '<div class="eco-reserve-presets" role="group" aria-label="Резерв заряду ' + device.name + '">' +
-      reservePresets.filter(percent => powerOcean || percent >= 5).map(percent =>
-        '<button type="button" class="eco-reserve-option' + (selected === percent ? ' is-active' : '') +
-        '" data-eco-reserve="' + percent + '" data-eco-device="' + key +
-        '" aria-pressed="' + String(selected === percent) + '">' + percent + '%</button>'
-      ).join('') + '</div>';
-  }
-
-  function adminControls(device) {
-    const key = activeEcoLocation + ':' + device.id;
-    const selected = individualReserves.has(key) ? individualReserves.get(key) : null;
-    return '<div class="eco-admin-only eco-device-admin"><strong>Керування</strong>' +
-      '<div class="eco-admin-controls"><div class="eco-individual-limit">' +
-      '<span class="eco-individual-label">Резерв заряду</span>' +
-      reserveOptions(device, key, selected) + '</div>' +
-      '<button type="button" disabled>AC-вихід</button></div></div>';
-  }
-
-  function powerOceanAdmin(device) {
-    const key = activeEcoLocation + ':' + device.id;
-    const dayLabel = powerOceanDraft.allDay ? '00:00–24:00' : powerOceanDraft.start + '–' + powerOceanDraft.end;
-    const timeSelect = (field, value, list) => '<select data-eco-ocean-time="' + field + '" aria-label="' +
-      (field === 'start' ? 'Початок заряджання' : 'Кінець заряджання') + '">' +
-      list.map(time => '<option value="' + time + '"' + (value === time ? ' selected' : '') + '>' +
-      time + '</option>').join('') + '</select>';
-    return '<section class="eco-admin-only eco-ocean-admin eco-device-admin"><div class="eco-ocean-admin-heading"><strong>Керування PowerOcean</strong>' +
-      '<span>Режим: ' + (powerOceanDraft.selfPowered ? 'Самозабезпечення' : 'Вимкнено') + '</span></div>' +
-      '<label class="eco-ocean-selfpowered"><input type="checkbox" data-eco-ocean-self-powered' +
-      (powerOceanDraft.selfPowered ? ' checked' : '') + '> Самозабезпечення</label>' +
-      '<div class="eco-ocean-controls">' +
-      '<div class="eco-ocean-setting"><span>Резерв заряду</span>' +
-      reserveOptions(device, key, powerOceanDraft.reserve, true) + '</div>' +
-      '<div class="eco-ocean-setting"><span>Потужність заряджання</span>' +
-      '<div class="eco-ocean-watts"><input type="range" data-eco-ocean-watts min="100" max="3000" step="100" value="' +
-      powerOceanDraft.chargeW + '" aria-label="Потужність заряджання PowerOcean"><output>' +
-      powerOceanDraft.chargeW + ' W</output></div><small>100–3000 W</small></div>' +
-      '<div class="eco-ocean-setting"><span>Час заряджання</span><label class="eco-ocean-allday">' +
-      '<input type="checkbox" data-eco-ocean-allday' + (powerOceanDraft.allDay ? ' checked' : '') +
-      '> Цілодобово</label><div class="eco-ocean-clock">' +
-      (powerOceanDraft.allDay ? '<strong>' + dayLabel + '</strong>' :
-        timeSelect('start', powerOceanDraft.start, timeSteps) +
-        '<span>до</span>' + timeSelect('end', powerOceanDraft.end, [...timeSteps.slice(1), '24:00'])) +
-      '</div></div></div>' +
-      '</section>';
-  }
-
   // The solar component is retained for later, but hidden until panels actually exist.
   const solarUiEnabled = false;
   const solarPowerLabel = watt => Number.isFinite(watt)
@@ -410,7 +356,6 @@
       energyStats(d, d.capacityWh, d.pct) +
       solarDisclosure(d) +
       availabilityNote(d) +
-      adminControls(d) +
       '</article>';
   }
 
@@ -418,7 +363,7 @@
     const cap = niceWh(d.capacityWh);
     return '<article class="eco-powerocean charge-' + level(d.pct) + (liveMode && !Number.isFinite(d.pct) ? ' eco-api-unavailable' : '') + '" aria-label="PowerOcean, домашня система, заряд ' + pctLabel(d.pct) + '">' +
       '<div class="eco-ocean-top"><div><span class="eco-ocean-overline">Домашня енергосистема</span>' +
-      '<h3>PowerOcean</h3><span class="eco-ocean-cap">' + d.batteryCount + ' акумулятори · ' + cap + ' · інвертор ' + uk.format(d.inverterKw * 1000) + ' W' +
+      '<h3>PowerOcean</h3><span class="eco-ocean-cap">' + d.batteryCount + (d.batteryCount === 1 ? ' акумулятор' : ' акумулятори') + ' · ' + cap + ' · інвертор ' + uk.format(d.inverterKw * 1000) + ' W' +
       '</span></div>' + operationBadge(d) + '</div>' +
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
       '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) + '</span></div>' +
@@ -428,7 +373,7 @@
       powerReading(d,'out') + '</div></div></div>' +
       '<div class="eco-ocean-autonomy eco-ocean-autonomy-split">' + autonomyCards(d,d.capacityWh,d.pct) + '</div>' +
       availabilityNote(d) +
-      powerOceanAdmin(d) + '</article>';
+      '</article>';
   }
 
   function systemView(main, addon) {
@@ -456,7 +401,6 @@
       (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
       energyStats(main, capacityWh, soc) +
       solarDisclosure(main) +
-      adminControls(main) +
       '</article>';
   }
 
@@ -484,158 +428,7 @@
       '<div class="eco-pending-list">' + pending.join('') + '</div></details>' : '');
   }
 
-  // Drafts are session-local UI state. No device commands or authentication exist yet.
-  const adminDraft = {
-    scope: 'current',
-    reserve: 5,
-    selected: { reserve: new Set(), ac: new Set(), speed: new Set() },
-    speeds: new Map(),
-    speedPreset: 'balanced'
-  };
   let activeEcoLocation = 'dacha';
-
-  function selectableStations() {
-    const locIds = adminDraft.scope === 'all'
-      ? Object.keys(inventory) : [activeEcoLocation];
-    // Expansion batteries belong to the primary; PowerOcean requires separate verified commands.
-    return locIds.flatMap(loc => inventory[loc].devices
-      .filter(d => d.type === 'station')
-      .map(d => ({ key: loc + ':' + d.id, name: d.name, id: d.id, loc, place: inventory[loc].name })));
-  }
-
-  // Per-model AC input power targets in W. Values are illustrative until device API capabilities are verified.
-  // DELTA 2 200/500/1200 W follows EcoFlow's documented quiet/optimized/max settings.
-  const chargingProfiles = {
-    dp3: { quiet: 500, balanced: 1000, fast: 2900 },
-    d3p: { quiet: 200, balanced: 500, fast: 1500 },
-    d2: { quiet: 200, balanced: 500, fast: 1200 },
-    r3pw: { quiet: 80, balanced: 200, fast: 380 },
-    r2: { quiet: 100, balanced: 200, fast: 360 }
-  };
-  const speedModes = [
-    { key: 'quiet', label: 'Тиха' },
-    { key: 'balanced', label: 'Оптимальна' },
-    { key: 'fast', label: 'Швидка' }
-  ];
-  function speedOptions(station) {
-    const profile = chargingProfiles[station.id];
-    const selected = adminDraft.speeds.get(station.key) || adminDraft.speedPreset;
-    return '<select class="eco-speed-select" data-eco-speed="' + station.key +
-      '" aria-label="Режим заряджання ' + station.name + '">' +
-      speedModes.map(mode => '<option value="' + mode.key + '"' +
-        (selected === mode.key ? ' selected' : '') + '>' + mode.label +
-        ' · ' + (station.id === 'r3pw' && mode.key === 'quiet' ? 'до 80 W' : profile[mode.key] + ' W') + '</option>').join('') + '</select>';
-  }
-
-  function targetRows(group, withSpeed) {
-    const stations = selectableStations();
-    const set = adminDraft.selected[group];
-    const rows = stations.map(station => {
-      const checked = set.has(station.key);
-      const speedSelect = withSpeed ? speedOptions(station) : '';
-      return '<div class="eco-target-row"><label class="eco-target-label">' +
-        '<input type="checkbox" data-eco-group="' + group + '" data-eco-target="' +
-        station.key + '"' + (checked ? ' checked' : '') + '>' +
-        '<span>' + station.name + (adminDraft.scope === 'all' ?
-          '<small>' + station.place + '</small>' : '') + '</span></label>' +
-        speedSelect + '</div>';
-    }).join('');
-    return '<div class="eco-target-top"><span>Станції: ' +
-      set.size + ' / ' + stations.length + '</span><span class="eco-target-actions">' +
-      '<button type="button" data-eco-select="all" data-eco-group="' + group + '">Усі</button>' +
-      '<button type="button" data-eco-select="none" data-eco-group="' + group + '">Жодної</button>' +
-      '</span></div><div class="eco-target-list">' +
-      (rows || '<p class="eco-target-empty">Немає сумісних переносних станцій у цій локації.</p>') +
-      '</div>';
-  }
-
-  function renderBulkPanel() {
-    const container = $('eco-bulk-content');
-    if (!container) return;
-    const selected = adminDraft.scope === 'all' ? 'Усі локації' : inventory[activeEcoLocation].name;
-    const scopePicker = '<label class="eco-bulk-scope">Локації <select id="eco-admin-scope">' +
-      '<option value="current"' + (adminDraft.scope === 'current' ? ' selected' : '') + '>Поточна: ' +
-        inventory[activeEcoLocation].name + '</option>' +
-      '<option value="all"' + (adminDraft.scope === 'all' ? ' selected' : '') + '>Усі локації</option></select></label>';
-    container.innerHTML =
-      '<div class="eco-bulk-toolbar">' + scopePicker +
-      '<span class="eco-bulk-scope-note">' + selected + '</span></div>' +
-      '<div class="eco-bulk-actions">' +
-      '<section class="eco-bulk-card"><h4>Резерв заряду</h4>' +
-      '<div class="eco-bulk-range"><input type="range" id="eco-bulk-reserve" min="5" max="100" step="5" value="' +
-        adminDraft.reserve + '" aria-label="Спільний резерв заряду">' +
-      '<output id="eco-bulk-reserve-value" for="eco-bulk-reserve">' + adminDraft.reserve + '%</output></div>' +
-      targetRows('reserve', false) +
-      '<button class="eco-bulk-apply" type="button" disabled>Застосувати резерв</button></section>' +
-      '<section class="eco-bulk-card"><h4>AC-виходи</h4>' +
-      targetRows('ac', false) +
-      '<div class="eco-bulk-buttons"><button class="eco-bulk-apply" type="button" disabled>Увімкнути AC</button>' +
-      '<button class="eco-bulk-apply eco-bulk-danger" type="button" disabled>Вимкнути AC</button></div>' +
-      '</section>' +
-      '<section class="eco-bulk-card"><h4>Швидкість заряджання</h4>' +
-      '<div class="eco-speed-preset" role="group" aria-label="Режим заряджання для вибраних станцій">' +
-      speedModes.map(mode => '<button type="button" data-eco-preset="' + mode.key +
-        '" class="eco-speed-preset-button' + (adminDraft.speedPreset === mode.key ? ' active' : '') + '">' +
-        mode.label + '</button>').join('') + '</div>' +
-      '<p class="eco-bulk-subtitle">Потужність у ватах залежить від моделі. Можна змінити режим кожної станції окремо.</p>' +
-      targetRows('speed', true) +
-      '<button class="eco-bulk-apply" type="button" disabled>Застосувати швидкості</button></section></div>';
-  }
-
-  const bulkContent = $('eco-bulk-content');
-  if (bulkContent) {
-    bulkContent.addEventListener('click', event => {
-      const presetButton = event.target.closest('button[data-eco-preset]');
-      if (presetButton) {
-        const mode = presetButton.dataset.ecoPreset;
-        if (!speedModes.some(item => item.key === mode)) return;
-        adminDraft.speedPreset = mode;
-        const available = new Set(selectableStations().map(st => st.key));
-        adminDraft.selected.speed.forEach(key => {
-          if (available.has(key)) adminDraft.speeds.set(key, mode);
-        });
-        renderBulkPanel();
-        return;
-      }
-      const button = event.target.closest('button[data-eco-select]');
-      if (!button) return;
-      const group = button.dataset.ecoGroup;
-      if (!Object.prototype.hasOwnProperty.call(adminDraft.selected, group)) return;
-      adminDraft.selected[group] = button.dataset.ecoSelect === 'all'
-        ? new Set(selectableStations().map(x => x.key))
-        : new Set();
-      renderBulkPanel();
-    });
-    bulkContent.addEventListener('input', event => {
-      const target = event.target;
-      if (target.id === 'eco-bulk-reserve') {
-        $('eco-bulk-reserve-value').textContent = target.value + '%';
-      }
-    });
-    bulkContent.addEventListener('change', event => {
-      const target = event.target;
-      if (target.id === 'eco-admin-scope') {
-        adminDraft.scope = target.value === 'all' ? 'all' : 'current';
-        Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
-      } else if (target.id === 'eco-bulk-reserve') {
-        adminDraft.reserve = Math.max(5, Math.min(100, Number(target.value) || 5));
-      } else if (target.dataset.ecoTarget) {
-        const group = target.dataset.ecoGroup;
-        const key = target.dataset.ecoTarget;
-        if (!adminDraft.selected[group] || !selectableStations().some(st => st.key === key)) return;
-        if (target.checked) adminDraft.selected[group].add(key);
-        else adminDraft.selected[group].delete(key);
-      } else if (target.dataset.ecoSpeed) {
-        const key = target.dataset.ecoSpeed;
-        if (!selectableStations().some(st => st.key === key)) return;
-        const value = speedModes.some(item => item.key === target.value) ? target.value : 'balanced';
-        adminDraft.speeds.set(key, value);
-        adminDraft.selected.speed.add(key);
-      } else return;
-      renderBulkPanel();
-    });
-  }
-
 
   // Location metrics use all physical battery packs, including expansion batteries.
   const detailArea = $('eco-metrics-area');
@@ -830,10 +623,11 @@
   // Generator planning is local-only and never sends any control commands.
   // The initial SOC values are sample EcoFlow inventory numbers, NOT live readings.
   const generatorPlan = {
-    chargeW: 1800, otherLoadW: 150, targetPct: 100, fuelLph: null,
+    chargeW: 2500, otherLoadW: 150, targetPct: 100, fuelLph: null,
     soc: new Map()
   };
-  const generatorRatedW = 2800;
+  const generatorRatedW = 5000;
+  const generatorCurrentInputLimitW = 16 * 230; // Existing Schuko cable, NOT the generator's 32 A outlet.
   const generatorSuggestedFraction = 0.8; // conservative planning headroom, not a manufacturer operating limit
   const generatorChargeEfficiency = 0.85; // illustrative average, charging tapers near 100%
   const generatorNum = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
@@ -887,7 +681,8 @@
         if (pack && document.activeElement !== field) field.value = generatorSOC(pack) ?? '';
       }
     });
-    const allowedW = Math.max(0, Math.floor(generatorRatedW * generatorSuggestedFraction) - generatorPlan.otherLoadW);
+    const allowedW = Math.max(0, Math.min(Math.floor(generatorRatedW * generatorSuggestedFraction),
+      generatorCurrentInputLimitW) - generatorPlan.otherLoadW);
     const actualW = Math.min(generatorPlan.chargeW, allowedW);
     const dp3Missing = generatorMissingWh(dp3);
     const allMissing = generatorMissingWh(packs);
@@ -910,7 +705,8 @@
     $('eco-gen-budget').textContent =
       'Доступно на заряджання: ' + generatorNum.format(actualW) + ' W · інші прилади: ' +
       generatorNum.format(generatorPlan.otherLoadW) + ' W · резерв потужності: ' +
-      generatorNum.format(generatorRatedW * (1 - generatorSuggestedFraction)) + ' W' +
+      generatorNum.format(generatorRatedW * (1 - generatorSuggestedFraction)) + ' W · ввід 16 A: максимум ' +
+      generatorNum.format(generatorCurrentInputLimitW) + ' W разом з іншими приладами' +
       (limited ? '. Потужність заряджання обмежена з урахуванням інших приладів.' : '.');
     $('eco-gen-budget').classList.toggle('is-limited', limited);
     const rate = generatorPlan.fuelLph;
@@ -934,9 +730,9 @@
   root.addEventListener('input', event => {
     const input = event.target;
     if (input.id === 'eco-gen-charge-w') {
-      generatorPlan.chargeW = Math.min(2200, Math.max(400, Number(input.value) || 1800));
+      generatorPlan.chargeW = Math.min(4000, Math.max(400, Number(input.value) || 2500));
     } else if (input.id === 'eco-gen-house-w') {
-      generatorPlan.otherLoadW = Math.min(1200, Math.max(0, Number(input.value) || 0));
+      generatorPlan.otherLoadW = Math.min(3000, Math.max(0, Number(input.value) || 0));
     } else if (input.id === 'eco-gen-fuel') {
       const rate = Number(input.value);
       generatorPlan.fuelLph = input.value.trim() && rate > 0 ? rate : null;
@@ -963,10 +759,7 @@
     const weighted = knownCapacityWh
       ? Math.round(knownSystems.reduce((sum,d)=>sum+d.capacityWh*d.pct,0)/knownCapacityWh*10)/10
       : null;
-    if (adminDraft.scope === 'current' && activeEcoLocation !== id) {
-      Object.keys(adminDraft.selected).forEach(group => adminDraft.selected[group].clear());
-    }
-    activeEcoLocation = id;
+     activeEcoLocation = id;
     renderConnection();
     if (!refreshOnly) clearMetric();
     root.dataset.location = id;
@@ -1010,91 +803,18 @@
     $('eco-devices').innerHTML = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>') +
       (id === 'dacha' ? unassignedSection() : '');
     renderSolar(place);
-    renderBulkPanel();
     if (id === 'dacha') renderGeneratorPlanner();
     if (refreshOnly && metricOpen && detailPanel && !detailPanel.hidden) {
       detailPanel.innerHTML = metricBreakdown(metricOpen);
     }
   }
 
-  // Read-only draft controls; no configuration reaches any EcoFlow device.
-  root.addEventListener('click', event => {
-    const button = event.target.closest('button[data-eco-reserve]');
-    if (!button || !root.contains(button)) return;
-    const value = Number(button.dataset.ecoReserve);
-    const key = button.dataset.ecoDevice;
-    if (!reservePresets.includes(value)) return;
-    if (!key.startsWith(activeEcoLocation + ':')) return;
-    const device = inventory[activeEcoLocation].devices.find(d =>
-      d.type !== 'battery' && (activeEcoLocation + ':' + d.id) === key);
-    if (!device || (device.type !== 'system' && value < 5)) return;
-    if (device.type === 'system') powerOceanDraft.reserve = value;
-    else individualReserves.set(key, value);
-    const group = button.closest('.eco-reserve-presets');
-    if (!group) return;
-    group.querySelectorAll('button[data-eco-reserve]').forEach(option => {
-      const active = Number(option.dataset.ecoReserve) === value;
-      option.classList.toggle('is-active', active);
-      option.setAttribute('aria-pressed', String(active));
-    });
-  });
-
-  root.addEventListener('input', event => {
-    const target = event.target;
-    if (!target.matches?.('[data-eco-ocean-watts]')) return;
-    const watts = Math.max(100, Math.min(3000, Math.round(Number(target.value) / 100) * 100 || 100));
-    powerOceanDraft.chargeW = watts;
-    const output = target.closest('.eco-ocean-watts')?.querySelector('output');
-    if (output) output.textContent = watts + ' W';
-  });
   root.addEventListener('toggle', event => {
     const item=event.target;
     if (!item?.matches?.('details.eco-pending')) return;
     const key=item.dataset.ecoPending;
     if (item.open) pendingExpanded.add(key); else pendingExpanded.delete(key);
   },true);
-  root.addEventListener('change', event => {
-    const target = event.target;
-    if (target.matches?.('[data-eco-ocean-self-powered]')) {
-      powerOceanDraft.selfPowered = target.checked;
-    } else if (target.matches?.('[data-eco-ocean-allday]')) {
-      powerOceanDraft.allDay = target.checked;
-    } else if (target.matches?.('[data-eco-ocean-time]')) {
-      const field = target.dataset.ecoOceanTime;
-      if (field !== 'start' && field !== 'end') return;
-      if (![...timeSteps, '24:00'].includes(target.value)) return;
-      powerOceanDraft[field] = target.value;
-      if (powerOceanDraft.end <= powerOceanDraft.start) powerOceanDraft.end = '24:00';
-    } else return;
-    $('eco-devices').innerHTML = renderDeviceGrid(inventory[activeEcoLocation].devices);
-  });
-
-  // Persistent, centered detail row. It does not reposition when the hovered bar changes.
-  // Admin controls stay disabled pending authenticated server access.
-  function setAdminMode(enabled) {
-    root.classList.toggle('is-admin-mode', enabled);
-    document.body.classList.toggle('eco-admin-visible', enabled);
-    toggle.setAttribute('aria-checked', String(enabled));
-    toggle.title = enabled ? 'Вимкнути Admin' : 'Увімкнути Admin';
-    $('eco-admin-bulk').hidden = !enabled;
-  }
-  toggle.addEventListener('click', function () {
-    setAdminMode(toggle.getAttribute('aria-checked') !== 'true');
-  });
-  setAdminMode(false);
-
-  // Keep Admin reachable after the header scrolls out of view.
-  const adminHost = toggle.closest('.header-time');
-  const siteHeader = document.querySelector('main > header');
-  function syncFloatingAdmin() {
-    if (!adminHost || !siteHeader) return;
-    const threshold = siteHeader.offsetTop + siteHeader.offsetHeight + 12;
-    adminHost.classList.toggle('is-floating', window.scrollY > threshold);
-  }
-  window.addEventListener('scroll', syncFloatingAdmin, { passive: true });
-  window.addEventListener('resize', syncFloatingAdmin);
-  syncFloatingAdmin();
-
   const selectedButton = document.querySelector('[data-location].selected');
   const restored = selectedButton?.dataset.location || 'dacha';
   applyReadings();

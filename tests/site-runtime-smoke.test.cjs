@@ -70,6 +70,15 @@ function mount(live = null) {
   return {get, events:windowEvents, root};
 }
 
+test('legacy EcoFlow Admin controls are absent while generator planner remains', () => {
+  assert.doesNotMatch(index, /id="ecoAdminToggle"|id="eco-admin-bulk"/);
+  assert.doesNotMatch(eco, /setAdminMode|adminControls\(|powerOceanAdmin\(|renderBulkPanel\(/);
+  assert.match(index, /GRETOR GRT-IG5500IE/);
+  assert.match(index, /5 000 W/);
+  assert.match(index, /5 500 W/);
+  assert.match(index, /id="eco-generator-planner"/);
+});
+
 test('inline main page JS syntax is valid', () => {
   const blocks = [...index.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
     .filter(match => !/\bsrc\s*=/.test(match[1]));
@@ -87,7 +96,8 @@ test('all four locations render and switch without DOM exceptions', () => {
   assert.match(m.get('eco-capacity').textContent, /10.526|10 526|10 526|10 526/);
   m.events['svitlo:location-change']({detail:{id:'home'}});
   assert.match(m.get('eco-devices').innerHTML, /PowerOcean/);
-  assert.equal(m.get('eco-count').textContent, '2');
+  assert.equal(m.get('eco-count').textContent, '1');
+  assert.match(m.get('eco-devices').innerHTML, /1 акумулятор · 5[\s\u00a0\u202f]000 Wh/);
   m.events['svitlo:location-change']({detail:{id:'solovky'}});
   assert.match(m.get('eco-devices').innerHTML, /\+ Додаткова батарея/);
   assert.equal(m.get('eco-count').textContent, '3');
