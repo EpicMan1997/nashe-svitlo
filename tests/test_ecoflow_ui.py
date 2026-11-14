@@ -244,7 +244,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('class="eco-powerocean charge-', JS)
         self.assertIn("eco-ocean-body", JS)
         self.assertIn("eco-ocean-energy", JS)
-        self.assertIn("1 акумулятор", JS) if False else self.assertIn("d.batteryCount === 1", JS)
+        self.assertIn("d.batteryCount === 1", JS)
         self.assertIn(".eco-powerocean{", CSS)
         self.assertIn('grid-column:1/-1!important', CSS)
         self.assertNotIn("Інвертор ' + d.inverterKw", JS)
