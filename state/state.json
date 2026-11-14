@@ -254,6 +254,10 @@
         ]
       ],
       "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"00:00\", \"01:00\"], [\"07:30\", \"11:30\"], [\"18:00\", \"22:00\"]]",
+          "first_seen": "2026-11-14T21:41+02:00"
+        },
         "Київщина.info": {
           "fingerprint": "[[\"00:00\", \"01:00\"], [\"07:30\", \"11:30\"], [\"18:00\", \"22:00\"]]",
           "first_seen": "2026-11-14T20:40+02:00"
@@ -269,7 +273,6 @@
       },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
           "outages": [
             [
               "00:00",
@@ -285,7 +288,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -355,6 +358,7 @@
       },
       "source_updated": "",
       "sources": [
+        "Alerts Energy",
         "Київщина.info",
         "КолиБуде",
         "КолиСвітло"
@@ -364,7 +368,7 @@
     },
     "2026-11-15": {
       "date": "2026-11-15",
-      "detail": "Очікуємо незалежне підтвердження",
+      "detail": "Зіставлено незалежні джерела",
       "outages": [
         [
           "16:00",
@@ -372,6 +376,10 @@
         ]
       ],
       "source_observations": {
+        "Alerts Energy": {
+          "fingerprint": "[[\"16:00\", \"20:00\"]]",
+          "first_seen": "2026-11-14T21:41+02:00"
+        },
         "Київщина.info": {
           "fingerprint": "[[\"16:00\", \"20:00\"]]",
           "first_seen": "2026-11-14T20:40+02:00"
@@ -379,7 +387,6 @@
       },
       "source_reports": {
         "Alerts Energy": {
-          "fetch_failed": false,
           "outages": [
             [
               "16:00",
@@ -387,7 +394,7 @@
             ]
           ],
           "partial": [],
-          "status": "old",
+          "status": "match",
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
@@ -405,7 +412,7 @@
             ]
           ],
           "partial": [],
-          "status": "diff",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -428,7 +435,7 @@
         "Alerts Energy",
         "Київщина.info"
       ],
-      "status": "stale",
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
