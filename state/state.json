@@ -555,6 +555,10 @@
             ]
           ],
           "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"00:00\", \"01:30\"], [\"09:30\", \"14:30\"], [\"16:30\", \"21:30\"]]",
+              "first_seen": "2026-11-16T23:20+02:00"
+            },
             "КолиБуде": {
               "fingerprint": "[[\"00:00\", \"01:30\"], [\"09:30\", \"14:30\"], [\"16:30\", \"21:30\"]]",
               "first_seen": "2026-11-16T00:01+02:00"
@@ -566,9 +570,22 @@
           },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "01:30"
+                ],
+                [
+                  "09:30",
+                  "14:30"
+                ],
+                [
+                  "16:30",
+                  "21:30"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -618,6 +635,7 @@
           },
           "source_updated": "",
           "sources": [
+            "Alerts Energy",
             "КолиБуде",
             "КолиСвітло"
           ],
@@ -1191,6 +1209,10 @@
             ]
           ],
           "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"05:30\", \"09:00\"], [\"13:30\", \"18:30\"], [\"23:00\", \"24:00\"]]",
+              "first_seen": "2026-11-16T23:20+02:00"
+            },
             "КолиБуде": {
               "fingerprint": "[[\"05:30\", \"09:00\"], [\"13:30\", \"18:30\"], [\"23:00\", \"24:00\"]]",
               "first_seen": "2026-11-16T00:01+02:00"
@@ -1202,9 +1224,22 @@
           },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "05:30",
+                  "09:00"
+                ],
+                [
+                  "13:30",
+                  "18:30"
+                ],
+                [
+                  "23:00",
+                  "24:00"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -1254,6 +1289,7 @@
           },
           "source_updated": "",
           "sources": [
+            "Alerts Energy",
             "КолиБуде",
             "КолиСвітло"
           ],
@@ -1843,6 +1879,10 @@
             ]
           ],
           "source_observations": {
+            "Alerts Energy": {
+              "fingerprint": "[[\"00:00\", \"01:30\"], [\"09:30\", \"14:30\"], [\"16:30\", \"21:30\"]]",
+              "first_seen": "2026-11-16T23:20+02:00"
+            },
             "КолиБуде": {
               "fingerprint": "[[\"00:00\", \"01:30\"], [\"09:30\", \"14:30\"], [\"16:30\", \"21:30\"]]",
               "first_seen": "2026-11-16T00:01+02:00"
@@ -1854,9 +1894,22 @@
           },
           "source_reports": {
             "Alerts Energy": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "01:30"
+                ],
+                [
+                  "09:30",
+                  "14:30"
+                ],
+                [
+                  "16:30",
+                  "21:30"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
@@ -1906,6 +1959,7 @@
           },
           "source_updated": "",
           "sources": [
+            "Alerts Energy",
             "КолиБуде",
             "КолиСвітло"
           ],
