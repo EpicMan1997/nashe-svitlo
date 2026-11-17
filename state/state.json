@@ -228,10 +228,6 @@
           "fingerprint": "[[\"06:30\", \"10:00\"], [\"17:00\", \"21:30\"]]",
           "first_seen": "2026-11-17T20:10+02:00"
         },
-        "КолиБуде": {
-          "fingerprint": "[[\"06:30\", \"10:00\"], [\"17:00\", \"21:30\"]]",
-          "first_seen": "2026-11-18T00:01+02:00"
-        },
         "КолиСвітло": {
           "fingerprint": "[[\"06:30\", \"10:00\"], [\"17:00\", \"21:30\"]]",
           "first_seen": "2026-11-18T00:01+02:00"
@@ -268,6 +264,7 @@
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
+          "fetch_failed": false,
           "outages": [
             [
               "06:30",
@@ -279,7 +276,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "old",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -301,7 +298,6 @@
       "source_updated": "",
       "sources": [
         "Київщина.info",
-        "КолиБуде",
         "КолиСвітло"
       ],
       "status": "normal",
@@ -540,7 +536,7 @@
         },
         "2026-11-18": {
           "date": "2026-11-18",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "4.1",
           "outages": [
             [
@@ -553,10 +549,6 @@
             ]
           ],
           "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"11:30\", \"17:00\"], [\"23:00\", \"24:00\"]]",
-              "first_seen": "2026-11-18T00:01+02:00"
-            },
             "КолиСвітло": {
               "fingerprint": "[[\"11:30\", \"17:00\"], [\"23:00\", \"24:00\"]]",
               "first_seen": "2026-11-18T00:01+02:00"
@@ -587,7 +579,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -602,7 +594,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -611,7 +603,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-19": {
@@ -1094,7 +1086,7 @@
         },
         "2026-11-18": {
           "date": "2026-11-18",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "10.1",
           "outages": [
             [
@@ -1107,10 +1099,6 @@
             ]
           ],
           "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"08:00\", \"11:30\"], [\"17:00\", \"21:30\"]]",
-              "first_seen": "2026-11-18T00:01+02:00"
-            },
             "КолиСвітло": {
               "fingerprint": "[[\"08:00\", \"11:30\"], [\"17:00\", \"21:30\"]]",
               "first_seen": "2026-11-18T00:01+02:00"
@@ -1141,7 +1129,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1156,7 +1144,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -1165,7 +1153,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-19": {
@@ -1640,7 +1628,7 @@
         },
         "2026-11-18": {
           "date": "2026-11-18",
-          "detail": "Зіставлено незалежні джерела",
+          "detail": "Очікуємо незалежне підтвердження",
           "group": "4.1",
           "outages": [
             [
@@ -1653,10 +1641,6 @@
             ]
           ],
           "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"11:30\", \"17:00\"], [\"23:00\", \"24:00\"]]",
-              "first_seen": "2026-11-18T00:01+02:00"
-            },
             "КолиСвітло": {
               "fingerprint": "[[\"11:30\", \"17:00\"], [\"23:00\", \"24:00\"]]",
               "first_seen": "2026-11-18T00:01+02:00"
@@ -1687,7 +1671,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1702,7 +1686,7 @@
                 ]
               ],
               "partial": [],
-              "status": "match",
+              "status": "diff",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -1711,7 +1695,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "normal",
+          "status": "stale",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-19": {
