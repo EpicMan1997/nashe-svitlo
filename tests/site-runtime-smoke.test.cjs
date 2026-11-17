@@ -262,3 +262,18 @@ test('Delta 2 router load of 0 W is not incorrectly called maintaining charge',(
  assert.match(html,/5 год 20 хв/);
  assert.doesNotMatch(html,/Підтримує заряд/);
 });
+
+test('no-op EcoFlow outage update does not replace stable station markup', () => {
+  const m=mount();
+  const el=m.get('eco-devices');
+  const original=el.innerHTML;
+  let writes=0,markup=original;
+  Object.defineProperty(el,'innerHTML',{configurable:true,
+    get(){return markup;},set(v){markup=v;writes++;}});
+  m.events['svitlo:outage-update']({});
+  assert.equal(writes,0);
+  assert.equal(el.innerHTML,original);
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  assert.equal(writes,1);
+  assert.match(el.innerHTML,/PowerOcean/);
+});

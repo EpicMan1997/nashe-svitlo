@@ -26,6 +26,7 @@
   let newestEmittedMs = 0;
   let revision = 0;
   let publishedSignature = '';
+  let acceptedPublishedFrame = null;
   let lastError = null;
   const subscribers = new Set();
 
@@ -98,6 +99,9 @@
     const emittedMs = isoTime(raw.emittedAt);
     if (emittedMs === null || Date.now() - emittedMs > (mode === 'published' ? PUBLISHED_MAX_AGE_MS : MAX_AGE_MS) ||
         emittedMs < newestEmittedMs) return false;
+    // Skip duplicate published frames; keep live stream events independent.
+    const frameSignature = mode === 'published' ? JSON.stringify(raw) : null;
+    if (frameSignature !== null && frameSignature === acceptedPublishedFrame) return false;
     let changed = false;
     const next = mode === 'published' ? new Map() : new Map(telemetry);
     for (const [key, entry] of Object.entries(raw.devices)) {
@@ -118,6 +122,7 @@
     if (!changed) return false;
     telemetry = next;
     newestEmittedMs = emittedMs;
+    if (frameSignature !== null) acceptedPublishedFrame = frameSignature;
     revision++;
     lastError = null;
     refreshStatus();

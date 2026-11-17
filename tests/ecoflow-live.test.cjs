@@ -131,3 +131,20 @@ test('scheduled EcoFlow snapshot is never called live and expires after 25 min',
   assert.equal(f.api.reading('dacha:dp3'), null);
   assert.equal(f.api.statusFor('dacha:dp3'), 'stale');
 });
+
+test('repeated published snapshot is idempotent but corrections remain accepted', async () => {
+  const f=fixture();
+  f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+  await f.api.start();
+  let count=0;f.api.subscribe(()=>count++);
+  f.advance(60000);
+  const frame={version:1,emittedAt:new Date(f.now()).toISOString(),
+    devices:{'dacha:dp3':{socPercent:42,inputW:0,outputW:200,operation:'discharging'}}};
+  assert.equal(f.api.acceptFrame(frame),true);
+  const prior=count;
+  assert.equal(f.api.acceptFrame(frame),false);
+  assert.equal(count,prior);
+  const corrected={...frame,devices:{'dacha:dp3':{...frame.devices['dacha:dp3'],socPercent:41}}};
+  assert.equal(f.api.acceptFrame(corrected),true);
+  assert.equal(f.api.reading('dacha:dp3').socPercent,41);
+});

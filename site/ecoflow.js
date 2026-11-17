@@ -142,10 +142,11 @@
       'Немає свіжих даних. Показники приховано.';
     const at = live?.summary()?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
-    element.innerHTML = '<i aria-hidden="true"></i>' + (mode === 'published'
+    const nextStatusHtml = '<i aria-hidden="true"></i>' + (mode === 'published'
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm + ' · ≈10 хв')
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
+    if (element.innerHTML !== nextStatusHtml) element.innerHTML = nextStatusHtml;
     root.dataset.telemetryState = stateHere;
   }
 
@@ -406,6 +407,8 @@
 
   // Keep total capacity accurate while putting unsupported stations in one disclosure.
   const pendingExpanded = new Set();
+  let lastRenderedDeviceMarkup = null;
+  let lastRenderedDeviceLocation = null;
   function renderDeviceGrid(devices) {
     const addons = new Map(devices.filter(d => d.type === 'battery' && d.parentId).map(d => [d.parentId, d]));
     const ids = new Set(devices.map(d => d.id));
@@ -800,8 +803,14 @@
       overallTrack.setAttribute('aria-valuenow', String(weighted));
       overallTrack.setAttribute('aria-valuetext', weighted + ' відсотків');
     }
-    $('eco-devices').innerHTML = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>') +
+    const deviceMarkup = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>') +
       (id === 'dacha' ? unassignedSection() : '');
+    // Keep DOM and open details intact when nothing visible has changed.
+    if (!refreshOnly || id !== lastRenderedDeviceLocation || deviceMarkup !== lastRenderedDeviceMarkup) {
+      $('eco-devices').innerHTML = deviceMarkup;
+      lastRenderedDeviceMarkup = deviceMarkup;
+      lastRenderedDeviceLocation = id;
+    }
     renderSolar(place);
     if (id === 'dacha') renderGeneratorPlanner();
     if (refreshOnly && metricOpen && detailPanel && !detailPanel.hidden) {
@@ -818,11 +827,9 @@
   const selectedButton = document.querySelector('[data-location].selected');
   const restored = selectedButton?.dataset.location || 'dacha';
   applyReadings();
-  renderConnection();
   updateLocation(restored);
   live?.subscribe(() => {
     applyReadings();
-    renderConnection();
     updateLocation(activeEcoLocation, true);
   });
   live?.start();
