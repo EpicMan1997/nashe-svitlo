@@ -541,10 +541,23 @@
         },
         "2026-11-17": {
           "date": "2026-11-17",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "4.1",
-          "outages": [],
+          "outages": [
+            [
+              "06:30",
+              "11:30"
+            ],
+            [
+              "15:00",
+              "20:30"
+            ]
+          ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"06:30\", \"11:30\"], [\"15:00\", \"20:30\"]]",
+              "first_seen": "2026-11-17T06:10+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"06:30\", \"11:30\"], [\"15:00\", \"20:30\"]]",
               "first_seen": "2026-11-17T00:01+02:00"
@@ -564,9 +577,18 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "outages": null,
+              "outages": [
+                [
+                  "06:30",
+                  "11:30"
+                ],
+                [
+                  "15:00",
+                  "20:30"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -581,13 +603,16 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде",
+            "КолиСвітло"
+          ],
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-18": {
@@ -631,6 +656,28 @@
       "emergency": null,
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "06:30",
+              "11:30"
+            ],
+            [
+              "15:00",
+              "20:30"
+            ]
+          ],
+          "at": "2026-11-17T06:10+02:00",
+          "before": null,
+          "date": "2026-11-17",
+          "first_observed_source": "КолиСвітло",
+          "kind": "published",
+          "message": "Опубліковано графік: 06:30–11:30, 15:00–20:30",
+          "sources_confirmed": [
+            "КолиБуде",
+            "КолиСвітло"
+          ]
+        },
         {
           "after": [
             [
@@ -1063,10 +1110,27 @@
         },
         "2026-11-17": {
           "date": "2026-11-17",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "10.1",
-          "outages": [],
+          "outages": [
+            [
+              "00:00",
+              "02:00"
+            ],
+            [
+              "10:00",
+              "15:30"
+            ],
+            [
+              "20:00",
+              "24:00"
+            ]
+          ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"00:00\", \"02:00\"], [\"10:00\", \"15:30\"], [\"20:00\", \"24:00\"]]",
+              "first_seen": "2026-11-17T06:10+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"00:00\", \"02:00\"], [\"10:00\", \"15:30\"], [\"20:00\", \"24:00\"]]",
               "first_seen": "2026-11-17T00:01+02:00"
@@ -1086,9 +1150,22 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
             },
             "КолиБуде": {
-              "outages": null,
+              "outages": [
+                [
+                  "00:00",
+                  "02:00"
+                ],
+                [
+                  "10:00",
+                  "15:30"
+                ],
+                [
+                  "20:00",
+                  "24:00"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1107,13 +1184,16 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде",
+            "КолиСвітло"
+          ],
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-18": {
@@ -1157,6 +1237,32 @@
       "emergency": null,
       "group": "10.1",
       "logs": [
+        {
+          "after": [
+            [
+              "00:00",
+              "02:00"
+            ],
+            [
+              "10:00",
+              "15:30"
+            ],
+            [
+              "20:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-17T06:10+02:00",
+          "before": null,
+          "date": "2026-11-17",
+          "first_observed_source": "КолиСвітло",
+          "kind": "published",
+          "message": "Опубліковано графік: 00:00–02:00, 10:00–15:30, 20:00–24:00",
+          "sources_confirmed": [
+            "КолиБуде",
+            "КолиСвітло"
+          ]
+        },
         {
           "after": [
             [
@@ -1609,10 +1715,23 @@
         },
         "2026-11-17": {
           "date": "2026-11-17",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "4.1",
-          "outages": [],
+          "outages": [
+            [
+              "06:30",
+              "11:30"
+            ],
+            [
+              "15:00",
+              "20:30"
+            ]
+          ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"06:30\", \"11:30\"], [\"15:00\", \"20:30\"]]",
+              "first_seen": "2026-11-17T06:10+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"06:30\", \"11:30\"], [\"15:00\", \"20:30\"]]",
               "first_seen": "2026-11-17T00:01+02:00"
@@ -1632,9 +1751,18 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "outages": null,
+              "outages": [
+                [
+                  "06:30",
+                  "11:30"
+                ],
+                [
+                  "15:00",
+                  "20:30"
+                ]
+              ],
               "partial": [],
-              "status": "unavailable",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1649,13 +1777,16 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде",
+            "КолиСвітло"
+          ],
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-18": {
@@ -1699,6 +1830,28 @@
       "emergency": null,
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "06:30",
+              "11:30"
+            ],
+            [
+              "15:00",
+              "20:30"
+            ]
+          ],
+          "at": "2026-11-17T06:10+02:00",
+          "before": null,
+          "date": "2026-11-17",
+          "first_observed_source": "КолиСвітло",
+          "kind": "published",
+          "message": "Опубліковано графік: 06:30–11:30, 15:00–20:30",
+          "sources_confirmed": [
+            "КолиБуде",
+            "КолиСвітло"
+          ]
+        },
         {
           "after": [
             [
