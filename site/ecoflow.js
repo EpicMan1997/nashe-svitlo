@@ -834,5 +834,16 @@
   });
   live?.start();
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
-  window.addEventListener('svitlo:outage-update', () => updateLocation(activeEcoLocation,true));
+  // One tick per minute is enough; skip forecasts whose displayed values did not change.
+  let lastOutageRenderKey = null;
+  window.addEventListener('svitlo:outage-update', () => {
+    const context = window.NasheSvitloOutageContext?.(activeEcoLocation);
+    const key = activeEcoLocation + ':' +
+      (context && Number.isFinite(context.minutes)
+        ? (context.current ? 'current:' : 'next:') + Math.ceil(context.minutes)
+        : 'unknown');
+    if (key === lastOutageRenderKey) return;
+    lastOutageRenderKey = key;
+    updateLocation(activeEcoLocation,true);
+  });
 })();

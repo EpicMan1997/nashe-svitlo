@@ -50,7 +50,7 @@ function makePayload(today) {
     days:locations.dacha.days,logs:[],locations,source_health:{issues:[]}};
 }
 function runDashboard(customizePayload) {
-  const nodes=new Map(),docEvents={},windowEvents={},storage=new Map(),tabs=[],siteViews=[],locations=[];
+  const nodes=new Map(),docEvents={},windowEvents={},storage=new Map(),tabs=[],siteViews=[],locations=[],timers=[];
   const node=id=>{if(!nodes.has(id))nodes.set(id,new NodeStub(id));return nodes.get(id);};
   ['today','tomorrow'].forEach(tab=>{const e=new NodeStub('tab-'+tab);e.dataset.tab=tab;tabs.push(e);});
   ['schedule','statistics'].forEach(view=>{const e=new NodeStub('view-'+view);e.dataset.siteView=view;siteViews.push(e);});
@@ -93,7 +93,7 @@ function runDashboard(customizePayload) {
   };
   const context={window,document,location:window.location,
     navigator:{},console,URL,Date,Intl,
-    setInterval(){return 1;},clearInterval(){},setTimeout(){return 1;},clearTimeout(){},
+    setInterval(fn,ms){timers.push({fn,ms});return timers.length;},clearInterval(){},setTimeout(){return 1;},clearTimeout(){},
     localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,String(v))},
     CustomEvent:class{constructor(type,opts){this.type=type;this.detail=opts?.detail;}},
     fetch:async url=>({ok:true,json:async()=>String(url).includes('season.json')?{
@@ -102,7 +102,7 @@ function runDashboard(customizePayload) {
     }:payload})
   };
   vm.runInNewContext(source,context);
-  return {node,tabs,siteViews,locations,payload,events,context,windowEvents};
+  return {node,tabs,siteViews,locations,payload,events,context,windowEvents,timers,document};
 }
 
 test('dashboard initializes, shows loaded schedules and an emergency beside the graph',async()=>{
@@ -168,4 +168,25 @@ test('tomorrow badge belongs to the selected location, not other preliminary sch
  r.locations[0].onclick();
  assert.equal(r.tabs[1].classList.contains('available'),false);
  assert.equal(r.node('tomorrowUnread').hidden,true);
+});
+
+test('unchanged 15-second schedule polling does not repaint the timeline', async () => {
+  const r=runDashboard();
+  await new Promise(setImmediate);
+  const timer=r.timers.find(x=>x.ms===15000);
+  assert.ok(timer,'dashboard must keep its current 15-second fetch cadence');
+  const display=r.node('display');
+  let markup=display.innerHTML,writes=0;
+  Object.defineProperty(display,'innerHTML',{configurable:true,
+    get(){return markup;},set(value){markup=value;writes++;}});
+  await timer.fn();
+  assert.equal(writes,0,'an identical JSON payload must not remount the graph');
+  r.payload.days[r.payload.today_date].outages=[['11:00','13:00']];
+  await timer.fn();
+  assert.ok(writes>0,'a genuine schedule change must still repaint');
+  assert.match(display.innerHTML,/11:00/);
+  const before=writes;
+  r.document.visibilityState='hidden';
+  await timer.fn();
+  assert.equal(writes,before,'the hidden PWA should not spend work on redraws');
 });
