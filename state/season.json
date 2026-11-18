@@ -150,6 +150,10 @@
           "2026-11-18": {
             "events": [],
             "observed": true
+          },
+          "2026-11-19": {
+            "events": [],
+            "observed": true
           }
         },
         "home": {
@@ -280,6 +284,10 @@
             "observed": true
           },
           "2026-11-18": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-19": {
             "events": [],
             "observed": true
           }
@@ -420,6 +428,10 @@
           "2026-11-18": {
             "events": [],
             "observed": true
+          },
+          "2026-11-19": {
+            "events": [],
+            "observed": true
           }
         },
         "solovky": {
@@ -550,6 +562,10 @@
             "observed": true
           },
           "2026-11-18": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-19": {
             "events": [],
             "observed": true
           }
@@ -1328,6 +1344,24 @@
               ]
             ],
             "total_minutes": 600
+          },
+          "2026-11-18": {
+            "longest_interval": [
+              "17:00",
+              "21:30"
+            ],
+            "longest_minutes": 270,
+            "outages": [
+              [
+                "06:30",
+                "10:00"
+              ],
+              [
+                "17:00",
+                "21:30"
+              ]
+            ],
+            "total_minutes": 480
           }
         },
         "home": {
