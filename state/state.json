@@ -491,7 +491,7 @@
         },
         "2026-11-19": {
           "date": "2026-11-19",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "4.1",
           "outages": [
             [
@@ -508,6 +508,10 @@
             ]
           ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"00:00\", \"02:30\"], [\"09:00\", \"14:00\"], [\"19:00\", \"23:30\"]]",
+              "first_seen": "2026-11-19T00:40+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"00:00\", \"02:30\"], [\"09:00\", \"14:00\"], [\"19:00\", \"23:30\"]]",
               "first_seen": "2026-11-19T00:01+02:00"
@@ -542,7 +546,7 @@
                 ]
               ],
               "partial": [],
-              "status": "old",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -561,7 +565,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -570,7 +574,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "stale",
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-20": {
@@ -977,7 +981,7 @@
         },
         "2026-11-19": {
           "date": "2026-11-19",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "10.1",
           "outages": [
             [
@@ -990,6 +994,10 @@
             ]
           ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"05:00\", \"09:00\"], [\"14:00\", \"19:00\"]]",
+              "first_seen": "2026-11-19T00:40+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"05:00\", \"09:00\"], [\"14:00\", \"19:00\"]]",
               "first_seen": "2026-11-19T00:01+02:00"
@@ -1020,7 +1028,7 @@
                 ]
               ],
               "partial": [],
-              "status": "old",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1035,7 +1043,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -1044,7 +1052,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "stale",
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-20": {
@@ -1439,7 +1447,7 @@
         },
         "2026-11-19": {
           "date": "2026-11-19",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Зіставлено незалежні джерела",
           "group": "4.1",
           "outages": [
             [
@@ -1456,6 +1464,10 @@
             ]
           ],
           "source_observations": {
+            "КолиБуде": {
+              "fingerprint": "[[\"00:00\", \"02:30\"], [\"09:00\", \"14:00\"], [\"19:00\", \"23:30\"]]",
+              "first_seen": "2026-11-19T00:40+02:00"
+            },
             "КолиСвітло": {
               "fingerprint": "[[\"00:00\", \"02:30\"], [\"09:00\", \"14:00\"], [\"19:00\", \"23:30\"]]",
               "first_seen": "2026-11-19T00:01+02:00"
@@ -1490,7 +1502,7 @@
                 ]
               ],
               "partial": [],
-              "status": "old",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1509,7 +1521,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolysvitlo.com/schedule/dtek_kyiv"
             }
           },
@@ -1518,7 +1530,7 @@
             "КолиБуде",
             "КолиСвітло"
           ],
-          "status": "stale",
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-20": {
