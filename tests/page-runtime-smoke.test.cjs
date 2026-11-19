@@ -190,3 +190,59 @@ test('unchanged 15-second schedule polling does not repaint the timeline', async
   await timer.fn();
   assert.equal(writes,before,'the hidden PWA should not spend work on redraws');
 });
+
+test('unverified zero-outage report never claims 24 hours of power',async()=>{
+ const r=runDashboard(payload=>{
+  const day=payload.today_date;
+  payload.locations.dacha.days[day]={
+   status:'preliminary',date:day,outages:[],sources:['Київщина.info'],
+   source_reports:{'Київщина.info':{status:'preliminary',outages:[]},
+     'КолиБуде':{status:'old',outages:[['14:00','17:30']]}}
+  };
+ });
+ await new Promise(setImmediate);
+ const markup=r.node('display').innerHTML;
+ assert.match(markup,/Попередньо: без планових відключень/);
+ assert.match(markup,/не гарантія фактичної наявності світла/);
+ assert.match(markup,/class="bar unknown "/);
+ assert.doesNotMatch(markup,/class="metric-summary"/);
+ assert.doesNotMatch(markup,/24 год/);
+ assert.doesNotMatch(markup,/class="bar preliminary"/);
+ assert.match(r.node('scheduleDetailsHost').innerHTML,/Очікуємо незалежне підтвердження/);
+ assert.equal(r.node('powerNowLabel').textContent,'Зараз: невідомо');
+});
+
+test('two-source confirmed zero outages still show full day without scheduled interruptions',async()=>{
+ const r=runDashboard(payload=>{
+  const day=payload.today_date;
+  payload.locations.dacha.days[day]={
+   status:'normal',date:day,outages:[],sources:['Київщина.info','Alerts Energy'],
+   source_reports:{'Київщина.info':{status:'match',outages:[]},
+     'Alerts Energy':{status:'match',outages:[]}}
+  };
+ });
+ await new Promise(setImmediate);
+ const markup=r.node('display').innerHTML;
+ assert.match(markup,/class="metric-summary"/);
+ assert.match(markup,/24 год/);
+ assert.match(markup,/class="bar "/);
+ assert.doesNotMatch(markup,/schedule-unconfirmed-zero/);
+ assert.doesNotMatch(markup,/bar unknown/);
+});
+
+test('preliminary nonzero outages remain visible as tentative hours',async()=>{
+ const r=runDashboard(payload=>{
+  const day=payload.today_date;
+  payload.locations.dacha.days[day]={
+   status:'preliminary',date:day,outages:[['14:00','17:30']],
+   sources:['Київщина.info'],source_reports:{'Київщина.info':{
+     status:'preliminary',outages:[['14:00','17:30']]}}
+  };
+ });
+ await new Promise(setImmediate);
+ const markup=r.node('display').innerHTML;
+ assert.match(markup,/class="metric-summary"/);
+ assert.match(markup,/class="bar preliminary"/);
+ assert.match(markup,/class="off"/);
+ assert.doesNotMatch(markup,/schedule-unconfirmed-zero/);
+});

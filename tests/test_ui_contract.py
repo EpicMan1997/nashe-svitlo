@@ -96,6 +96,15 @@ class VisualStatusContract(unittest.TestCase):
         self.assertNotIn("Графік за цей день не збережений", HTML)
         self.assertNotIn("Зміни графіка: '+count", HTML)
 
+    def test_unconfirmed_zero_outage_does_not_promise_24_hours_of_power(self):
+        self.assertIn("preliminaryZero=status==='preliminary'&&out.length===0", HTML)
+        self.assertIn("known=status!=='unknown'&&!preliminaryZero", HTML)
+        self.assertIn("if(preliminaryZero){", HTML)
+        self.assertIn("if(status==='preliminary'&&!preliminaryZero)", HTML)
+        self.assertIn("Попередньо: без планових відключень", HTML)
+        self.assertIn("не гарантія фактичної наявності світла", HTML)
+        self.assertIn(".schedule-unconfirmed-zero", HTML)
+
     def test_tomorrow_indicator_is_location_scoped(self):
         self.assertIn("const available=Boolean(f),unseen=available&&remembered('dubechnya-tomorrow-seen-'+locationId+'-'+f.iso)!==f.hash", HTML)
         self.assertIn("button.classList.toggle('unavailable',!available)", HTML)
