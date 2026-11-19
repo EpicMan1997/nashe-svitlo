@@ -117,6 +117,56 @@ class Tests(unittest.TestCase):
   )
   self.assertIsNone(parse_kyivshchyna(page,date(2026,11,11),today))
 
+ def test_region_todays_full_day_light_is_zero_outages(self):
+  day=date(2026,11,19)
+  page=(
+   '<h2>Графік відключення світла в Київській області: сьогодні, 19 листопада</h2>'
+   '<p>kyivshchyna.info · ДТЕК оновив 19.11.2026 19:32</p>'
+   '<p>Черга 3.1 Світло весь день</p>'
+   '<p>Черга 3.2 Світло весь день</p>'
+   '<h2>Новини про світло на Київщині</h2>'
+   '<p>Черга 3.1: старий графік 14:00–17:30</p>'
+  )
+  self.assertEqual(parse_kyivshchyna(page,day,day),())
+  self.assertIsNone(parse_kyivshchyna(page,day+timedelta(days=1),day))
+
+ def test_live_cancellation_overrides_old_plan_as_preliminary_during_429(self):
+  day=date(2026,11,19)
+  old={'date':day.isoformat(),'status':'stale','outages':[['14:00','17:30']],
+       'sources':['Київщина.info','КолиБуде']}
+  primary={'candidates':[],'updated':'','unpublished':False}
+  provisional=choose(day,primary,None,None,old,{'Київщина.info':()},
+                     primary_source='Карта світла',allow_early=True)
+  self.assertEqual(provisional['status'],'preliminary')
+  self.assertEqual(provisional['outages'],[])
+  self.assertEqual(provisional['sources'],['Київщина.info'])
+  report=source_reports(provisional,primary,None,None,(),None,old)
+  self.assertEqual(report['Київщина.info']['status'],'preliminary')
+  self.assertEqual(report['КолиБуде']['status'],'unavailable')
+  confirmed=choose(day,primary,None,None,old,
+                   {'Київщина.info':(),'Alerts Energy':()},
+                   primary_source='Карта світла',allow_early=True)
+  self.assertEqual(confirmed['status'],'normal')
+  self.assertEqual(confirmed['outages'],[])
+  self.assertEqual(len(confirmed['sources']),2)
+
+ def test_no_new_confirmation_retains_stale_without_invented_zero(self):
+  day=date(2026,11,19)
+  old={'date':day.isoformat(),'status':'normal','outages':[['14:00','17:30']],
+       'sources':['Київщина.info','КолиБуде']}
+  primary={'candidates':[],'updated':'','unpublished':False}
+  stale=choose(day,primary,None,None,old,{'Київщина.info':None},
+               primary_source='Карта світла',allow_early=True)
+  self.assertEqual(stale['status'],'stale')
+  self.assertEqual(stale['outages'],[['14:00','17:30']])
+  checked=choose(day,primary,None,None,old,
+                 {'Київщина.info':(('14:00','17:30'),)},
+                 primary_source='Карта світла',allow_early=True)
+  self.assertEqual(checked['status'],'stale')
+  self.assertEqual(checked['outages'],[['14:00','17:30']])
+  reports=source_reports(checked,primary,None,None,(('14:00','17:30'),),None,old)
+  self.assertEqual(reports['Київщина.info']['status'],'unconfirmed')
+
  def test_news_article_fallback_is_date_scoped_and_ignores_older_revision(self):
   target=date(2026,11,11)
   page=(

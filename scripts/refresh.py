@@ -182,7 +182,7 @@ def parse_kyivshchyna(html, target, today):
         if not row:
             return None
         block = row.group(1)
-        if re.search(r'без відключень|відключень немає', block, re.I):
+        if re.search(r'без відключень|відключень немає|світло весь день', block, re.I):
             return tuple()
         off = re.search(r'без світла:\s*(.*)', block, re.I)
         if not off:
@@ -201,7 +201,7 @@ def parse_kyivshchyna(html, target, today):
     if not row:
         return None
     block = row.group(1)
-    if re.search(r'без відключень|відключень немає', block, re.I):
+    if re.search(r'без відключень|відключень немає|світло весь день', block, re.I):
         return tuple()
     off = re.search(r'без світла:\s*(.*)', block, re.I)
     if not off:
@@ -337,7 +337,10 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None,region_url=N
         else:
             outage_list=[list(x) for x in ranges]
             matches=(result['status'] in ('normal','preliminary') and target==ranges and not part)
-            output[name]={'status':('match' if result['status']=='normal' else 'preliminary') if matches else 'partial' if part else 'diff',
+            report_status=(('match' if result['status']=='normal' else 'preliminary') if matches
+                           else 'partial' if part else 'unconfirmed'
+                           if result['status']=='stale' and target==ranges else 'diff')
+            output[name]={'status':report_status,
                           'outages':outage_list,'partial':part,'url':entry['url']}
     return output
 
@@ -479,8 +482,9 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
         _,ranges,sources=confirmed[0]
         return {**base,'status':'normal','outages':[list(x) for x in ranges],'sources':sorted(sources),'detail':'Зіставлено незалежні джерела'}
     why='Графік ще не опубліковано' if bez['unpublished'] else 'Суперечливі джерела' if confirmed else 'Очікуємо незалежне підтвердження' if votes else 'Немає підтверджених даних'
-    if old.get('date')==day.isoformat() and old.get('status') in ('normal','stale') and 'outages' in old:
-        return {**base,'status':'stale','outages':old['outages'],'sources':old.get('sources',[]),'detail':why}
+    # A date-scoped fresh correction can supersede an old confirmed plan as
+    # PRELIMINARY when rate-limited sources prevent a two-source quorum.
+    # Never call one source confirmed.
     # Show fresh, date-scoped first reports for tomorrow instead of hiding them
     # while a second independent provider has not caught up.
     # An ambiguous alternating BeZ/map page must not be trusted on its own.
@@ -498,12 +502,18 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
             return (-len(srcs),first,str(off))
         ordered=sorted(provisional_votes.items(),key=rank)
         selected,sources=ordered[0]
+        if (old.get('date')==day.isoformat() and old.get('status') in ('normal','stale')
+                and old.get('outages') == [list(x) for x in selected]):
+            return {**base,'status':'stale','outages':old['outages'],
+                    'sources':old.get('sources',[]),'detail':why}
         alternatives=[{'sources':sorted(srcs),'outages':[list(x) for x in off]}
                       for off,srcs in ordered[1:]]
         detail=('Джерела показують різні години. Потрібне підтвердження.'
                 if alternatives else 'Перші дані з одного джерела. Потрібне підтвердження.')
         return {**base,'status':'preliminary','outages':[list(x) for x in selected],
                 'sources':sorted(sources),'alternatives':alternatives,'detail':detail}
+    if old.get('date')==day.isoformat() and old.get('status') in ('normal','stale') and 'outages' in old:
+        return {**base,'status':'stale','outages':old['outages'],'sources':old.get('sources',[]),'detail':why}
     return {**base,'status':'unknown','outages':[],'sources':[],'detail':why}
 
 def change(old,new):
@@ -742,7 +752,9 @@ def main():
         live=None  # Svitlo.live is no longer treated as a current reference
         previous=old.get('days',{}).get(target.isoformat(),{})
         alerts=parse_alerts(region_alerts,target,'3.1','kyivska_oblast_oblenergo')
-        entry=choose(target,bez,a,b,previous,{'Київщина.info':region,'Alerts Energy':alerts},primary_source='Карта світла',allow_early=target>today)
+        entry=choose(target,bez,a,b,previous,{'Київщина.info':region,'Alerts Energy':alerts},
+                     primary_source='Карта світла',
+                     allow_early=(target>today or region is not None or alerts is not None))
         entry['source_reports']=source_reports(entry,bez,a,b,region,live,previous,alerts,region_url)
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry

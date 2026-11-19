@@ -19,6 +19,8 @@ class VisualStatusContract(unittest.TestCase):
     def test_old_source_is_independently_reported(self):
         self.assertIn("old:'Не оновлено'", HTML)
         self.assertIn("e.source_reports||{}", HTML)
+        self.assertIn("unconfirmed:'Потребує підтвердження'", HTML)
+        self.assertIn("['preliminary','unconfirmed'].includes(type)", HTML)
 
     def test_age_only_colours_freshness_ring(self):
         self.assertIn("function updateRefreshRing(){", HTML)
