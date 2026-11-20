@@ -158,9 +158,8 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-20": {
-      "alternatives": [],
       "date": "2026-11-20",
-      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "detail": "Зіставлено незалежні джерела",
       "outages": [
         [
           "21:30",
@@ -171,6 +170,10 @@
         "Київщина.info": {
           "fingerprint": "[[\"21:30\", \"24:00\"]]",
           "first_seen": "2026-11-20T08:10+02:00"
+        },
+        "КолиБуде": {
+          "fingerprint": "[[\"21:30\", \"24:00\"]]",
+          "first_seen": "2026-11-20T08:31+02:00"
         }
       },
       "source_reports": {
@@ -196,14 +199,18 @@
             ]
           ],
           "partial": [],
-          "status": "preliminary",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "21:30",
+              "24:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "match",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -216,9 +223,10 @@
       },
       "source_updated": "",
       "sources": [
-        "Київщина.info"
+        "Київщина.info",
+        "КолиБуде"
       ],
-      "status": "preliminary",
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-21": {
@@ -1480,6 +1488,24 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "21:30",
+          "24:00"
+        ]
+      ],
+      "at": "2026-11-20T08:31+02:00",
+      "before": null,
+      "date": "2026-11-20",
+      "first_observed_source": "Київщина.info",
+      "kind": "published",
+      "message": "Змінено графік: 21:30–24:00 → 21:30–24:00",
+      "sources_confirmed": [
+        "Київщина.info",
+        "КолиБуде"
+      ]
+    },
     {
       "after": [
         [
