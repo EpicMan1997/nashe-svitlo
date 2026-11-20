@@ -16,7 +16,7 @@
   let mode = 'stream';
   let availability = {};
   let unassigned = [];
-  const RECONNECT_CHECK_MS = 3000;
+  const RECONNECT_CHECK_MS = 15000;
   let status = 'preview';
   let telemetry = new Map();
   let eventSource = null;
@@ -27,6 +27,7 @@
   let revision = 0;
   let publishedSignature = '';
   let acceptedPublishedFrame = null;
+  let snapshotInFlight = null;
   let lastError = null;
   const subscribers = new Set();
 
@@ -129,16 +130,20 @@
     return true;
   }
   async function getSnapshot() {
-    if (!enabled || !snapshotUrl) return;
-    try {
-      const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 60000)) : '';
-      const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      acceptFrame(await response.json());
-    } catch (error) {
-      lastError = 'snapshot-unavailable';
-      refreshStatus();
-    }
+    if (!enabled || !snapshotUrl || (mode === 'published' && host.document?.visibilityState === 'hidden')) return;
+    if (snapshotInFlight) return snapshotInFlight;
+    snapshotInFlight = (async () => {
+      try {
+        const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 60000)) : '';
+        const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        acceptFrame(await response.json());
+      } catch (error) {
+        lastError = 'snapshot-unavailable';
+        refreshStatus();
+      }
+    })();
+    try { await snapshotInFlight; } finally { snapshotInFlight = null; }
   }
   function connectStream() {
     if (!enabled || !streamUrl || typeof EventSource === 'undefined') return;
