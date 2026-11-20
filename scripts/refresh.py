@@ -649,7 +649,12 @@ def city_sources(entry,bez,koly,bude,street,prev,alerts=None):
     for name,url in targets.items():
         value=data[name]
         if value is not None:
-            out[name]={'status':('match' if entry['status']=='normal' else 'preliminary') if entry['status'] in ('normal','preliminary') and value==compare else 'diff',
+            matches = value == compare
+            verdict = (('match' if entry['status']=='normal' else 'preliminary')
+                       if entry['status'] in ('normal','preliminary') and matches
+                       else 'unconfirmed' if entry['status']=='stale' and matches
+                       else 'diff')
+            out[name]={'status':verdict,
                        'outages':[list(x) for x in value],'url':url,'partial':[]}
         else:
             older=previous.get(name,{})
@@ -685,7 +690,10 @@ def update_city_locations(now,today,old,errors):
             prev=old_loc.get('days',{}).get(target.isoformat(),{})
             # Uses same two-source quorum as the dacha, but the city sources are distinct.
             alerts=parse_alerts(city_alerts,target,config['group'],'kyiv_oblenergo')
-            entry=choose(target,bez,koly,bude,prev,{'Alerts Energy':alerts},primary_source='Карта світла',allow_early=target>today)
+            entry=choose(target,bez,koly,bude,prev,{'Alerts Energy':alerts},
+                         primary_source='Карта світла',
+                         allow_early=(target>today or bool(bez.get('candidates'))
+                                      or koly is not None or bude is not None or alerts is not None))
             entry['url']=url
             entry['source_reports']=city_sources(entry,bez,koly,bude,url,prev,alerts)
             record_source_observations(now,prev,entry)

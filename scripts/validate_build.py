@@ -97,7 +97,7 @@ def check_payload(payload, season, config, site, now):
                     loc + "/" + date + ": missing source monitoring")
             for source, report in reports.items():
                 require(isinstance(report, dict) and report.get("status") in
-                        ("match", "preliminary", "diff", "old", "unavailable", "partial"),
+                        ("match", "preliminary", "unconfirmed", "diff", "old", "unavailable", "partial"),
                         loc + "/" + date + ": invalid source " + source)
                 if report.get("outages") is not None:
                     check_intervals(report["outages"], loc + "/" + source)

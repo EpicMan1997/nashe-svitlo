@@ -239,6 +239,31 @@ class Tests(unittest.TestCase):
   script=Path(__file__).resolve().parents[1].joinpath('scripts/refresh.py').read_text(encoding='utf-8')
   self.assertNotIn("city_dtek=fetch(",script)
   self.assertNotIn("'ДТЕК':None",script)
+ def test_city_stale_matching_hours_are_not_mislabeled_as_different(self):
+  day=D.isoformat()
+  previously={'date':day,'status':'normal','outages':[['07:30','11:00']],
+              'sources':['КолиСвітло','КолиБуде']}
+  first={'candidates':[],'updated':'','unpublished':False}
+  lone=(('07:30','11:00'),)
+  result=choose(D,first,lone,None,previously,{},
+                primary_source='Карта світла',allow_early=True)
+  self.assertEqual(result['status'],'stale')
+  report=city_sources(result,first,lone,None,'https://example.com',previously)
+  self.assertEqual(report['КолиСвітло']['status'],'unconfirmed')
+  self.assertNotEqual(report['КолиСвітло']['status'],'diff')
+
+ def test_city_new_single_source_cancellation_is_visible_but_tentative(self):
+  previous={'date':D.isoformat(),'status':'normal',
+            'outages':[['14:00','17:30']],
+            'sources':['КолиСвітло','КолиБуде']}
+  first={'candidates':[],'updated':'','unpublished':False}
+  result=choose(D,first,None,(),previous,{},primary_source='Карта світла',
+                allow_early=True)
+  self.assertEqual(result['status'],'preliminary')
+  self.assertEqual(result['outages'],[])
+  report=city_sources(result,first,None,(),'https://example.com',previous)
+  self.assertEqual(report['КолиБуде']['status'],'preliminary')
+
  def test_alerts_region_half_hour_codes(self):
   slots=[0]*24
   for i in range(8,12):slots[i]=1
