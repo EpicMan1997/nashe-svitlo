@@ -53,6 +53,23 @@ def public_error_status(error):
     return "rate_limited" if ("429" in code or "quota" in code.lower()) else "api_error"
 
 
+def public_error_code(error):
+    """Return only a numeric HTTP/API code or safe category, never raw text."""
+    if not isinstance(error, ProbeError):
+        return "unexpected"
+    message = str(error)
+    found = re.search(r"(?:HTTP error|code)\s+(\d{3,7})", message)
+    if found:
+        return "code_" + found.group(1)
+    if "Could not reach" in message:
+        return "network"
+    if "invalid JSON" in message:
+        return "invalid_json"
+    if "response type" in message:
+        return "invalid_response"
+    return "unknown"
+
+
 def fresh_reading(quota, key, model, timestamp):
     # Existing normalizer validates numbers and never mistakes 0 for missing.
     typekey = "dacha:dp3" if model == "delta_pro_3" else "dacha:d2"
@@ -192,8 +209,8 @@ def main():
             # Outage publishing must stay independent of upstream EcoFlow access.
             # Sanitized category only: never print API URLs, serials or secrets.
             print("EcoFlow provider error: " +
-                  (public_error_status(error) if isinstance(error, ProbeError)
-                   else "unavailable"))
+                  ((public_error_status(error) + " / " + public_error_code(error))
+                   if isinstance(error, ProbeError) else "unavailable"))
             state = {
                 "version": 1, "mode": "scheduled",
                 "emittedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
