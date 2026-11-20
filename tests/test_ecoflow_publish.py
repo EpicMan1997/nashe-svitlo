@@ -177,6 +177,12 @@ class PublishedEcoFlowTests(unittest.TestCase):
                          "api_error")
         self.assertEqual(pub.public_error_status(pub.ProbeError("unavailable")),
                          "api_error")
+        self.assertEqual(pub.public_error_code(pub.ProbeError("EcoFlow HTTP error 429")),
+                         "code_429")
+        self.assertEqual(pub.public_error_code(pub.ProbeError("EcoFlow rejected request (code 1006)")),
+                         "code_1006")
+        self.assertEqual(pub.public_error_code(pub.ProbeError("Could not reach EcoFlow EU API")),
+                         "network")
 
     def test_ambiguous_delta_pro_3_serial_never_claims_location(self):
         devices = [self.DEVICES[1], {"sn": "OTHER-DP3", "deviceName": "DELTA Pro 3"}]
