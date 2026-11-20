@@ -578,7 +578,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("const solarUiEnabled = false;", JS)
         self.assertIn("powerReading(d,'in')", JS)
         self.assertNotIn("кВт", JS)
-        self.assertIn("номінальних 5 кВт", HTML)
+        self.assertIn("5 кВт номінально", HTML)
         self.assertNotIn("Вт", JS)
         self.assertIn("<strong>5 000 W</strong>", HTML)
         self.assertIn("4 800 Wh", HTML)
