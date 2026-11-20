@@ -75,8 +75,9 @@ test('legacy EcoFlow Admin controls are absent while generator planner remains',
   assert.doesNotMatch(index, /id="ecoAdminToggle"|id="eco-admin-bulk"/);
   assert.doesNotMatch(eco, /setAdminMode|adminControls\(|powerOceanAdmin\(|renderBulkPanel\(/);
   assert.match(index, /GRETOR GRT-IG5500IE/);
-  assert.match(index, /5 000 W/);
-  assert.match(index, /5 500 W/);
+  assert.match(index, /5 кВт номінально/);
+  assert.match(index, /підключення 16 A/);
+  assert.doesNotMatch(index, /Ручний; електро та пульт/);
   assert.match(index, /id="eco-generator-planner"/);
 });
 
@@ -322,7 +323,7 @@ test('compact generator displays available DP3 estimate but not fake whole-locat
 
 test('compact generator retains target and safe input limit calculations', () => {
   const m=mount();
-  assert.match(m.get('eco-gen-budget').textContent,/3 680 W сумарно/);
+  assert.match(m.get('eco-gen-budget').textContent,/3[\s\u00a0\u202f]680 W сумарно/);
   const target={dataset:{ecoGenTarget:'80'},closest(){return this;}};
   m.root.listeners.click({target});
   assert.equal(m.get('eco-gen-dp3-time').textContent,'Досягнуто цілі');
