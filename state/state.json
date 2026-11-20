@@ -158,10 +158,16 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-20": {
+      "alternatives": [],
       "date": "2026-11-20",
-      "detail": "Немає підтверджених даних",
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
       "outages": [],
-      "source_observations": {},
+      "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[]",
+          "first_seen": "2026-11-20T05:31+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
           "fetch_failed": false,
@@ -178,10 +184,9 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [],
           "partial": [],
-          "status": "unavailable",
+          "status": "preliminary",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -200,8 +205,10 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Київщина.info"
+      ],
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-21": {
@@ -1442,6 +1449,16 @@
     }
   },
   "logs": [
+    {
+      "after": [],
+      "at": "2026-11-20T05:31+02:00",
+      "before": null,
+      "date": "2026-11-20",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: без відключень",
+      "sources_confirmed": []
+    },
     {
       "after": [],
       "at": "2026-11-19T22:12+02:00",
