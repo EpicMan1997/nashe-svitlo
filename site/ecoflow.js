@@ -138,12 +138,12 @@
     element.title = mode === 'preview' ?
       'Тестові показники, не реальна телеметрія EcoFlow' :
       mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
-      mode === 'published' ? 'Реальні показники з EcoFlow API, GitHub Actions оновлює приблизно кожні 10 хвилин. Не миттєві.' :
+      mode === 'published' ? 'Реальні показники з EcoFlow API, публікація залежить від графіка GitHub Actions. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
     const at = live?.summary()?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
     const nextStatusHtml = '<i aria-hidden="true"></i>' + (mode === 'published'
-      ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm + ' · ≈10 хв')
+      ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
     if (element.innerHTML !== nextStatusHtml) element.innerHTML = nextStatusHtml;

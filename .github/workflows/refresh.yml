@@ -2,7 +2,8 @@ name: Наше Світло | оновлення графіків і публі�
 on:
   push:
     branches: [main]
-  # Reliable primary: external workflow_dispatch roughly every 10 minutes.
+  # External workflow_dispatch is currently around 10 min; configure its existing
+  # cron-job.org job for 2 min. GitHub schedule is a best-effort 5-min fallback.
   # Emergency announcements can arrive at any hour. Five-minute UTC
   # backup schedule (GitHub scheduler is best-effort and may run late).
   schedule:
@@ -37,7 +38,7 @@ jobs:
       - run: node --test tests/page-runtime-smoke.test.cjs
       - run: python -m unittest discover -s tests -v
       - run: python scripts/refresh.py
-      - name: Fetch supported EcoFlow stations (read-only, ~10-minute snapshots)
+      - name: Fetch supported EcoFlow stations (read-only, scheduled snapshot)
         env:
           ECOFLOW_ACCESS_KEY: ${{ secrets.ECOFLOW_ACCESS_KEY }}
           ECOFLOW_SECRET_KEY: ${{ secrets.ECOFLOW_SECRET_KEY }}

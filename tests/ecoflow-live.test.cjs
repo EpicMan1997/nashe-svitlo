@@ -158,7 +158,7 @@ test('edge 09 parallel published snapshot triggers share one HTTP request', asyn
   const f=fixture();
   f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
   await f.api.start();
-  const poll=f.intervals.find(x=>x.ms===60000)?.fn;
+  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
   assert.ok(poll);
   assert.equal(f.snapshotCalls.length,1);
   let resolveSnapshot;
@@ -178,7 +178,7 @@ test('edge 10 hidden published PWA pauses polls and refreshes when visible',asyn
   const f=fixture();
   f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
   await f.api.start();
-  const poll=f.intervals.find(x=>x.ms===60000)?.fn;
+  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
   assert.ok(poll);
   const initial=f.snapshotCalls.length;
   f.document.visibilityState='hidden';
@@ -190,4 +190,21 @@ test('edge 10 hidden published PWA pauses polls and refreshes when visible',asyn
   await new Promise(setImmediate);
   assert.equal(f.snapshotCalls.length,initial+1);
   assert.equal(f.api.summary().mode,'published');
+});
+
+test('published mode checks snapshots every 20 seconds with a fresh cache key',async()=>{
+  const f=fixture();
+  f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+  await f.api.start();
+  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
+  assert.ok(poll,'fast published polling');
+  const initial=f.snapshotCalls[0];
+  await poll();
+  assert.equal(f.snapshotCalls.length,2);
+  assert.equal(f.snapshotCalls[1],initial);
+  f.advance(20000);
+  await poll();
+  assert.equal(f.snapshotCalls.length,3);
+  assert.notEqual(f.snapshotCalls[2],initial);
+  assert.equal(f.socket.length,0);
 });

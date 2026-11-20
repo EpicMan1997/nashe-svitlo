@@ -134,7 +134,7 @@
     if (snapshotInFlight) return snapshotInFlight;
     snapshotInFlight = (async () => {
       try {
-        const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 60000)) : '';
+        const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 20000)) : '';
         const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
         acceptFrame(await response.json());
@@ -184,9 +184,9 @@
       notify();
       await getSnapshot();
       if (mode === 'stream') connectStream();
-      // Published GitHub Actions snapshots are NOT live. Re-fetch every minute.
+      // Published GitHub Actions snapshots are NOT live; look for a new publication every 20 seconds.
       setInterval(refreshStatus, RECONNECT_CHECK_MS);
-      setInterval(getSnapshot, mode === 'published' ? 60000 : 30000);
+      setInterval(getSnapshot, mode === 'published' ? 20000 : 30000);
       host.document?.addEventListener?.('visibilitychange', () => {
         if (host.document.visibilityState === 'visible') getSnapshot();
       });
