@@ -159,7 +159,7 @@
     },
     "2026-11-20": {
       "date": "2026-11-20",
-      "detail": "Зіставлено незалежні джерела",
+      "detail": "Очікуємо незалежне підтвердження",
       "outages": [
         [
           "11:00",
@@ -172,8 +172,8 @@
           "first_seen": "2026-11-20T10:31+02:00"
         },
         "КолиБуде": {
-          "fingerprint": "[[\"11:00\", \"15:00\"]]",
-          "first_seen": "2026-11-20T10:31+02:00"
+          "fingerprint": "[[\"11:00\", \"16:00\"], [\"20:30\", \"24:00\"]]",
+          "first_seen": "2026-11-20T14:28+02:00"
         }
       },
       "source_reports": {
@@ -199,18 +199,22 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "unconfirmed",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
           "outages": [
             [
               "11:00",
-              "15:00"
+              "16:00"
+            ],
+            [
+              "20:30",
+              "24:00"
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "diff",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -226,7 +230,7 @@
         "Київщина.info",
         "КолиБуде"
       ],
-      "status": "normal",
+      "status": "stale",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-21": {
