@@ -40,7 +40,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
 
     def test_paired_ecoflow_card_collapses_pack_details_but_keeps_live_stats(self):
         self.assertIn("const expandedCards = new Set()", JS)
-        self.assertIn("class=\\\"eco-card-details\\\"", JS)
+        self.assertIn("class=\\\"eco-card-details\\\" data-eco-card", JS)
         self.assertIn("data-eco-card=", JS)
         self.assertIn("Склад системи", JS)
         self.assertIn("energyStats(main, capacityWh, soc)", JS)
