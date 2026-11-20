@@ -704,14 +704,25 @@
     const actualW = Math.min(generatorPlan.chargeW, allowedW);
     const dp3Missing = generatorMissingWh(dp3);
     const allMissing = generatorMissingWh(packs);
+    const missingCount = packs.filter(device => generatorSOC(device) === null).length;
     const dp3Hours = generatorDuration(dp3Missing, actualW);
     const allHours = generatorDuration(allMissing, actualW);
-    $('eco-gen-dp3-time').textContent = '≈ ' + generatorTime(dp3Hours);
-    $('eco-gen-all-time').textContent = '≈ ' + generatorTime(allHours);
-    $('eco-gen-dp3-energy').textContent = 'Дозарядити ' + (dp3Missing === null ? '—' : niceWh(Math.ceil(dp3Missing))) + ' із ' +
-      niceWh(dp3.reduce((sum, d) => sum + d.capacityWh, 0));
-    $('eco-gen-all-energy').textContent = 'Дозарядити ' + (allMissing === null ? '—' : niceWh(Math.ceil(allMissing))) + ' із ' +
-      niceWh(packs.reduce((sum, d) => sum + d.capacityWh, 0));
+    const estimate = hours => Number.isNaN(hours) ? 'Потрібен заряд' :
+      hours === 0 ? 'Досягнуто цілі' : '≈ ' + generatorTime(hours);
+    $('eco-gen-dp3-time').textContent = estimate(dp3Hours);
+    $('eco-gen-all-time').textContent = missingCount ? 'Потрібні дані' : estimate(allHours);
+    $('eco-gen-dp3-energy').textContent = dp3Missing === null
+      ? 'Уточни заряд DELTA Pro 3'
+      : 'Дозарядити ' + niceWh(Math.ceil(dp3Missing)) + ' із ' +
+        niceWh(dp3.reduce((sum, d) => sum + d.capacityWh, 0));
+    $('eco-gen-all-energy').textContent = missingCount
+      ? 'Немає показників для ' + missingCount + ' із ' + packs.length + ' систем'
+      : 'Дозарядити ' + niceWh(Math.ceil(allMissing)) + ' із ' +
+        niceWh(packs.reduce((sum, d) => sum + d.capacityWh, 0));
+    $('eco-gen-dp3-result').classList.toggle('is-missing', dp3Missing === null);
+    $('eco-gen-all-result').classList.toggle('is-missing', allMissing === null);
+    $('eco-gen-soc-hint').textContent = missingCount
+      ? '· ' + missingCount + ' без даних' : '';
     $('eco-gen-charge-value').textContent = generatorNum.format(generatorPlan.chargeW) + ' W';
     $('eco-gen-house-value').textContent = generatorNum.format(generatorPlan.otherLoadW) + ' W';
     area.querySelectorAll('[data-eco-gen-target]').forEach(button => {
@@ -721,11 +732,10 @@
     });
     const limited = actualW < generatorPlan.chargeW;
     $('eco-gen-budget').textContent =
-      'Доступно на заряджання: ' + generatorNum.format(actualW) + ' W · інші прилади: ' +
-      generatorNum.format(generatorPlan.otherLoadW) + ' W · резерв потужності: ' +
-      generatorNum.format(generatorRatedW * (1 - generatorSuggestedFraction)) + ' W · ввід 16 A: максимум ' +
-      generatorNum.format(generatorCurrentInputLimitW) + ' W разом з іншими приладами' +
-      (limited ? '. Потужність заряджання обмежена з урахуванням інших приладів.' : '.');
+      'На заряд: ' + generatorNum.format(actualW) + ' W · інші прилади: ' +
+      generatorNum.format(generatorPlan.otherLoadW) + ' W · ліміт вводу 16 A: ' +
+      generatorNum.format(generatorCurrentInputLimitW) + ' W сумарно' +
+      (limited ? ' · потужність обмежено автоматично' : '');
     $('eco-gen-budget').classList.toggle('is-limited', limited);
     const rate = generatorPlan.fuelLph;
     const fuelDisplay = $('eco-gen-fuel-result');

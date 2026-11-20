@@ -41,6 +41,7 @@ class Element {
   querySelectorAll() { return []; }
   querySelector() { return null; }
   closest() { return this; }
+  contains() { return true; }
   focus() {}
 }
 
@@ -297,4 +298,35 @@ test('paired battery details start collapsed, can expand and survive location sw
   m.events['svitlo:location-change']({detail:{id:'home'}});
   m.events['svitlo:location-change']({detail:{id:'dacha'}});
   assert.doesNotMatch(m.get('eco-devices').innerHTML,/data-eco-card="dacha:dp3" open/);
+});
+
+test('compact generator displays available DP3 estimate but not fake whole-location time', () => {
+  const readings={'dacha:dp3': {socPercent:55,inputW:0,outputW:140,operation:'discharging'}};
+  const live={
+    summary:()=>({status:'published',lastFrameMs:Date.now(),unassigned:[]}),
+    statusFor:key=>readings[key]?'published':'waiting',
+    reading:key=>readings[key]||null,
+    availabilityFor:key=>readings[key]?'readable':'api_error',
+    subscribe(){},start(){}
+  };
+  const m=mount(live);
+  const main=m.get('eco-gen-dp3-time').textContent;
+  assert.match(main,/≈/);
+  assert.doesNotMatch(main,/Немає даних/);
+  assert.equal(m.get('eco-gen-all-time').textContent,'Потрібні дані');
+  assert.match(m.get('eco-gen-all-energy').textContent,/3 із 4 систем/);
+  assert.match(m.get('eco-gen-soc-hint').textContent,/3 без даних/);
+  assert.equal(m.get('eco-gen-all-result').classList.contains('is-missing'),true);
+  assert.equal(m.get('eco-gen-dp3-result').classList.contains('is-missing'),false);
+});
+
+test('compact generator retains target and safe input limit calculations', () => {
+  const m=mount();
+  assert.match(m.get('eco-gen-budget').textContent,/3 680 W сумарно/);
+  const target={dataset:{ecoGenTarget:'80'},closest(){return this;}};
+  m.root.listeners.click({target});
+  assert.equal(m.get('eco-gen-dp3-time').textContent,'Досягнуто цілі');
+  m.root.listeners.input({target:{id:'eco-gen-house-w',value:'3000'}});
+  assert.match(m.get('eco-gen-budget').textContent,/На заряд: 680 W/);
+  assert.match(m.get('eco-gen-budget').textContent,/потужність обмежено автоматично/);
 });

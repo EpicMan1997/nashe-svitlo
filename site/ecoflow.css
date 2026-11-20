@@ -2223,3 +2223,46 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
   main>header .location-button #locationLabel{font-size:18px}
   main>header .clock-view #viewMenuToggle{padding:5px 8px}
 }
+
+/* v66: generator = compact charging calculator, not an equipment specification sheet. */
+.eco-generator-compact{padding:18px 19px;border-color:#536478;background:#172439}
+.eco-generator-compact .eco-generator-header h3{font-size:clamp(20px,2.5vw,25px);margin:5px 0 3px}
+.eco-generator-compact .eco-generator-header p{font-size:12px;color:#b7c9dc}
+.eco-generator-compact .eco-generator-planner{margin-top:15px;padding:0;border:0;background:transparent}
+.eco-generator-compact .eco-generator-plan-head h4{font-size:17px;color:#dceafa;font-weight:780}
+.eco-generator-compact .eco-generator-plan-results{margin:12px 0;gap:9px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.eco-generator-compact .eco-generator-result{gap:6px;padding:15px 16px;background:#1c3048;border-color:#405c78}
+.eco-generator-compact .eco-generator-result-primary{background:#1c3935;border-color:#417966}
+.eco-generator-compact .eco-generator-result>span{font-size:12px}
+.eco-generator-compact .eco-generator-result>strong{font-size:clamp(18px,2.7vw,29px);line-height:1.18;overflow-wrap:anywhere}
+.eco-generator-compact .eco-generator-result>div{font-size:12px;line-height:1.4}
+.eco-generator-compact .eco-generator-result.is-missing{background:#202d3f;border-color:#42546b}
+.eco-generator-compact .eco-generator-result.is-missing>strong{color:#becbdb;font-size:clamp(17px,2.2vw,24px)}
+.eco-generator-compact .eco-generator-result.is-missing>div{color:#a9bfd6}
+.eco-generator-compact .eco-generator-plan-controls{grid-template-columns:minmax(220px,.9fr) minmax(0,1.5fr);gap:9px;align-items:stretch}
+.eco-generator-compact .eco-generator-target,.eco-generator-compact .eco-generator-slider{padding:11px 13px;gap:9px}
+.eco-generator-compact .eco-generator-budget{margin:10px 0 0;background:transparent;border-left:2px solid #4e867b;padding:6px 0 6px 10px;color:#bbd8d1;font-size:11px}
+.eco-generator-compact .eco-generator-budget.is-limited{background:transparent;color:#ffd49b;border-left-color:#f59e0b}
+.eco-generator-compact .eco-generator-soc{margin-top:12px}
+.eco-generator-compact .eco-generator-soc>summary,.eco-generator-compact .eco-generator-options>summary{min-height:43px;font-size:12px}
+.eco-generator-compact .eco-generator-soc summary small{display:inline;color:#e7c078;background:transparent;font-size:11px;margin-left:4px;padding:0}
+.eco-generator-options{border:1px solid #3b5672;border-radius:10px;background:#1b3045;margin-top:9px;overflow:hidden}
+.eco-generator-options>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;list-style:none;cursor:pointer;color:#cfe1f2;font-weight:750}
+.eco-generator-options>summary::-webkit-details-marker{display:none}
+.eco-generator-options[open] .eco-generator-soc-chevron{transform:rotate(225deg)}
+.eco-generator-options-body{display:grid;gap:10px;padding:0 13px 14px}
+.eco-generator-options-body .eco-generator-slider{background:#213a52}
+.eco-generator-options-body .eco-generator-fuel{margin:0}
+.eco-generator-options-body .eco-generator-fuel-result{margin:0}
+.eco-generator-options-body .eco-generator-caveat{margin:0;padding-top:4px;line-height:1.5;color:#98adc6}
+.eco-generator-options-body .eco-generator-source{margin:0;justify-self:start}
+.eco-generator-compact .eco-generator-soc>summary:focus-visible,.eco-generator-options>summary:focus-visible{outline:2px solid #facc15;outline-offset:-2px}
+@media(max-width:600px){
+  .eco-generator-compact{padding:12px}
+  .eco-generator-compact .eco-generator-header h3{font-size:20px}
+  .eco-generator-compact .eco-generator-plan-results{grid-template-columns:minmax(0,1fr)}
+  .eco-generator-compact .eco-generator-result{padding:12px 13px}
+  .eco-generator-compact .eco-generator-plan-controls{grid-template-columns:minmax(0,1fr);gap:8px}
+  .eco-generator-compact .eco-generator-target-options{max-width:none}
+  .eco-generator-compact .eco-generator-target,.eco-generator-compact .eco-generator-slider{padding:10px 12px}
+}
