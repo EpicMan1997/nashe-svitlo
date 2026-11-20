@@ -580,7 +580,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertNotIn("кВт", JS)
         self.assertIn("5 кВт номінально", HTML)
         self.assertNotIn("Вт", JS)
-        self.assertIn("<strong>5 000 W</strong>", HTML)
+        self.assertNotIn("<strong>5 000 W</strong>", HTML)
         self.assertIn("4 800 Wh", HTML)
         self.assertIn("maximumFractionDigits: 2", JS)
         self.assertIn("device.capacityWh * device.pct / knownWh", JS)
