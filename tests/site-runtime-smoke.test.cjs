@@ -277,3 +277,24 @@ test('no-op EcoFlow outage update does not replace stable station markup', () =>
   assert.equal(writes,1);
   assert.match(el.innerHTML,/PowerOcean/);
 });
+
+test('paired battery details start collapsed, can expand and survive location switches',()=>{
+  const m=mount();
+  const html=m.get('eco-devices').innerHTML;
+  assert.match(html,/class="eco-card-details"/);
+  assert.match(html,/data-eco-card="dacha:dp3"/);
+  assert.match(html,/<summary>Склад системи/);
+  assert.doesNotMatch(html,/data-eco-card="dacha:dp3" open/);
+  const onToggle=m.root.listeners.toggle;
+  assert.equal(typeof onToggle,'function');
+  onToggle({target:{matches:selector=>selector==='details.eco-card-details',
+    dataset:{ecoCard:'dacha:dp3'},open:true}});
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  m.events['svitlo:location-change']({detail:{id:'dacha'}});
+  assert.match(m.get('eco-devices').innerHTML,/data-eco-card="dacha:dp3" open/);
+  onToggle({target:{matches:selector=>selector==='details.eco-card-details',
+    dataset:{ecoCard:'dacha:dp3'},open:false}});
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  m.events['svitlo:location-change']({detail:{id:'dacha'}});
+  assert.doesNotMatch(m.get('eco-devices').innerHTML,/data-eco-card="dacha:dp3" open/);
+});

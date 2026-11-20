@@ -377,11 +377,15 @@
       '</article>';
   }
 
+  // Disclosure state survives telemetry updates that replace a station card.
+  const expandedCards = new Set();
   function systemView(main, addon) {
     const capacityWh = main.capacityWh + addon.capacityWh;
     const soc = main.pct; // Single provider-reported SOC for the complete battery system.
     const label = main.id === 'dp3' ? 'Smart Extra Battery' : 'Додаткова батарея';
     const charge = level(soc);
+    const detailKey = activeEcoLocation + ':' + main.id;
+    const openDetails = expandedCards.has(detailKey) ? ' open' : '';
     return '<article class="eco-system eco-system-paired eco-system-combined charge-' + charge +
       (liveMode && !Number.isFinite(soc) ? ' eco-api-unavailable' : '') +
       '" aria-label="' + main.name + ' із додатковою батареєю, ємність ' + niceWh(capacityWh) +
@@ -394,14 +398,17 @@
       pctLabel(soc) + '</strong></div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
       '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc) + '</small>' +
       '</div>' +
+      (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
+      energyStats(main, capacityWh, soc) +
+      '<details class="eco-card-details" data-eco-card="' + detailKey + '"' + openDetails +
+      '><summary>Склад системи <span class="eco-card-chevron" aria-hidden="true">⌄</span></summary>' +
       '<div class="eco-system-modules" aria-label="Склад системи">' +
       '<div class="eco-system-module"><span>Основна станція</span><strong>' +
       niceWh(main.capacityWh) + '</strong></div>' +
       '<div class="eco-system-module"><span>' + label + '</span><strong>' +
       niceWh(addon.capacityWh) + '</strong></div></div>' +
-      (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
-      energyStats(main, capacityWh, soc) +
       solarDisclosure(main) +
+      '</details>' +
       '</article>';
   }
 
@@ -419,14 +426,22 @@
       if (liveMode && !Number.isFinite(d.pct)) {
         pending.push('<div class="eco-pending-device eco-api-unavailable"><strong>' + textEscape(d.name) +
           '</strong><span>' + niceWh(d.capacityWh+(addon?.capacityWh||0)) + '</span><small>' +
-          (d.availability==='unsupported'?'EcoFlow API повертає 1006':'Очікуємо даних') +
-          ' · Підключення в процесі</small></div>');
+          (d.availability==='unsupported'?'EcoFlow API повертає 1006 · очікуємо сумісну інтеграцію':
+          d.availability==='rate_limited'?'API тимчасово обмежує запити':
+          d.availability==='not_listed'?'EcoFlow не повернув станцію у списку':
+          d.availability==='api_error'?'Помилка запиту до EcoFlow':
+          d.availability==='invalid_data'?'EcoFlow не повернув коректного заряду':
+          'Немає свіжих даних · повторюємо перевірку') +
+          '</small></div>');
       } else active.push(addon?systemView(d,addon):d.type==='system'?powerOceanView(d):deviceView(d));
     }
+    const partialFailure = devices.some(d => d.type !== 'battery' &&
+      liveMode && !Number.isFinite(d.pct) && d.availability !== 'unsupported');
     return active.join('') + (pending.length ?
       '<details class="eco-pending"' + (pendingExpanded.has(activeEcoLocation)?' open':'') +
-      ' data-eco-pending="' + activeEcoLocation + '"><summary><span><strong>Підключення в процесі</strong>' +
-      '<small>' + pending.length + ' станцій поки без моніторингу</small></span>' +
+      ' data-eco-pending="' + activeEcoLocation + '"><summary><span><strong>' +
+      (partialFailure ? 'Частина моніторингу недоступна' : 'Підключення в процесі') + '</strong>' +
+      '<small>' + pending.length + ' станцій без свіжих показників</small></span>' +
       '<span class="eco-pending-chevron" aria-hidden="true">⌄</span></summary>' +
       '<div class="eco-pending-list">' + pending.join('') + '</div></details>' : '');
   }
@@ -820,6 +835,11 @@
 
   root.addEventListener('toggle', event => {
     const item=event.target;
+    if (item?.matches?.('details.eco-card-details')) {
+      const key=item.dataset.ecoCard;
+      if (key) { if(item.open) expandedCards.add(key); else expandedCards.delete(key); }
+      return;
+    }
     if (!item?.matches?.('details.eco-pending')) return;
     const key=item.dataset.ecoPending;
     if (item.open) pendingExpanded.add(key); else pendingExpanded.delete(key);

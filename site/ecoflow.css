@@ -2177,3 +2177,49 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
   main > header{grid-template-columns:minmax(0,1fr)}
   main > header .clock-view{grid-column:1;grid-row:2;justify-self:center;width:100%}
 }
+
+/* v65 compact header and battery cards; layout only, no telemetry changes. */
+.eco-card-details{margin-top:11px;border:1px solid #405a76;border-radius:10px;background:#1d3149;overflow:hidden}
+.eco-card-details>summary{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;min-height:38px;color:#c9dcf1;font:700 12px/1.35 system-ui;list-style:none}
+.eco-card-details>summary::-webkit-details-marker{display:none}
+.eco-card-details>summary:focus-visible{outline:2px solid #facc15;outline-offset:-2px}
+.eco-card-chevron{font-size:19px;line-height:1;transition:transform .18s}
+.eco-card-details[open] .eco-card-chevron{transform:rotate(180deg)}
+.eco-card-details .eco-system-modules{margin:4px 10px 11px}
+.eco-card-details .eco-solar-disclosure{margin:0 10px 10px}
+.eco-system-combined{padding:14px}
+.eco-system-combined .eco-system-head{margin-bottom:11px}
+.eco-system-combined .eco-system-combined-charge{padding:12px 14px}
+.eco-system-combined .eco-system-combined-charge .eco-charge-track{margin-top:9px}
+.eco-system-combined .eco-remaining-energy{margin-top:6px}
+.eco-system-combined .eco-common-stats{margin-top:10px}
+.eco-system-combined .eco-common-stats .eco-device-stat{padding:10px 11px}
+@media(max-width:650px){
+  /* Put location and section selection on one row; time/date compact below. */
+  main{padding:13px 11px 20px}
+  main>header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 7px;align-items:center}
+  main>header .location-shell{grid-column:1;grid-row:1;min-width:0}
+  main>header .location-shell h1{min-height:40px;gap:5px;flex-wrap:nowrap}
+  main>header .location-button{min-height:40px;padding:4px;gap:4px}
+  main>header .location-button #locationLabel{font-size:clamp(18px,5vw,23px);white-space:nowrap}
+  main>header .head-icon{width:29px;height:29px}
+  main>header .clock-view{display:contents}
+  main>header .clock-view .view-switch{grid-column:2;grid-row:1;justify-self:end}
+  main>header .clock-view #viewMenuToggle{min-width:0;min-height:36px;padding:5px 11px;gap:8px;font-size:12px}
+  main>header .clock-view #clock{grid-column:1/-1;grid-row:2;justify-self:center;min-height:30px;
+    display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:9px;
+    padding:0;font-size:clamp(19px,5.3vw,24px);line-height:1.1}
+  main>header .clock-view #clock span{margin:0;font-size:11px;line-height:1.1}
+  main>nav.tabs{margin:9px 0 11px}
+  .eco-system-combined{padding:12px}
+  .eco-system-combined .eco-system-head{margin-bottom:9px}
+  .eco-system-combined .eco-system-combined-charge{padding:11px}
+  .eco-system-combined-percent{font-size:clamp(26px,8vw,33px)}
+  .eco-system-combined .eco-common-stats{gap:7px}
+  .eco-system-combined .eco-common-stats .eco-device-stat{padding:9px}
+  .eco-card-details .eco-system-modules{grid-template-columns:1fr}
+}
+@media(max-width:380px){
+  main>header .location-button #locationLabel{font-size:18px}
+  main>header .clock-view #viewMenuToggle{padding:5px 8px}
+}

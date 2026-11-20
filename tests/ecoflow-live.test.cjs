@@ -208,3 +208,27 @@ test('published mode checks snapshots every 20 seconds with a fresh cache key',a
   assert.notEqual(f.snapshotCalls[2],initial);
   assert.equal(f.socket.length,0);
 });
+
+test('private API quota interruptions have explicit sanitized availability states',async()=>{
+  const f=fixture();
+  f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+  await f.api.start();
+  const accepted=f.api.acceptFrame({
+    version:1,emittedAt:new Date(f.now()).toISOString(),
+    devices:{'dacha:dp3':{socPercent:64,inputW:0,outputW:200,operation:'discharging'}},
+    availability:{
+      'dacha:dp3':'readable','dacha:d2':'rate_limited',
+      'solovky:d2':'not_listed','naumenky:d2':'api_error',
+      'dacha:d3p':'unsupported','home:po':'unsupported',
+      'dacha:r3pw':'invalid_data'
+    },unassigned:[]
+  });
+  assert.equal(accepted,true);
+  for(const [key,reason] of Object.entries({
+    'dacha:d2':'rate_limited','solovky:d2':'not_listed',
+    'naumenky:d2':'api_error','dacha:d3p':'unsupported',
+    'dacha:r3pw':'invalid_data'}))
+    assert.equal(f.api.availabilityFor(key),reason);
+  assert.equal(f.api.reading('dacha:d2'),null);
+  assert.equal(f.api.reading('dacha:dp3').socPercent,64);
+});

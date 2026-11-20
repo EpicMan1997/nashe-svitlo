@@ -113,7 +113,8 @@
       changed = true;
     }
     if (mode === 'published') {
-      const allowed = new Set(['unavailable','unsupported','unassigned','readable']);
+      const allowed = new Set(['unavailable','unsupported','unassigned','readable',
+          'not_listed','api_error','invalid_data','rate_limited']);
       availability = Object.fromEntries(Object.entries(raw.availability || {})
         .filter(([key,val]) => KNOWN.has(key) && allowed.has(val)));
       unassigned = Array.isArray(raw.unassigned)

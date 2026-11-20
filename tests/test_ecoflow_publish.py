@@ -65,7 +65,7 @@ class PublishedEcoFlowTests(unittest.TestCase):
         with patch.object(pub, "request_api", api):
             doc = pub.build_snapshot("A", "B", bindings={})
         self.assertEqual(doc["devices"], {})
-        self.assertEqual(doc["availability"]["dacha:dp3"], "unavailable")
+        self.assertEqual(doc["availability"]["dacha:dp3"], "invalid_data")
         self.assertEqual(len(doc["unassigned"]), 3)
 
     def test_verified_location_bindings_and_expansion_battery_soc(self):
@@ -139,6 +139,44 @@ class PublishedEcoFlowTests(unittest.TestCase):
         self.assertNotIn("dacha:dp3eb", doc["devices"])
         self.assertNotIn("solovky:d2eb", doc["devices"])
         self.assertNotIn("estimated", json.dumps(doc))
+
+    def test_temporary_delta2_errors_are_classified_without_exposing_identity(self):
+        secret = "TEST_PRIVATE_KEY"
+        bindings = {key: pub.fingerprint(serial, secret) for key, serial in (
+            ("dacha:d2", "PRIVATE-D2-3"),
+            ("solovky:d2", "PRIVATE-D2-1"),
+            ("naumenky:d2", "PRIVATE-D2-2"),
+        )}
+        def api(path, access, secret_key, query=None):
+            if path == pub.DEVICE_LIST:
+                # DELTA 2 of Dacha temporarily absent from the account list.
+                return [self.DEVICES[1], self.DEVICES[4], self.DEVICES[5]]
+            if path == pub.DEVICE_QUOTA:
+                sn = query["sn"]
+                if sn == "PRIVATE-DP3":
+                    return {"cmsBattSoc": 70, "powInSumW": 0, "powOutSumW": 80}
+                if sn == "PRIVATE-D2-2":
+                    raise pub.ProbeError("EcoFlow HTTP error 429")
+                if sn == "PRIVATE-D2-3":
+                    raise pub.ProbeError("EcoFlow rejected request (code 1006)")
+            raise pub.ProbeError("unavailable")
+        with patch.object(pub, "request_api", api):
+            doc = pub.build_snapshot("ACCESS", secret, bindings=bindings)
+        self.assertEqual(doc["availability"]["dacha:d2"], "not_listed")
+        self.assertEqual(doc["availability"]["solovky:d2"], "not_listed")
+        self.assertEqual(doc["availability"]["naumenky:d2"], "rate_limited")
+        self.assertEqual(doc["availability"]["dacha:dp3"], "readable")
+        public = json.dumps(doc)
+        for private in ("PRIVATE-", "TEST_PRIVATE_KEY", "ACCESS"):
+            self.assertNotIn(private, public)
+
+    def test_public_error_classifier_never_reflects_raw_provider_message(self):
+        self.assertEqual(pub.public_error_status(pub.ProbeError("EcoFlow HTTP error 429")),
+                         "rate_limited")
+        self.assertEqual(pub.public_error_status(pub.ProbeError("code 1006")),
+                         "api_error")
+        self.assertEqual(pub.public_error_status(pub.ProbeError("unavailable")),
+                         "api_error")
 
     def test_ambiguous_delta_pro_3_serial_never_claims_location(self):
         devices = [self.DEVICES[1], {"sn": "OTHER-DP3", "deviceName": "DELTA Pro 3"}]

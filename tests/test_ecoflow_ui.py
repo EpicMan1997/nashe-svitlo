@@ -32,6 +32,21 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertNotRegex(JS, r"\bfetch\s*\(|XMLHttpRequest|WebSocket")
         self.assertNotIn("adminControls(", JS)
 
+    def test_mobile_header_is_compact_and_sections_are_side_by_side(self):
+        self.assertIn("main>header .clock-view{display:contents}", CSS)
+        self.assertIn("main>header .clock-view .view-switch{grid-column:2;grid-row:1", CSS)
+        self.assertIn("main>header .clock-view #clock{grid-column:1/-1;grid-row:2", CSS)
+        self.assertIn("font-size:clamp(19px,5.3vw,24px)", CSS)
+
+    def test_paired_ecoflow_card_collapses_pack_details_but_keeps_live_stats(self):
+        self.assertIn("const expandedCards = new Set()", JS)
+        self.assertIn("class=\\\"eco-card-details\\\"", JS)
+        self.assertIn("data-eco-card=", JS)
+        self.assertIn("Склад системи", JS)
+        self.assertIn("energyStats(main, capacityWh, soc)", JS)
+        self.assertIn(".eco-card-details>summary", CSS)
+        self.assertIn("Частина моніторингу недоступна", JS)
+
     def test_admin_and_fake_device_controls_are_removed(self):
         self.assertNotIn('id="ecoAdminToggle"', HTML)
         self.assertNotIn('id="eco-admin-bulk"', HTML)
@@ -59,8 +74,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("new CustomEvent('svitlo:location-change'", HTML)
         self.assertNotIn('href="#ecoflow"', HTML)
         self.assertIn('<section class="eco-shell"', HTML)
-        self.assertIn('"./ecoflow.css?v=64"', SW)
-        self.assertIn('"./ecoflow.js?v=64"', SW)
+        self.assertIn('"./ecoflow.css?v=65"', SW)
+        self.assertIn('"./ecoflow.js?v=65"', SW)
 
 
     def test_device_section_first_and_header_rearranged(self):
@@ -274,10 +289,10 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('eco-title-monogram', HTML)
         self.assertIn('<path d="M14 20H26" stroke="currentColor"', HTML)
         self.assertNotIn('stroke="#67E8F9"', HTML)
-        self.assertIn('href="./ecoflow.css?v=64"', HTML)
-        self.assertIn('src="./ecoflow.js?v=64"', HTML)
+        self.assertIn('href="./ecoflow.css?v=65"', HTML)
+        self.assertIn('src="./ecoflow.js?v=65"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v64', SW)
+        self.assertIn('nashe-svitlo-static-v65', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)

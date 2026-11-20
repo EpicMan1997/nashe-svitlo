@@ -162,6 +162,17 @@ def check_payload(payload, season, config, site, now):
                 set(snap['unassigned']).issubset({
                     'unassigned:delta2-1','unassigned:delta2-2','unassigned:delta2-3'}),
                 'Unapproved unassigned EcoFlow keys')
+        allowed_availability_keys = {
+            'dacha:dp3', 'dacha:dp3eb', 'dacha:d3p', 'dacha:d2', 'dacha:r3pw',
+            'home:po', 'solovky:d2', 'solovky:d2eb', 'solovky:r2', 'naumenky:d2'}
+        allowed_availability_states = {
+            'unavailable', 'unsupported', 'unassigned', 'readable',
+            'not_listed', 'api_error', 'invalid_data', 'rate_limited'}
+        available = snap.get('availability', {})
+        require(isinstance(available, dict) and
+                set(available).issubset(allowed_availability_keys) and
+                set(available.values()).issubset(allowed_availability_states),
+                'Unexpected EcoFlow availability status')
         require(set(snap).issubset({'version', 'mode', 'emittedAt',
                                    'devices', 'availability', 'unassigned', 'connection'}),
                 'Unexpected public EcoFlow snapshot metadata')
