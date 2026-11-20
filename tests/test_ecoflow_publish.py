@@ -162,7 +162,7 @@ class PublishedEcoFlowTests(unittest.TestCase):
             raise pub.ProbeError("unavailable")
         with patch.object(pub, "request_api", api):
             doc = pub.build_snapshot("ACCESS", secret, bindings=bindings)
-        self.assertEqual(doc["availability"]["dacha:d2"], "not_listed")
+        self.assertEqual(doc["availability"]["dacha:d2"], "api_error")
         self.assertEqual(doc["availability"]["solovky:d2"], "not_listed")
         self.assertEqual(doc["availability"]["naumenky:d2"], "rate_limited")
         self.assertEqual(doc["availability"]["dacha:dp3"], "readable")
