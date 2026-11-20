@@ -10,7 +10,8 @@ function fixture() {
   let config = { enabled: true,
     snapshotUrl: 'https://read-only.example.test/api/ecoflow/snapshot',
     streamUrl: 'https://read-only.example.test/api/ecoflow/events' };
-  const socket = [];
+  const socket = [], intervals = [], snapshotCalls = [], documentEvents = {};
+  let snapshotResponder = null;
   const FakeDate = class extends Date { static now() { return time; } };
   class FakeEvents {
     constructor(url, options) { this.url = url; this.options = options; this.handlers = {}; socket.push(this); }
@@ -19,15 +20,17 @@ function fixture() {
   }
   const window = {
     location: { href: 'https://epicman1997.github.io/nashe-svitlo/', origin:'https://epicman1997.github.io' },
-    document: { addEventListener() {}, visibilityState: 'visible' }
+    document: { addEventListener(name,fn) { documentEvents[name] = fn; }, visibilityState: 'visible' }
   };
   const context = {
     window, Date: FakeDate, URL, EventSource: FakeEvents, console,
-    setInterval() {},
+    setInterval(fn,ms) { intervals.push({fn,ms}); },
     async fetch(url) {
       if (url === './ecoflow-live-config.json') return {
         ok: true, async json() { return config; }
       };
+      snapshotCalls.push(url);
+      if (snapshotResponder) return snapshotResponder(url);
       return { ok: true, async json() {
         return { version: 1, emittedAt: new Date(time).toISOString(), devices: {} };
       } };
@@ -37,7 +40,9 @@ function fixture() {
   return {
     api: window.NasheSvitloEcoFlowLive,
     socket, now: () => time, advance: value => { time += value; },
-    configure: value => { config = value; }
+    configure: value => { config = value; },
+    intervals, snapshotCalls, document: window.document, documentEvents,
+    setSnapshotResponder: fn => { snapshotResponder = fn; }
   };
 }
 test('disabled config never accepts live frames or exposes credentials', async () => {
@@ -147,4 +152,42 @@ test('repeated published snapshot is idempotent but corrections remain accepted'
   const corrected={...frame,devices:{'dacha:dp3':{...frame.devices['dacha:dp3'],socPercent:41}}};
   assert.equal(f.api.acceptFrame(corrected),true);
   assert.equal(f.api.reading('dacha:dp3').socPercent,41);
+});
+
+test('edge 09 parallel published snapshot triggers share one HTTP request', async () => {
+  const f=fixture();
+  f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+  await f.api.start();
+  const poll=f.intervals.find(x=>x.ms===60000)?.fn;
+  assert.ok(poll);
+  assert.equal(f.snapshotCalls.length,1);
+  let resolveSnapshot;
+  f.setSnapshotResponder(()=>new Promise(resolve=>{resolveSnapshot=resolve;}));
+  const first=poll(),second=poll();
+  assert.equal(f.snapshotCalls.length,2,'only one in-flight HTTP call allowed');
+  resolveSnapshot({ok:true,async json(){
+    return {version:1,emittedAt:new Date(f.now()).toISOString(),
+      devices:{'dacha:dp3':{socPercent:67,outputW:100,operation:'discharging'}}};
+  }});
+  await Promise.all([first,second]);
+  assert.equal(f.api.reading('dacha:dp3').socPercent,67);
+  assert.equal(f.snapshotCalls.length,2);
+});
+
+test('edge 10 hidden published PWA pauses polls and refreshes when visible',async()=>{
+  const f=fixture();
+  f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+  await f.api.start();
+  const poll=f.intervals.find(x=>x.ms===60000)?.fn;
+  assert.ok(poll);
+  const initial=f.snapshotCalls.length;
+  f.document.visibilityState='hidden';
+  await poll();
+  assert.equal(f.snapshotCalls.length,initial);
+  f.advance(60000);
+  f.document.visibilityState='visible';
+  f.documentEvents.visibilitychange();
+  await new Promise(setImmediate);
+  assert.equal(f.snapshotCalls.length,initial+1);
+  assert.equal(f.api.summary().mode,'published');
 });

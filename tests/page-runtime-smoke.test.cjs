@@ -246,3 +246,42 @@ test('preliminary nonzero outages remain visible as tentative hours',async()=>{
  assert.match(markup,/class="off"/);
  assert.doesNotMatch(markup,/schedule-unconfirmed-zero/);
 });
+
+test('edge 07 cancellation after an outage never claims 24 hours of guaranteed power',async()=>{
+  const r=runDashboard();
+  await new Promise(setImmediate);
+  assert.match(r.node('display').innerHTML,/class="off"/);
+  const day=r.payload.today_date;
+  r.payload.locations.dacha.days[day]={
+    date:day,status:'preliminary',outages:[],sources:['Київщина.info'],
+    source_reports:{'Київщина.info':{status:'preliminary',outages:[]},
+      'КолиСвітло':{status:'old',outages:[['07:30','10:00']]}}
+  };
+  const poll=r.timers.find(x=>x.ms===15000);
+  await poll.fn();
+  const markup=r.node('display').innerHTML;
+  assert.match(markup,/Попередньо: без планових відключень/);
+  assert.match(markup,/class="bar unknown /);
+  assert.doesNotMatch(markup,/class="metric-summary"/);
+  assert.doesNotMatch(markup,/24 год/);
+  assert.doesNotMatch(markup,/class="off"/);
+});
+
+test('edge 08 timestamp-only refresh preserves DOM while exposing the new verification time',async()=>{
+  const r=runDashboard();
+  await new Promise(setImmediate);
+  const display=r.node('display');
+  const original=display.innerHTML;
+  let markup=original,writes=0;
+  Object.defineProperty(display,'innerHTML',{configurable:true,
+    get(){return markup;},set(v){markup=v;writes++;}});
+  r.payload.updated_at=new Date(Date.now()-15*1000).toISOString();
+  const poll=r.timers.find(x=>x.ms===15000);
+  await poll.fn();
+  assert.equal(writes,0,'fresh verification timestamp alone should not redraw the schedule');
+  assert.equal(display.innerHTML,original);
+  r.payload.locations.dacha.days[r.payload.today_date].outages=[['12:00','13:00']];
+  await poll.fn();
+  assert.ok(writes>0,'actual change must trigger new layout');
+  assert.match(display.innerHTML,/12:00/);
+});
