@@ -440,10 +440,20 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-20": {
+          "alternatives": [],
           "date": "2026-11-20",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "4.1",
-          "outages": [],
+          "outages": [
+            [
+              "07:30",
+              "11:00"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
           "source_observations": {
             "КолиБуде": {
               "fingerprint": "[[\"07:30\", \"11:00\"], [\"16:00\", \"21:00\"]]",
@@ -475,7 +485,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "preliminary",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -486,8 +496,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-21": {
@@ -538,6 +550,25 @@
       },
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "07:30",
+              "11:00"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
+          "at": "2026-11-20T10:08+02:00",
+          "before": null,
+          "date": "2026-11-20",
+          "first_observed_source": "КолиБуде",
+          "kind": "preliminary",
+          "message": "Попередній графік: 07:30–11:00, 16:00–21:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
@@ -834,10 +865,20 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-20": {
+          "alternatives": [],
           "date": "2026-11-20",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "10.1",
-          "outages": [],
+          "outages": [
+            [
+              "11:00",
+              "16:00"
+            ],
+            [
+              "21:00",
+              "24:00"
+            ]
+          ],
           "source_observations": {
             "КолиБуде": {
               "fingerprint": "[[\"11:00\", \"16:00\"], [\"21:00\", \"24:00\"]]",
@@ -869,7 +910,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "preliminary",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -880,8 +921,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-21": {
@@ -932,6 +975,25 @@
       },
       "group": "10.1",
       "logs": [
+        {
+          "after": [
+            [
+              "11:00",
+              "16:00"
+            ],
+            [
+              "21:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-20T10:08+02:00",
+          "before": null,
+          "date": "2026-11-20",
+          "first_observed_source": "КолиБуде",
+          "kind": "preliminary",
+          "message": "Попередній графік: 11:00–16:00, 21:00–24:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
@@ -1240,10 +1302,20 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-20": {
+          "alternatives": [],
           "date": "2026-11-20",
-          "detail": "Очікуємо незалежне підтвердження",
+          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
           "group": "4.1",
-          "outages": [],
+          "outages": [
+            [
+              "07:30",
+              "11:00"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
           "source_observations": {
             "КолиБуде": {
               "fingerprint": "[[\"07:30\", \"11:00\"], [\"16:00\", \"21:00\"]]",
@@ -1275,7 +1347,7 @@
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "preliminary",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1286,8 +1358,10 @@
             }
           },
           "source_updated": "",
-          "sources": [],
-          "status": "unknown",
+          "sources": [
+            "КолиБуде"
+          ],
+          "status": "preliminary",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-21": {
@@ -1338,6 +1412,25 @@
       },
       "group": "4.1",
       "logs": [
+        {
+          "after": [
+            [
+              "07:30",
+              "11:00"
+            ],
+            [
+              "16:00",
+              "21:00"
+            ]
+          ],
+          "at": "2026-11-20T10:08+02:00",
+          "before": null,
+          "date": "2026-11-20",
+          "first_observed_source": "КолиБуде",
+          "kind": "preliminary",
+          "message": "Попередній графік: 07:30–11:00, 16:00–21:00",
+          "sources_confirmed": []
+        },
         {
           "after": [
             [
