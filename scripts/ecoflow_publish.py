@@ -107,7 +107,8 @@ def build_snapshot(access, secret, now=None, bindings=None):
     seen = set()
     unassigned_index = 0
     diag = {"delta2_listed": 0, "delta2_bound": 0,
-            "quota_limited": 0, "quota_failed": 0, "invalid_data": 0}
+            "quota_limited": 0, "quota_failed": 0, "invalid_data": 0,
+            "codes": {}}
     for device in api_devices:
         if not isinstance(device, dict):
             continue
@@ -144,6 +145,8 @@ def build_snapshot(access, secret, now=None, bindings=None):
             quota = request_api(DEVICE_QUOTA, access, secret, {"sn": serial})
         except ProbeError as error:
             reason = public_error_status(error)
+            error_code = public_error_code(error)
+            diag["codes"][error_code] = diag["codes"].get(error_code, 0) + 1
             diag["quota_limited" if reason == "rate_limited" else "quota_failed"] += 1
             if key in availability:
                 availability[key] = reason
@@ -189,7 +192,9 @@ def build_snapshot(access, secret, now=None, bindings=None):
           ", matched=" + str(diag["delta2_bound"]) +
           ", rate-limited=" + str(diag["quota_limited"]) +
           ", failed=" + str(diag["quota_failed"]) +
-          ", invalid=" + str(diag["invalid_data"]))
+          ", invalid=" + str(diag["invalid_data"]) +
+          ", error_codes=" + ",".join(
+              f"{code}:{count}" for code, count in sorted(diag["codes"].items())))
     return result
 
 
