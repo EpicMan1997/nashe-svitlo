@@ -1381,6 +1381,24 @@
               ]
             ],
             "total_minutes": 480
+          },
+          "2026-11-20": {
+            "longest_interval": [
+              "11:00",
+              "16:00"
+            ],
+            "longest_minutes": 300,
+            "outages": [
+              [
+                "11:00",
+                "16:00"
+              ],
+              [
+                "20:30",
+                "24:00"
+              ]
+            ],
+            "total_minutes": 510
           }
         },
         "home": {
