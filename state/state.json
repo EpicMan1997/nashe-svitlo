@@ -163,17 +163,17 @@
       "outages": [
         [
           "18:30",
-          "22:30"
+          "22:00"
         ]
       ],
       "source_observations": {
         "Київщина.info": {
-          "fingerprint": "[[\"18:30\", \"22:30\"]]",
-          "first_seen": "2026-11-21T15:31+02:00"
+          "fingerprint": "[[\"18:30\", \"22:00\"]]",
+          "first_seen": "2026-11-21T22:20+02:00"
         },
         "КолиБуде": {
-          "fingerprint": "[[\"18:30\", \"22:30\"]]",
-          "first_seen": "2026-11-21T15:31+02:00"
+          "fingerprint": "[[\"18:30\", \"22:00\"]]",
+          "first_seen": "2026-11-21T22:20+02:00"
         }
       },
       "source_reports": {
@@ -195,7 +195,7 @@
           "outages": [
             [
               "18:30",
-              "22:30"
+              "22:00"
             ]
           ],
           "partial": [],
@@ -206,7 +206,7 @@
           "outages": [
             [
               "18:30",
-              "22:30"
+              "22:00"
             ]
           ],
           "partial": [],
@@ -230,10 +230,21 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-22": {
+      "alternatives": [],
       "date": "2026-11-22",
-      "detail": "Графік ще не опубліковано",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "outages": [
+        [
+          "15:30",
+          "19:00"
+        ]
+      ],
+      "source_observations": {
+        "Київщина.info": {
+          "fingerprint": "[[\"15:30\", \"19:00\"]]",
+          "first_seen": "2026-11-21T22:20+02:00"
+        }
+      },
       "source_reports": {
         "Alerts Energy": {
           "fetch_failed": false,
@@ -250,10 +261,14 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "fetch_failed": false,
-          "outages": null,
+          "outages": [
+            [
+              "15:30",
+              "19:00"
+            ]
+          ],
           "partial": [],
-          "status": "unavailable",
+          "status": "preliminary",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
@@ -272,8 +287,10 @@
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "Київщина.info"
+      ],
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -1649,6 +1666,44 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "15:30",
+          "19:00"
+        ]
+      ],
+      "at": "2026-11-21T22:20+02:00",
+      "before": null,
+      "date": "2026-11-22",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: 15:30–19:00",
+      "sources_confirmed": []
+    },
+    {
+      "after": [
+        [
+          "18:30",
+          "22:00"
+        ]
+      ],
+      "at": "2026-11-21T22:20+02:00",
+      "before": [
+        [
+          "18:30",
+          "22:30"
+        ]
+      ],
+      "date": "2026-11-21",
+      "first_observed_source": null,
+      "kind": "changed",
+      "message": "Змінено графік: 18:30–22:30 → 18:30–22:00",
+      "sources_confirmed": [
+        "Київщина.info",
+        "КолиБуде"
+      ]
+    },
     {
       "after": [
         [
