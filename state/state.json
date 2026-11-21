@@ -158,25 +158,8 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-21": {
-      "alternatives": [
-        {
-          "outages": [
-            [
-              "08:00",
-              "12:30"
-            ],
-            [
-              "18:00",
-              "23:30"
-            ]
-          ],
-          "sources": [
-            "КолиБуде"
-          ]
-        }
-      ],
       "date": "2026-11-21",
-      "detail": "Джерела показують різні години. Потрібне підтвердження.",
+      "detail": "Зіставлено незалежні джерела",
       "outages": [
         [
           "09:00",
@@ -193,8 +176,8 @@
           "first_seen": "2026-11-21T07:01+02:00"
         },
         "КолиБуде": {
-          "fingerprint": "[[\"08:00\", \"12:30\"], [\"18:00\", \"23:30\"]]",
-          "first_seen": "2026-11-21T01:20+02:00"
+          "fingerprint": "[[\"09:00\", \"12:30\"], [\"18:00\", \"23:30\"]]",
+          "first_seen": "2026-11-21T07:10+02:00"
         }
       },
       "source_reports": {
@@ -224,13 +207,13 @@
             ]
           ],
           "partial": [],
-          "status": "preliminary",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
           "outages": [
             [
-              "08:00",
+              "09:00",
               "12:30"
             ],
             [
@@ -239,7 +222,7 @@
             ]
           ],
           "partial": [],
-          "status": "diff",
+          "status": "match",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -252,9 +235,10 @@
       },
       "source_updated": "",
       "sources": [
-        "Київщина.info"
+        "Київщина.info",
+        "КолиБуде"
       ],
-      "status": "preliminary",
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-22": {
@@ -1698,6 +1682,28 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "09:00",
+          "12:30"
+        ],
+        [
+          "18:00",
+          "23:30"
+        ]
+      ],
+      "at": "2026-11-21T07:10+02:00",
+      "before": null,
+      "date": "2026-11-21",
+      "first_observed_source": "Київщина.info",
+      "kind": "published",
+      "message": "Змінено графік: 09:00–12:30, 18:00–23:30 → 09:00–12:30, 18:00–23:30",
+      "sources_confirmed": [
+        "Київщина.info",
+        "КолиБуде"
+      ]
+    },
     {
       "after": [
         [
