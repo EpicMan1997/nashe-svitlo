@@ -167,7 +167,7 @@
     },
     "2026-11-22": {
       "date": "2026-11-22",
-      "detail": "Зіставлено незалежні джерела",
+      "detail": "Очікуємо незалежне підтвердження",
       "outages": [
         [
           "15:30",
@@ -178,10 +178,6 @@
         "Київщина.info": {
           "fingerprint": "[[\"15:30\", \"22:00\"]]",
           "first_seen": "2026-11-21T22:40+02:00"
-        },
-        "КолиБуде": {
-          "fingerprint": "[[\"15:30\", \"22:00\"]]",
-          "first_seen": "2026-11-22T00:01+02:00"
         }
       },
       "source_reports": {
@@ -207,10 +203,11 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "unconfirmed",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
+          "fetch_failed": false,
           "outages": [
             [
               "15:30",
@@ -218,7 +215,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "old",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -234,7 +231,7 @@
         "Київщина.info",
         "КолиБуде"
       ],
-      "status": "normal",
+      "status": "stale",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-23": {
@@ -435,22 +432,11 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-22": {
-          "alternatives": [],
           "date": "2026-11-22",
-          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+          "detail": "Немає підтверджених даних",
           "group": "4.1",
-          "outages": [
-            [
-              "13:00",
-              "16:30"
-            ]
-          ],
-          "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"13:00\", \"16:30\"]]",
-              "first_seen": "2026-11-22T00:01+02:00"
-            }
-          },
+          "outages": [],
+          "source_observations": {},
           "source_reports": {
             "Alerts Energy": {
               "outages": null,
@@ -472,7 +458,7 @@
                 ]
               ],
               "partial": [],
-              "status": "preliminary",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -483,10 +469,8 @@
             }
           },
           "source_updated": "",
-          "sources": [
-            "КолиБуде"
-          ],
-          "status": "preliminary",
+          "sources": [],
+          "status": "unknown",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-23": {
@@ -856,26 +840,11 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-22": {
-          "alternatives": [],
           "date": "2026-11-22",
-          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+          "detail": "Немає підтверджених даних",
           "group": "10.1",
-          "outages": [
-            [
-              "06:00",
-              "09:30"
-            ],
-            [
-              "18:00",
-              "22:00"
-            ]
-          ],
-          "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"06:00\", \"09:30\"], [\"18:00\", \"22:00\"]]",
-              "first_seen": "2026-11-22T00:01+02:00"
-            }
-          },
+          "outages": [],
+          "source_observations": {},
           "source_reports": {
             "Alerts Energy": {
               "outages": null,
@@ -901,7 +870,7 @@
                 ]
               ],
               "partial": [],
-              "status": "preliminary",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -912,10 +881,8 @@
             }
           },
           "source_updated": "",
-          "sources": [
-            "КолиБуде"
-          ],
-          "status": "preliminary",
+          "sources": [],
+          "status": "unknown",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-23": {
@@ -1289,22 +1256,11 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-22": {
-          "alternatives": [],
           "date": "2026-11-22",
-          "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+          "detail": "Немає підтверджених даних",
           "group": "4.1",
-          "outages": [
-            [
-              "13:00",
-              "16:30"
-            ]
-          ],
-          "source_observations": {
-            "КолиБуде": {
-              "fingerprint": "[[\"13:00\", \"16:30\"]]",
-              "first_seen": "2026-11-22T00:01+02:00"
-            }
-          },
+          "outages": [],
+          "source_observations": {},
           "source_reports": {
             "Alerts Energy": {
               "outages": null,
@@ -1326,7 +1282,7 @@
                 ]
               ],
               "partial": [],
-              "status": "preliminary",
+              "status": "old",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1337,10 +1293,8 @@
             }
           },
           "source_updated": "",
-          "sources": [
-            "КолиБуде"
-          ],
-          "status": "preliminary",
+          "sources": [],
+          "status": "unknown",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
         },
         "2026-11-23": {
