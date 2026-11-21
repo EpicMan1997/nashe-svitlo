@@ -236,13 +236,13 @@
       "outages": [
         [
           "15:30",
-          "19:00"
+          "22:00"
         ]
       ],
       "source_observations": {
         "Київщина.info": {
-          "fingerprint": "[[\"15:30\", \"19:00\"]]",
-          "first_seen": "2026-11-21T22:20+02:00"
+          "fingerprint": "[[\"15:30\", \"22:00\"]]",
+          "first_seen": "2026-11-21T22:40+02:00"
         }
       },
       "source_reports": {
@@ -264,7 +264,7 @@
           "outages": [
             [
               "15:30",
-              "19:00"
+              "22:00"
             ]
           ],
           "partial": [],
@@ -1666,6 +1666,21 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "15:30",
+          "22:00"
+        ]
+      ],
+      "at": "2026-11-21T22:40+02:00",
+      "before": null,
+      "date": "2026-11-22",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: 15:30–22:00",
+      "sources_confirmed": []
+    },
     {
       "after": [
         [
