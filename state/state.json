@@ -166,22 +166,14 @@
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-22": {
+      "alternatives": [],
       "date": "2026-11-22",
-      "detail": "Зіставлено незалежні джерела",
-      "outages": [
-        [
-          "15:30",
-          "22:00"
-        ]
-      ],
+      "detail": "Перші дані з одного джерела. Потрібне підтвердження.",
+      "outages": [],
       "source_observations": {
         "Київщина.info": {
-          "fingerprint": "[[\"15:30\", \"22:00\"]]",
-          "first_seen": "2026-11-21T22:40+02:00"
-        },
-        "КолиБуде": {
-          "fingerprint": "[[\"15:30\", \"22:00\"]]",
-          "first_seen": "2026-11-22T00:40+02:00"
+          "fingerprint": "[]",
+          "first_seen": "2026-11-22T13:11+02:00"
         }
       },
       "source_reports": {
@@ -200,17 +192,13 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "outages": [
-            [
-              "15:30",
-              "22:00"
-            ]
-          ],
+          "outages": [],
           "partial": [],
-          "status": "match",
+          "status": "preliminary",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
+          "fetch_failed": false,
           "outages": [
             [
               "15:30",
@@ -218,7 +206,7 @@
             ]
           ],
           "partial": [],
-          "status": "match",
+          "status": "old",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -231,10 +219,9 @@
       },
       "source_updated": "",
       "sources": [
-        "Київщина.info",
-        "КолиБуде"
+        "Київщина.info"
       ],
-      "status": "normal",
+      "status": "preliminary",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     },
     "2026-11-23": {
@@ -1614,6 +1601,16 @@
     }
   },
   "logs": [
+    {
+      "after": [],
+      "at": "2026-11-22T13:11+02:00",
+      "before": null,
+      "date": "2026-11-22",
+      "first_observed_source": "Київщина.info",
+      "kind": "preliminary",
+      "message": "Попередній графік: без відключень",
+      "sources_confirmed": []
+    },
     {
       "after": [
         [
