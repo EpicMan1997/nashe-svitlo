@@ -175,6 +175,10 @@
           "2026-11-22": {
             "events": [],
             "observed": true
+          },
+          "2026-11-23": {
+            "events": [],
+            "observed": true
           }
         },
         "home": {
@@ -1427,6 +1431,20 @@
               ]
             ],
             "total_minutes": 210
+          },
+          "2026-11-22": {
+            "longest_interval": [
+              "15:30",
+              "19:30"
+            ],
+            "longest_minutes": 240,
+            "outages": [
+              [
+                "15:30",
+                "19:30"
+              ]
+            ],
+            "total_minutes": 240
           }
         },
         "home": {
