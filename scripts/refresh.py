@@ -393,6 +393,37 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None,region_url=N
                           'outages':outage_list,'partial':part,'url':entry['url']}
     return output
 
+
+def annotate_source_health(reports, fetched_pages, target, today, unpublished=()):
+    """Distinguish a missing schedule from a fetch or format problem.
+
+    The public site must not say "no data" as though the provider itself had
+    no plan when the page was fetched but this parser could not read it.
+    Do not turn a failed parse into a positive (or zero-hour) schedule.
+    """
+    unpublished = set(unpublished)
+    for name, report in reports.items():
+        if report.get('status') not in ('unavailable', 'old'):
+            continue
+        page = fetched_pages.get(name)
+        if page is None:
+            report['fetch_failed'] = True
+            if report.get('outages') is None:
+                report['status'] = 'fetch_error'
+            continue
+        if report.get('outages') is not None:
+            continue  # preserved old reading; not a freshly confirmed one
+        if (name in unpublished or
+                (target > today and re.search(
+                    r'Графік на завтра ще не опубліковано|'
+                    r'Оператор ще не опублікував графік на завтра',
+                    plain(page)[:3500], re.I))):
+            report['status'] = 'unpublished'
+        else:
+            report['status'] = 'unreadable'
+        report['fetch_failed'] = False
+
+
 def fetch(url, label, errors, optional=False):
     try:
         r=requests.get(url,timeout=(8,15),headers={'User-Agent':'Mozilla/5.0 (compatible; SvitloDubechnya/1.0)','Accept-Language':'uk-UA,uk;q=0.9'})
@@ -745,6 +776,12 @@ def update_city_locations(now,today,old,errors):
                                       or koly is not None or bude is not None or alerts is not None))
             entry['url']=url
             entry['source_reports']=city_sources(entry,bez,koly,bude,url,prev,alerts)
+            annotate_source_health(
+                entry['source_reports'],
+                {'Карта світла':city_map_pages[config['group']],
+                 'КолиСвітло':city_koly, 'КолиБуде':city_bude,
+                 'Alerts Energy':city_alerts},
+                target,today,{'Карта світла'} if bez['unpublished'] else ())
             record_source_observations(now,prev,entry)
             entry['group']=config['group']
             days[target.isoformat()]=entry
@@ -814,6 +851,12 @@ def main():
                      allow_early=(target>today or bool(bez['candidates']) or a is not None
                                   or b is not None or region is not None or alerts is not None))
         entry['source_reports']=source_reports(entry,bez,a,b,region,live,previous,alerts,region_url)
+        annotate_source_health(
+            entry['source_reports'],
+            {'Карта світла':map_region_html, 'КолиСвітло':koly,
+             'КолиБуде':bude, 'Київщина.info':region_html,
+             'Alerts Energy':region_alerts},
+            target,today,{'Карта світла'} if bez['unpublished'] else ())
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry
         event=change(previous,entry)
