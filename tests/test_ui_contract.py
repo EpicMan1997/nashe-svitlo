@@ -13,7 +13,8 @@ class VisualStatusContract(unittest.TestCase):
         self.assertNotIn("if(s==='normal'&&(age>35||age< -5))s='delayed'", HTML)
 
     def test_four_matching_sources_are_still_verified(self):
-        self.assertIn("const healthy=status==='normal'&&allMatch>=2", HTML)
+        self.assertIn("const healthy=status==='normal'&&allMatch>=2&&!contested", HTML)
+        self.assertIn("Є розбіжності між джерелами", HTML)
         self.assertIn("healthy?'Графік підтверджено'", HTML)
 
     def test_old_source_is_independently_reported(self):
