@@ -90,7 +90,7 @@ jobs:
           }
           target = Path("state/workflow_health.json")
           target.parent.mkdir(exist_ok=True)
-          target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\\n")
+          target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
           PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
