@@ -811,7 +811,8 @@ def main():
         alerts=parse_alerts(region_alerts,target,'3.1','kyivska_oblast_oblenergo')
         entry=choose(target,bez,a,b,previous,{'Київщина.info':region,'Alerts Energy':alerts},
                      primary_source='Карта світла',
-                     allow_early=(target>today or region is not None or alerts is not None))
+                     allow_early=(target>today or bool(bez['candidates']) or a is not None
+                                  or b is not None or region is not None or alerts is not None))
         entry['source_reports']=source_reports(entry,bez,a,b,region,live,previous,alerts,region_url)
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry
