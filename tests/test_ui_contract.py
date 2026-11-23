@@ -17,7 +17,7 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("healthy?'Графік підтверджено'", HTML)
 
     def test_old_source_is_independently_reported(self):
-        self.assertIn("old:'Не оновлено'", HTML)
+        self.assertIn("old:'Застарілий знімок'", HTML)
         self.assertIn("e.source_reports||{}", HTML)
         self.assertIn("unconfirmed:'Потребує підтвердження'", HTML)
         self.assertIn("['preliminary','unconfirmed'].includes(type)", HTML)
