@@ -330,6 +330,10 @@
           "2026-11-23": {
             "events": [],
             "observed": true
+          },
+          "2026-11-24": {
+            "events": [],
+            "observed": true
           }
         },
         "naumenky": {
@@ -626,6 +630,10 @@
             "observed": true
           },
           "2026-11-23": {
+            "events": [],
+            "observed": true
+          },
+          "2026-11-24": {
             "events": [],
             "observed": true
           }
