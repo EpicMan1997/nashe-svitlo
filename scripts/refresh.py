@@ -394,25 +394,34 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None,region_url=N
     return output
 
 
-def annotate_source_health(reports, fetched_pages, target, today, unpublished=()):
-    """Distinguish a missing schedule from a fetch or format problem.
-
-    The public site must not say "no data" as though the provider itself had
-    no plan when the page was fetched but this parser could not read it.
-    Do not turn a failed parse into a positive (or zero-hour) schedule.
-    """
+def annotate_source_health(reports, fetched_pages, target, today, unpublished=(),
+                           now=None, previous=None):
+    """Keep independent fetch freshness and schedule freshness on every source."""
     unpublished = set(unpublished)
+    previous = previous or {}
+    stamp = now.isoformat(timespec='minutes') if now is not None else None
     for name, report in reports.items():
+        past = previous.get(name, {})
+        page = fetched_pages.get(name)
+        has_schedule = (report.get('status') not in
+                        ('old', 'unavailable', 'unreadable', 'fetch_error', 'unpublished'))
+        if stamp and page is not None:
+            report['checked_at'] = stamp
+        elif past.get('checked_at'):
+            report['checked_at'] = past['checked_at']
+        if has_schedule and stamp:
+            report['data_seen_at'] = stamp
+        elif past.get('data_seen_at'):
+            report['data_seen_at'] = past['data_seen_at']
         if report.get('status') not in ('unavailable', 'old'):
             continue
-        page = fetched_pages.get(name)
         if page is None:
             report['fetch_failed'] = True
             if report.get('outages') is None:
                 report['status'] = 'fetch_error'
             continue
         if report.get('outages') is not None:
-            continue  # preserved old reading; not a freshly confirmed one
+            continue  # last accepted reading is old, not validated this time
         if (name in unpublished or
                 (target > today and re.search(
                     r'Графік на завтра ще не опубліковано|'
@@ -781,7 +790,8 @@ def update_city_locations(now,today,old,errors):
                 {'Карта світла':city_map_pages[config['group']],
                  'КолиСвітло':city_koly, 'КолиБуде':city_bude,
                  'Alerts Energy':city_alerts},
-                target,today,{'Карта світла'} if bez['unpublished'] else ())
+                target,today,{'Карта світла'} if bez['unpublished'] else (),
+                now,prev.get('source_reports',{}))
             record_source_observations(now,prev,entry)
             entry['group']=config['group']
             days[target.isoformat()]=entry
@@ -856,7 +866,8 @@ def main():
             {'Карта світла':map_region_html, 'КолиСвітло':koly,
              'КолиБуде':bude, 'Київщина.info':region_html,
              'Alerts Energy':region_alerts},
-            target,today,{'Карта світла'} if bez['unpublished'] else ())
+            target,today,{'Карта світла'} if bez['unpublished'] else (),
+                now,prev.get('source_reports',{}))
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry
         event=change(previous,entry)
