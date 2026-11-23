@@ -6,12 +6,25 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from refresh import annotate_source_health
+from refresh import annotate_source_health, provider_update_label
 
 class SourceDiagnosticsTests(unittest.TestCase):
     def setUp(self):
         self.today = date(2026, 11, 23)
         self.now = datetime(2026, 11, 23, 20, 0, tzinfo=ZoneInfo('Europe/Kyiv'))
+
+    def test_provider_update_time_is_separate_from_scrape_time(self):
+        examples = (
+            ('Карта світла', 'Оновлено 19:42 за київським часом', '23.11 19:42'),
+            ('КолиСвітло', 'Дані від 23 листопада о 19:42', '23 листопада о 19:42'),
+            ('КолиБуде', 'Оновлено 23 листопада о 19:01', '23 листопада о 19:01'),
+            ('Київщина.info', 'ДТЕК оновив 23.11.2026 19:35', '23.11.2026 19:35'),
+            ('Alerts Energy', 'Оновлення джерела: 23 лист. 2026 р., 11:14',
+             '23 лист. 2026 р., 11:14'),
+        )
+        for name, body, expected in examples:
+            with self.subTest(name=name):
+                self.assertEqual(provider_update_label(name, body, self.now), expected)
 
     def test_current_parsed_report_stamped_as_checked_and_seen(self):
         reports = {'Карта світла': {'status': 'match', 'outages': [['11:00', '18:00']]}}
