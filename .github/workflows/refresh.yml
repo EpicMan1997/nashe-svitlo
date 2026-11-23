@@ -77,6 +77,12 @@ jobs:
               print('KOLY_PROBE', response.status_code, 'length', len(response.text))
               print('KOLY_DOM', 'scripts', len(soup.select('script')), 'rows', len(soup.select('tr,[role=row]')),
                     'data-group', len(soup.select('[data-group],[data-queue]')))
+              print('KOLY_SCRIPT_URLS', [x.get('src') for x in soup.select('script[src]')][:15])
+              for script in soup.select('script'):
+                  body=script.string or script.get_text() or ''
+                  for key in ('/api/', 'fetch(', 'schedule', 'dataset', 'groupId', '/static/'):
+                      at=body.find(key)
+                      if at>=0: print('KOLY_JS_FOCUS',key,repr(body[max(0,at-85):at+180]))
               for script in soup.select('script'):
                   content = script.string or script.get_text() or ''
                   matches = [token for token in ('3.1','11:00','22:30','dtek_kyiv_oblast','intervals') if token in content]
