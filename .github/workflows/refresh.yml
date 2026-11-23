@@ -65,75 +65,29 @@ jobs:
               echo "::warning::History push conflicted with a newer commit; keeping the published graph live."
             fi
           fi
-      - name: Inspect public KolySvitlo HTML for safe parser recovery
+      - name: Inspect public KolySvitlo HTML for parser recovery
         if: ${{ always() }}
         run: |
           python - <<'PY'
-          import re, requests
+          import requests, re
           from bs4 import BeautifulSoup
-          url = 'https://kolysvitlo.com/schedule/dtek_kyiv_oblast'
           try:
-              response = requests.get(url, timeout=15, headers={'User-Agent':'Mozilla/5.0'})
-              print('KOLY_DIAG', response.status_code, response.url,
-                    'html_length', len(response.text))
+              response = requests.get('https://kolysvitlo.com/schedule/dtek_kyiv_oblast', timeout=15, headers={'User-Agent': 'Mozilla/5.0'})
               soup = BeautifulSoup(response.text, 'html.parser')
-              print('KOLY_TITLE', soup.title.get_text(' ', strip=True) if soup.title else None)
-              print('KOLY_COUNTS', 'scripts', len(soup.select('script')),
-                    'data_attrs', len(soup.select('[data-day],[data-queue],[data-group]')),
-                    'table_rows', len(soup.select('tr,[role=row]')))
+              print('KOLY_PROBE', response.status_code, 'length', len(response.text))
+              print('KOLY_DOM', 'scripts', len(soup.select('script')), 'rows', len(soup.select('tr,[role=row]')),
+                    'data-group', len(soup.select('[data-group],[data-queue]')))
               for script in soup.select('script'):
-                  script_text = script.string or script.get_text() or ''
-                  found = [v for v in ('3.1','11:00','22:30','dtek_kyiv_oblast','intervals') if v in script_text]
-                  print('KOLY_SCRIPT', script.get('id',''), script.get('type',''),
-                        'src', bool(script.get('src')), 'size',len(script_text),'tokens',found)
-                  if found and len(script_text) <= 200000:
-                      for pattern in ('11:00','22:30','dtek_kyiv_oblast'):
-                          at = script_text.find(pattern)
-                          if at >= 0:
-                              print('KOLY_SCRIPT_SNIP',pattern,
-                                    re.sub(r'\\s+',' ',script_text[max(0,at-100):at+160])[:270])
-              for node in soup.find_all(string=re.compile(r'^\\s*3\\.1\\s*
-        if: ${{ always() && github.ref == 'refs/heads/main' }}
-        env:
-          TEST_OUTCOME: ${{ steps.unit_tests.outcome }}
-          OUTAGE_OUTCOME: ${{ steps.outage_refresh.outcome }}
-          VALIDATE_OUTCOME: ${{ steps.build_validate.outcome }}
-          DEPLOY_OUTCOME: ${{ steps.deploy.outcome }}
-          GH_RUN_ID: ${{ github.run_id }}
-          GH_RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: |
-          python - <<'PY'
-          import json, os
-          from datetime import datetime, timezone
-          from pathlib import Path
-          result = {
-              "checked_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-              "run_id": os.getenv("GH_RUN_ID", ""),
-              "run_attempt": os.getenv("GH_RUN_ATTEMPT", ""),
-              "unit_tests": os.getenv("TEST_OUTCOME", ""),
-              "outage_refresh": os.getenv("OUTAGE_OUTCOME", ""),
-              "validation": os.getenv("VALIDATE_OUTCOME", ""),
-              "deployment": os.getenv("DEPLOY_OUTCOME", ""),
-          }
-          target = Path("state/workflow_health.json")
-          target.parent.mkdir(exist_ok=True)
-          target.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
-          PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/workflow_health.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Record refresh workflow health"
-            if ! git push; then
-              echo "::warning::Unable to persist workflow health; see this run's logs."
-            fi
-          fi
-))[:3]:
-                  parent = node.parent
-                  print('KOLY_QUEUE_NODE', str(parent.parent if parent.parent else parent)[:1500])
-              for key in ('data-day','data-queue','data-group','data-start','data-end','aria-label','title'):
-                  selected = soup.select('['+key+']')
-                  print('KOLY_ATTR',key,len(selected),[str(n.get(key,''))[:90] for n in selected[:8]])
+                  content = script.string or script.get_text() or ''
+                  matches = [token for token in ('3.1','11:00','22:30','dtek_kyiv_oblast','intervals') if token in content]
+                  print('KOLY_SCRIPT',script.get('id',''), 'size',len(content),'matches',matches)
+                  if matches and len(content)<180000:
+                      for token in ('11:00','22:30'):
+                          i=content.find(token)
+                          if i>=0: print('KOLY_CONTEXT',token,repr(content[max(0,i-100):i+100]))
+              for node in soup.find_all(string=re.compile('3[.]1'))[:5]:
+                  p = node.parent
+                  print('KOLY_NODE', str(p.parent if p.parent else p)[:1100])
           except Exception as e:
               print('KOLY_PROBE_ERROR',type(e).__name__)
           PY
