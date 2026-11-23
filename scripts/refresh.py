@@ -99,7 +99,7 @@ def parse_mapasvitla(html, target, today, group):
     title = soup.title.get_text(' ', strip=True) if soup.title else ''
     heading_title = soup.h1.get_text(' ', strip=True) if soup.h1 else ''
     # Group verification is mandatory. Do not accidentally use another queue.
-    group_label = r'Черга\\s*' + re.escape(group) + r'(?![\\d.])'
+    group_label = r'Черга\s*' + re.escape(group) + r'(?![\d.])'
     if not (re.search(group_label, title, re.I) or
             re.search(group_label, heading_title, re.I)):
         return empty
@@ -113,16 +113,16 @@ def parse_mapasvitla(html, target, today, group):
         # If the site moves/removes data-day attributes, recover the exact
         # dated plan from visible text without reading the weekly history.
         page = plain(html)
-        start = re.search(r'План\\s+на\\s+' + local_label +
-                          r'\\s*,?\\s*(?:пн|вт|ср|чт|пт|сб|нд)?\\s*'
-                          r'\\d{1,2}\\.\\d{1,2}(?!\\d)', page, re.I)
+        start = re.search(r'План\s+на\s+' + local_label +
+                          r'\s*,?\s*(?:пн|вт|ср|чт|пт|сб|нд)?\s*'
+                          r'\d{1,2}\.\d{1,2}(?!\d)', page, re.I)
         if start:
             text = page[start.start():]
         elif kind == 'tomorrow':
             # A missing tomorrow schedule is different from a failed parse.
             after_today = re.search(
-                r'Всього\\s+(?:планових\\s+відключень|без\\s+світла)'
-                r'\\s*\\d+(?:[,.]\\d+)?\\s*(?:год|хв)', page, re.I)
+                r'Всього\s+(?:планових\s+відключень|без\s+світла)'
+                r'\s*\d+(?:[,.]\d+)?\s*(?:год|хв)', page, re.I)
             tail = page[after_today.end():] if after_today else page
             if re.search(r'Очікуємо графік|на завтра ще не опублікован|'
                          r'не опублікував графік на завтра', tail[:500], re.I):
@@ -132,9 +132,9 @@ def parse_mapasvitla(html, target, today, group):
             return empty
 
     # Check the specific day, even when the day panel has been reused.
-    day = re.search(r'План\\s+на\\s+' + local_label +
-                    r'\\s*,?\\s*(?:пн|вт|ср|чт|пт|сб|нд)?\\s*'
-                    r'(\\d{1,2})\\.(\\d{1,2})(?!\\d)', text[:220], re.I)
+    day = re.search(r'План\s+на\s+' + local_label +
+                    r'\s*,?\s*(?:пн|вт|ср|чт|пт|сб|нд)?\s*'
+                    r'(\d{1,2})\.(\d{1,2})(?!\d)', text[:220], re.I)
     if not day:
         if kind == 'tomorrow' and re.search(
                 r'Очікуємо графік|ще не опублікован|'
@@ -146,9 +146,9 @@ def parse_mapasvitla(html, target, today, group):
     # The total marks the end of the interval list; never parse a second day's
     # intervals, explanatory SEO text or historical figures after this point.
     total = re.search(
-        r'(?:Всього|Усього)\\s+(?:планових\\s+відключень|'
-        r'без\\s+світла|відключень)\\s*'
-        r'(\\d+(?:[,.]\\d+)?)\\s*(год(?:ин[а-я]*)?|хв(?:илин[а-я]*)?)',
+        r'(?:Всього|Усього)\s+(?:планових\s+відключень|'
+        r'без\s+світла|відключень)\s*'
+        r'(\d+(?:[,.]\d+)?)\s*(год(?:ин[а-я]*)?|хв(?:илин[а-я]*)?)',
         text, re.I)
     if total is None:
         return empty
