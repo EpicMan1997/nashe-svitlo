@@ -167,8 +167,8 @@
           "first_seen": "2026-11-23T11:01+02:00"
         },
         "КолиБуде": {
-          "fingerprint": "[[\"11:00\", \"18:00\"], [\"23:00\", \"24:00\"]]",
-          "first_seen": "2026-11-23T20:07+02:00"
+          "fingerprint": "[[\"11:00\", \"18:00\"], [\"22:30\", \"24:00\"]]",
+          "first_seen": "2026-11-23T20:10+02:00"
         }
       },
       "source_reports": {
@@ -189,8 +189,8 @@
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
-          "checked_at": "2026-11-23T20:07+02:00",
-          "data_seen_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
+          "data_seen_at": "2026-11-23T20:10+02:00",
           "outages": [
             [
               "11:00",
@@ -206,8 +206,8 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "checked_at": "2026-11-23T20:07+02:00",
-          "data_seen_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
+          "data_seen_at": "2026-11-23T20:10+02:00",
           "outages": [
             [
               "11:00",
@@ -223,20 +223,20 @@
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
-          "checked_at": "2026-11-23T20:07+02:00",
-          "data_seen_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
+          "data_seen_at": "2026-11-23T20:10+02:00",
           "outages": [
             [
               "11:00",
               "18:00"
             ],
             [
-              "23:00",
+              "22:30",
               "24:00"
             ]
           ],
           "partial": [],
-          "status": "diff",
+          "status": "match",
           "url": "https://kolybude.com/kyiv-oblast"
         },
         "КолиСвітло": {
@@ -250,7 +250,8 @@
       "source_updated": "",
       "sources": [
         "Карта світла",
-        "Київщина.info"
+        "Київщина.info",
+        "КолиБуде"
       ],
       "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
@@ -269,7 +270,7 @@
           "url": "https://alerts.energy/kyivska-oblast"
         },
         "Карта світла": {
-          "checked_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
           "fetch_failed": false,
           "outages": null,
           "partial": [],
@@ -277,7 +278,7 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "checked_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
           "fetch_failed": false,
           "outages": null,
           "partial": [],
@@ -285,7 +286,7 @@
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         },
         "КолиБуде": {
-          "checked_at": "2026-11-23T20:07+02:00",
+          "checked_at": "2026-11-23T20:10+02:00",
           "fetch_failed": false,
           "outages": null,
           "partial": [],
@@ -480,8 +481,8 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "08:30",
@@ -497,8 +498,8 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "08:30",
@@ -544,7 +545,7 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
@@ -552,7 +553,7 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
@@ -964,25 +965,8 @@
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-23": {
-          "alternatives": [
-            {
-              "outages": [
-                [
-                  "12:30",
-                  "17:30"
-                ],
-                [
-                  "22:30",
-                  "24:00"
-                ]
-              ],
-              "sources": [
-                "КолиБуде"
-              ]
-            }
-          ],
           "date": "2026-11-23",
-          "detail": "Джерела показують різні години. Потрібне підтвердження.",
+          "detail": "Зіставлено незалежні джерела",
           "group": "10.1",
           "outages": [
             [
@@ -1000,8 +984,8 @@
               "first_seen": "2026-11-23T20:07+02:00"
             },
             "КолиБуде": {
-              "fingerprint": "[[\"12:30\", \"17:30\"], [\"22:30\", \"24:00\"]]",
-              "first_seen": "2026-11-23T11:10+02:00"
+              "fingerprint": "[[\"12:30\", \"17:30\"], [\"21:00\", \"24:00\"]]",
+              "first_seen": "2026-11-23T20:10+02:00"
             }
           },
           "source_reports": {
@@ -1022,8 +1006,8 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "12:30",
@@ -1035,24 +1019,24 @@
                 ]
               ],
               "partial": [],
-              "status": "preliminary",
+              "status": "match",
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "12:30",
                   "17:30"
                 ],
                 [
-                  "22:30",
+                  "21:00",
                   "24:00"
                 ]
               ],
               "partial": [],
-              "status": "diff",
+              "status": "match",
               "url": "https://kolybude.com/kyiv"
             },
             "КолиСвітло": {
@@ -1065,9 +1049,10 @@
           },
           "source_updated": "",
           "sources": [
-            "Карта світла"
+            "Карта світла",
+            "КолиБуде"
           ],
-          "status": "preliminary",
+          "status": "normal",
           "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
         },
         "2026-11-24": {
@@ -1085,7 +1070,7 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
@@ -1093,7 +1078,7 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/10.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
@@ -1117,6 +1102,28 @@
       "emergency": null,
       "group": "10.1",
       "logs": [
+        {
+          "after": [
+            [
+              "12:30",
+              "17:30"
+            ],
+            [
+              "21:00",
+              "24:00"
+            ]
+          ],
+          "at": "2026-11-23T20:10+02:00",
+          "before": null,
+          "date": "2026-11-23",
+          "first_observed_source": "Карта світла",
+          "kind": "published",
+          "message": "Змінено графік: 12:30–17:30, 21:00–24:00 → 12:30–17:30, 21:00–24:00",
+          "sources_confirmed": [
+            "Карта світла",
+            "КолиБуде"
+          ]
+        },
         {
           "after": [
             [
@@ -1565,8 +1572,8 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "08:30",
@@ -1582,8 +1589,8 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
-              "data_seen_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
+              "data_seen_at": "2026-11-23T20:10+02:00",
               "outages": [
                 [
                   "08:30",
@@ -1629,7 +1636,7 @@
               "url": "https://alerts.energy/kyiv"
             },
             "Карта світла": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
@@ -1637,7 +1644,7 @@
               "url": "https://mapasvitla.com.ua/kyiv/dtek-kem/4.1"
             },
             "КолиБуде": {
-              "checked_at": "2026-11-23T20:07+02:00",
+              "checked_at": "2026-11-23T20:10+02:00",
               "fetch_failed": false,
               "outages": null,
               "partial": [],
