@@ -867,7 +867,7 @@ def main():
              'КолиБуде':bude, 'Київщина.info':region_html,
              'Alerts Energy':region_alerts},
             target,today,{'Карта світла'} if bez['unpublished'] else (),
-                now,prev.get('source_reports',{}))
+                now,previous.get('source_reports',{}))
         record_source_observations(now,previous,entry)
         days[target.isoformat()]=entry
         event=change(previous,entry)
