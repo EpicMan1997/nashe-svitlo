@@ -78,6 +78,14 @@ jobs:
               print('KOLY_DOM', 'scripts', len(soup.select('script')), 'rows', len(soup.select('tr,[role=row]')),
                     'data-group', len(soup.select('[data-group],[data-queue]')))
               print('KOLY_SCRIPT_URLS', [x.get('src') for x in soup.select('script[src]')][:15])
+              for el in soup.select('[data-url],[data-token],[data-api],[data-endpoint],[hx-get],[data-region]')[:12]:
+                  a = el.attrs
+                  safe = {k:v for k,v in a.items() if k in ('id','data-url','data-api','data-endpoint','data-region','hx-get')}
+                  print('KOLY_DOM_API', el.name, safe, 'token_present', 'data-token' in a, 'token_len', len(str(a.get('data-token',''))))
+              alljs = '\\n'.join((s.string or s.get_text() or '') for s in soup.select('script'))
+              for token in ('/api/page', 'window.ksPageData', 'ksPageData(', 'dataset.token', 'data-token', 'dataset.url', 'data-url'):
+                  i=alljs.find(token)
+                  if i>=0: print('KOLY_ENDPOINT_CONTEXT',token,repr(alljs[max(0,i-180):i+320]))
               for script in soup.select('script'):
                   body=script.string or script.get_text() or ''
                   for key in ('/api/', 'fetch(', 'schedule', 'dataset', 'groupId', '/static/'):
