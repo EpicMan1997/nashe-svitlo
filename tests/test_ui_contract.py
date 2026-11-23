@@ -20,7 +20,7 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("old:'Застарілий знімок'", HTML)
         self.assertIn("e.source_reports||{}", HTML)
         self.assertIn("unconfirmed:'Потребує підтвердження'", HTML)
-        self.assertIn("['preliminary','unconfirmed'].includes(type)", HTML)
+        self.assertIn("['preliminary','unconfirmed','diff','partial'].includes(type)", HTML)
 
     def test_age_only_colours_freshness_ring(self):
         self.assertIn("function updateRefreshRing(){", HTML)
