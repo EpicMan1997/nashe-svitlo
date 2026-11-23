@@ -434,16 +434,25 @@ def annotate_source_health(reports, fetched_pages, target, today, unpublished=()
 
 
 def fetch(url, label, errors, optional=False):
-    try:
-        r=requests.get(url,timeout=(8,15),headers={'User-Agent':'Mozilla/5.0 (compatible; SvitloDubechnya/1.0)','Accept-Language':'uk-UA,uk;q=0.9'})
-        r.raise_for_status()
-        return r.text
-    except requests.RequestException as exc:
-        code=exc.response.status_code if getattr(exc,'response',None) is not None else None
-        if optional and code == 404:
-            return None  # An unpublished date-scoped article is normal.
-        errors.append(label+': '+type(exc).__name__+(f' HTTP {code}' if code is not None else ''))
-        return None
+    """Retry brief network/5xx failures; never hammer a provider returning 429."""
+    from time import sleep
+    for attempt in range(2):
+        try:
+            r=requests.get(url,timeout=(8,15),headers={
+                'User-Agent':'Mozilla/5.0 (compatible; SvitloDubechnya/1.0)',
+                'Accept-Language':'uk-UA,uk;q=0.9'})
+            r.raise_for_status()
+            return r.text
+        except requests.RequestException as exc:
+            code=exc.response.status_code if getattr(exc,'response',None) is not None else None
+            if optional and code == 404:
+                return None
+            retryable = isinstance(exc, (requests.ConnectionError, requests.Timeout)) or code in (500, 502, 503, 504)
+            if attempt == 0 and retryable:
+                sleep(0.8)
+                continue
+            errors.append(label+': '+type(exc).__name__+(f' HTTP {code}' if code is not None else ''))
+            return None
 
 DTEK_TELEGRAM = 'https://t.me/s/dtek_ua'
 EMERGENCY_MAX_AGE = timedelta(hours=36)
