@@ -86,36 +86,85 @@ def parse_bez(html, target):
 
 
 def parse_mapasvitla(html, target, today, group):
-    """Parse one operator-specific, day-scoped queue page (not the mixed-region grid).
-    Reject the wrong group/date, placeholders, and ambiguous intervals.
+    """Read a dated queue page across old/new markup and summary wording.
+
+    Two independent extraction paths: a tagged day panel or the dated
+    visible-text heading. Never use a neighbouring day, queue, history or
+    unscoped time ranges. A malformed summary is not a valid schedule.
     """
-    empty={'candidates':[],'updated':'','unpublished':False}
-    if not html: return empty
-    soup=BeautifulSoup(html,'html.parser')
-    title=soup.title.get_text(' ',strip=True) if soup.title else ''
-    if not re.search(r'Черга\s*'+re.escape(group)+r'(?!\d)',title):
+    empty = {'candidates': [], 'updated': '', 'unpublished': False}
+    if not html or target not in (today, today + timedelta(days=1)):
         return empty
-    scope='today' if target==today else 'tomorrow' if target==today+timedelta(days=1) else None
-    if not scope:return empty
-    section=soup.select_one('[data-day="'+scope+'"]')
-    if section is None:return empty
-    s=section.get_text(' ',strip=True)
-    if re.search(r'Очікуємо графік|ще не опублікован',s,re.I):
-        return {**empty,'unpublished':True}
-    day=re.search(r'План на\s+(?:сьогодні|завтра)[^0-9]{0,40}(\d{1,2})\.(\d{2})(?!\d)',s[:180],re.I)
-    if not day or int(day.group(1))!=target.day or int(day.group(2))!=target.month:return empty
-    # The outage list is before the total. Do not read periods from history or explanations.
-    if 'Всього без світла' not in s:return empty
-    before=s.split('Всього без світла',1)[0]
-    intervals=pairs(before)
-    if not intervals:
-        if re.search(r'Всього без світла\s*(?:0(?:[,.]0)?\s*год|0\s*хв)',s,re.I) or re.search(r'Без відключень|Світло весь день',s,re.I):
-            choices=[tuple()]
-        else:return empty
+    soup = BeautifulSoup(html, 'html.parser')
+    title = soup.title.get_text(' ', strip=True) if soup.title else ''
+    heading_title = soup.h1.get_text(' ', strip=True) if soup.h1 else ''
+    # Group verification is mandatory. Do not accidentally use another queue.
+    group_label = r'Черга\\s*' + re.escape(group) + r'(?![\\d.])'
+    if not (re.search(group_label, title, re.I) or
+            re.search(group_label, heading_title, re.I)):
+        return empty
+
+    kind = 'today' if target == today else 'tomorrow'
+    local_label = 'сьогодні' if kind == 'today' else 'завтра'
+    section = soup.select_one('[data-day="' + kind + '"]')
+    if section is not None:
+        text = section.get_text(' ', strip=True)
     else:
-        # A valid summary is necessary to guard against fragments from other widgets.
-        choices=[normalize(intervals)]
-    return {'candidates':choices,'updated':'','unpublished':False}
+        # If the site moves/removes data-day attributes, recover the exact
+        # dated plan from visible text without reading the weekly history.
+        page = plain(html)
+        start = re.search(r'План\\s+на\\s+' + local_label +
+                          r'\\s*,?\\s*(?:пн|вт|ср|чт|пт|сб|нд)?\\s*'
+                          r'\\d{1,2}\\.\\d{1,2}(?!\\d)', page, re.I)
+        if start:
+            text = page[start.start():]
+        elif kind == 'tomorrow':
+            # A missing tomorrow schedule is different from a failed parse.
+            after_today = re.search(
+                r'Всього\\s+(?:планових\\s+відключень|без\\s+світла)'
+                r'\\s*\\d+(?:[,.]\\d+)?\\s*(?:год|хв)', page, re.I)
+            tail = page[after_today.end():] if after_today else page
+            if re.search(r'Очікуємо графік|на завтра ще не опублікован|'
+                         r'не опублікував графік на завтра', tail[:500], re.I):
+                return {**empty, 'unpublished': True}
+            return empty
+        else:
+            return empty
+
+    # Check the specific day, even when the day panel has been reused.
+    day = re.search(r'План\\s+на\\s+' + local_label +
+                    r'\\s*,?\\s*(?:пн|вт|ср|чт|пт|сб|нд)?\\s*'
+                    r'(\\d{1,2})\\.(\\d{1,2})(?!\\d)', text[:220], re.I)
+    if not day:
+        if kind == 'tomorrow' and re.search(
+                r'Очікуємо графік|ще не опублікован|'
+                r'не опублікував графік на завтра', text[:300], re.I):
+            return {**empty, 'unpublished': True}
+        return empty
+    if (int(day.group(1)), int(day.group(2))) != (target.day, target.month):
+        return empty
+    # The total marks the end of the interval list; never parse a second day's
+    # intervals, explanatory SEO text or historical figures after this point.
+    total = re.search(
+        r'(?:Всього|Усього)\\s+(?:планових\\s+відключень|'
+        r'без\\s+світла|відключень)\\s*'
+        r'(\\d+(?:[,.]\\d+)?)\\s*(год(?:ин[а-я]*)?|хв(?:илин[а-я]*)?)',
+        text, re.I)
+    if total is None:
+        return empty
+    intervals = pairs(text[day.end():total.start()])
+    try:
+        outages = normalize(intervals)
+        declared = float(total.group(1).replace(',', '.'))
+        expected_minutes = round(declared * (60 if total.group(2).lower().startswith('год') else 1))
+        measured_minutes = sum(minutes(end) - minutes(start) for start, end in outages)
+    except ValueError:
+        return empty
+    # Cross-check totals. This catches partial pages and accidental duplicate
+    # intervals, rather than silently showing the wrong hours as confirmed.
+    if expected_minutes != measured_minutes:
+        return empty
+    return {'candidates': [outages], 'updated': '', 'unpublished': False}
 
 def scoped(html, target, today):
     s = plain(html)
