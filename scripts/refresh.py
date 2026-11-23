@@ -394,6 +394,26 @@ def source_reports(result,bez,koly,bude,region,live,old,alerts=None,region_url=N
     return output
 
 
+def provider_update_label(name, html, now):
+    """Best-effort source's OWN update label; never used to infer outages."""
+    if not html or now is None:
+        return ''
+    visible = plain(html)[:7000]
+    patterns = {
+        'Карта світла': r'Оновлено\s+(\d{1,2}:\d{2})\s+за київським часом',
+        'КолиСвітло': r'Дані від\s+(\d{1,2}\s+[^\s]+\s+о\s+\d{1,2}:\d{2})',
+        'КолиБуде': r'Оновлено\s+(\d{1,2}\s+[^\s]+\s+о\s+\d{1,2}:\d{2})',
+        'Київщина.info': r'ДТЕК оновив\s+(\d{2}\.\d{2}\.\d{4}\s+\d{1,2}:\d{2})',
+        'Alerts Energy': r'Оновлення джерела:\s+(\d{1,2}\s+[^\s]+\s+\d{4}\s+р\.,?\s+\d{1,2}:\d{2})',
+    }
+    pattern = patterns.get(name)
+    found = re.search(pattern, visible, re.I) if pattern else None
+    if not found:
+        return ''
+    label = found.group(1).strip()
+    return now.strftime('%d.%m') + ' ' + label if name == 'Карта світла' else label
+
+
 def annotate_source_health(reports, fetched_pages, target, today, unpublished=(),
                            now=None, previous=None):
     """Keep independent fetch freshness and schedule freshness on every source."""
@@ -403,6 +423,11 @@ def annotate_source_health(reports, fetched_pages, target, today, unpublished=()
     for name, report in reports.items():
         past = previous.get(name, {})
         page = fetched_pages.get(name)
+        provider_label = provider_update_label(name, page, now)
+        if provider_label:
+            report['provider_updated_label'] = provider_label
+        elif past.get('provider_updated_label'):
+            report['provider_updated_label'] = past['provider_updated_label']
         has_schedule = (report.get('status') not in
                         ('old', 'unavailable', 'unreadable', 'fetch_error', 'unpublished'))
         if stamp and page is not None:
