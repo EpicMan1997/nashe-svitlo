@@ -292,7 +292,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('href="./ecoflow.css?v=66"', HTML)
         self.assertIn('src="./ecoflow.js?v=66"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v66', SW)
+        self.assertIn('nashe-svitlo-static-v67', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)
