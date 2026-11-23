@@ -50,6 +50,14 @@ class BuildValidationTests(unittest.TestCase):
                                ROOT / 'site', self.now)
         self.assertEqual(counts['dacha'][self.days[0]]['status'], 'stale')
 
+    def test_all_real_diagnostic_states_are_valid(self):
+        for verdict in ('unreadable', 'fetch_error', 'unpublished'):
+            with self.subTest(verdict=verdict):
+                self.payload['locations']['dacha']['days'][self.days[0]][
+                    'source_reports']['Alerts Energy']['status'] = verdict
+                check_payload(self.payload, self.season, self.config,
+                              ROOT / 'site', self.now)
+
     def test_invalid_unknown_source_verdict_still_fails(self):
         self.payload['locations']['dacha']['days'][self.days[0]][
             'source_reports']['КолиБуде']['status'] = 'invented'
