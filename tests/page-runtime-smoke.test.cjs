@@ -285,3 +285,35 @@ test('edge 08 timestamp-only refresh preserves DOM while exposing the new verifi
   assert.ok(writes>0,'actual change must trigger new layout');
   assert.match(display.innerHTML,/12:00/);
 });
+
+test('right-hand power countdown switches between light and outage at exact boundaries',async()=>{
+ const r=runDashboard();
+ await new Promise(setImmediate);
+ const check=(h,m,s,state,label)=>{
+  vm.runInContext('updateCurrentPower('+JSON.stringify({iso:r.payload.today_date,h,m,s})+')',r.context);
+  assert.equal(r.node('powerNow').dataset.powerState,state);
+  assert.equal(r.node('powerRemaining').hidden,false);
+  assert.equal(r.node('powerRemaining').textContent,label);
+ };
+ check(6,3,0,'power-on','Ще 1 год 27 хв');
+ check(7,29,59,'power-on','Ще 1 с');
+ check(7,30,0,'power-off','Ще 2 год 30 хв');
+ check(9,59,59,'power-off','Ще 1 с');
+ check(10,0,0,'power-on','Ще 8 год');
+ check(20,0,0,'power-on','Ще 4 год (до 24:00)');
+});
+
+test('power countdown is hidden for stale schedules and labeled as planned during emergencies',async()=>{
+ const r=runDashboard();
+ await new Promise(setImmediate);
+ r.locations[1].onclick();
+ const tickAt={iso:r.payload.today_date,h:6,m:3,s:0};
+ vm.runInContext('updateCurrentPower('+JSON.stringify(tickAt)+')',r.context);
+ assert.equal(r.node('powerRemaining').textContent,'За планом ще 1 год 27 хв');
+ r.payload.updated_at=new Date(Date.now()-76*60000).toISOString();
+ await r.timers.find(x=>x.ms===15000).fn();
+ vm.runInContext('updateCurrentPower('+JSON.stringify(tickAt)+')',r.context);
+ assert.equal(r.node('powerNowLabel').textContent,'Зараз: невідомо');
+ assert.equal(r.node('powerRemaining').hidden,true);
+ assert.equal(r.node('powerRemaining').textContent,'');
+});
