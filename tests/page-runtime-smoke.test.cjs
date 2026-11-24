@@ -101,7 +101,9 @@ function runDashboard(customizePayload) {
       locations:Object.fromEntries(Object.keys(payload.locations).map(k=>[k,{name:k,recorded_days:0}]))
     }:payload})
   };
-  vm.runInNewContext(source,context);
+  const instrumented=source.replace(/\}\)\(\);\s*$/, 'window.__testUpdateCurrentPower=updateCurrentPower;})();');
+  assert.notEqual(instrumented,source,'Expected dashboard closure for test hook');
+  vm.runInNewContext(instrumented,context);
   return {node,tabs,siteViews,locations,payload,events,context,windowEvents,timers,document};
 }
 
@@ -290,7 +292,7 @@ test('right-hand power countdown switches between light and outage at exact boun
  const r=runDashboard();
  await new Promise(setImmediate);
  const check=(h,m,s,state,label)=>{
-  vm.runInContext('updateCurrentPower('+JSON.stringify({iso:r.payload.today_date,h,m,s})+')',r.context);
+  r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h,m,s});
   assert.equal(r.node('powerNow').dataset.powerState,state);
   assert.equal(r.node('powerRemaining').hidden,false);
   assert.equal(r.node('powerRemaining').textContent,label);
@@ -308,11 +310,11 @@ test('power countdown is hidden for stale schedules and labeled as planned durin
  await new Promise(setImmediate);
  r.locations[1].onclick();
  const tickAt={iso:r.payload.today_date,h:6,m:3,s:0};
- vm.runInContext('updateCurrentPower('+JSON.stringify(tickAt)+')',r.context);
+ r.context.window.__testUpdateCurrentPower(tickAt);
  assert.equal(r.node('powerRemaining').textContent,'За планом ще 1 год 27 хв');
  r.payload.updated_at=new Date(Date.now()-76*60000).toISOString();
  await r.timers.find(x=>x.ms===15000).fn();
- vm.runInContext('updateCurrentPower('+JSON.stringify(tickAt)+')',r.context);
+ r.context.window.__testUpdateCurrentPower(tickAt);
  assert.equal(r.node('powerNowLabel').textContent,'Зараз: невідомо');
  assert.equal(r.node('powerRemaining').hidden,true);
  assert.equal(r.node('powerRemaining').textContent,'');
