@@ -43,10 +43,11 @@ class ScheduleAndTelemetryEdgeCases(unittest.TestCase):
                'sources': ['КолиСвітло', 'КолиБуде']}
         result = choose(DAY, EMPTY_PRIMARY, MORNING, None, old, {},
                         allow_early=True)
-        self.assertEqual(result['status'], 'stale')
+        self.assertEqual(result['status'], 'preliminary')
+        self.assertTrue(result['previously_confirmed'])
         self.assertEqual(result['outages'], [list(x) for x in MORNING])
         reports = source_reports(result, EMPTY_PRIMARY, MORNING, None, None, None, old)
-        self.assertEqual(reports['КолиСвітло']['status'], 'unconfirmed')
+        self.assertEqual(reports['КолиСвітло']['status'], 'preliminary')
 
     def test_edge_04_yesterday_schedule_never_fills_new_day(self):
         old = {'date': (DAY - timedelta(days=1)).isoformat(),
