@@ -319,3 +319,39 @@ test('power countdown is hidden for stale schedules and labeled as planned durin
  assert.equal(r.node('powerRemaining').hidden,true);
  assert.equal(r.node('powerRemaining').textContent,'');
 });
+
+test('building plan has a clean main graph, planned timer and full source caveats in details',async()=>{
+ const r=runDashboard(payload=>{
+  const date=payload.today_date;
+  payload.locations.home.emergency=null;
+  payload.locations.home.address_verified=false;
+  payload.locations.home.days[date]={date,status:'preliminary',outages:[['12:30','17:00']],sources:['Повідомлення будинку'],local_report:{observed_off_at:'12:38'},source_reports:{}};
+ });
+ await new Promise(setImmediate);
+ r.locations[1].onclick();
+ const main=r.node('display').innerHTML,details=r.node('scheduleDetailsHost').innerHTML;
+ assert.match(main,/За графіком будинку/);
+ assert.match(main,/class="bar "/);
+ assert.doesNotMatch(main,/Група з попереднього|Графік будинку надано вручну|Попередні дані з/);
+ assert.match(details,/Графік будинку надано вручну/);
+ assert.match(details,/Попередні дані з/);
+ r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h:16,m:11,s:0});
+ assert.equal(r.node('powerNowLabel').textContent,'За планом: без світла');
+ assert.equal(r.node('powerRemaining').textContent,'Ще 49 хв');
+ assert.equal(r.node('powerRemaining').hidden,false);
+});
+test('unverified home queue shows a clearly labeled queue forecast, not actual voltage',async()=>{
+ const r=runDashboard(payload=>{
+  const date=payload.today_date;
+  payload.locations.home.emergency=null;
+  payload.locations.home.days[date]={...payload.locations.home.days[date],address_conflict:true};
+ });
+ await new Promise(setImmediate);
+ r.locations[1].onclick();
+ assert.match(r.node('display').innerHTML,/Графік черги 4.1/);
+ assert.doesNotMatch(r.node('display').innerHTML,/не підтверджено для цього будинку/);
+ assert.match(r.node('scheduleDetailsHost').innerHTML,/не підтверджено для цього будинку/);
+ r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h:6,m:3,s:0});
+ assert.equal(r.node('powerNowLabel').textContent,'За чергою: зі світлом');
+ assert.equal(r.node('powerRemaining').textContent,'Ще 1 год 27 хв');
+});

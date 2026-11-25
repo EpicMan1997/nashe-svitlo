@@ -105,6 +105,8 @@ class VisualStatusContract(unittest.TestCase):
         self.assertIn("known=status!=='unknown'&&!preliminaryZero", HTML)
         self.assertIn("if(preliminaryZero){", HTML)
         self.assertIn("if(status==='preliminary'&&!preliminaryZero)", HTML)
+        self.assertIn("status==='preliminary'&&!buildingPlan?'preliminary'", HTML)
+        self.assertIn("За графіком будинку", HTML)
         self.assertIn("Попередньо: без планових відключень", HTML)
         self.assertIn("не гарантія фактичної наявності світла", HTML)
         self.assertIn(".schedule-unconfirmed-zero", HTML)
