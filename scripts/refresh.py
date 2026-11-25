@@ -399,6 +399,8 @@ def provider_update_label(name, html, now):
         'КолиСвітло': r'Дані від\s+(\d{1,2}\s+[^\s]+\s+о\s+\d{1,2}:\d{2})',
         'КолиБуде': r'Оновлено\s+(\d{1,2}\s+[^\s]+\s+о\s+\d{1,2}:\d{2})',
         'Київщина.info': r'ДТЕК оновив\s+(\d{2}\.\d{2}\.\d{4}\s+\d{1,2}:\d{2})',
+        'GPV': r'оператор оновив графік\s+(\d{1,2}:\d{2},\s*\d{1,2}\s+[А-Яа-яІіЇїЄєҐґ.]+)',
+        'Powercut': r'Оператор оновив графік\s+((?:сьогодні|вчора)\s+о\s+\d{1,2}:\d{2})',
         'Alerts Energy': r'Оновлення джерела:\s+(\d{1,2}\s+[^\s]+\s+\d{4}\s+р\.,?\s+\d{1,2}:\d{2})',
     }
     pattern = patterns.get(name)
@@ -411,48 +413,41 @@ def provider_update_label(name, html, now):
 
 def annotate_source_health(reports, fetched_pages, target, today, unpublished=(),
                            now=None, previous=None):
-    """Keep independent fetch freshness and schedule freshness on every source."""
-    unpublished = set(unpublished)
-    previous = previous or {}
-    stamp = now.isoformat(timespec='minutes') if now is not None else None
-    for name, report in reports.items():
-        past = previous.get(name, {})
-        page = fetched_pages.get(name)
-        provider_label = provider_update_label(name, page, now)
-        if provider_label:
-            report['provider_updated_label'] = provider_label
-        elif past.get('provider_updated_label'):
-            report['provider_updated_label'] = past['provider_updated_label']
-        has_schedule = (report.get('status') not in
-                        ('old', 'unavailable', 'unreadable', 'fetch_error', 'unpublished'))
-        if stamp:
-            report['attempted_at'] = stamp
-        if stamp and page is not None:
-            report['checked_at'] = stamp
-        elif past.get('checked_at'):
-            report['checked_at'] = past['checked_at']
-        if has_schedule and stamp:
-            report['data_seen_at'] = stamp
-        elif past.get('data_seen_at'):
-            report['data_seen_at'] = past['data_seen_at']
-        if report.get('status') not in ('unavailable', 'old'):
-            continue
-        if page is None:
-            report['fetch_failed'] = True
-            if report.get('outages') is None:
-                report['status'] = 'fetch_error'
-            continue
-        if report.get('outages') is not None:
-            continue  # last accepted reading is old, not validated this time
-        if (name in unpublished or
-                (target > today and re.search(
-                    r'Графік на завтра ще не опубліковано|'
-                    r'Оператор ще не опублікував графік на завтра|Оператор ще не оприлюднив графік',
-                    plain(page)[:3500], re.I))):
-            report['status'] = 'unpublished'
-        else:
-            report['status'] = 'unreadable'
-        report['fetch_failed'] = False
+    """Separate last fetch, last parsed data, and actual recent success rate."""
+    unpublished=set(unpublished)
+    previous=previous or {}
+    stamp=now.isoformat(timespec='minutes') if now is not None else None
+    for name,report in reports.items():
+        past=previous.get(name,{})
+        page=fetched_pages.get(name)
+        label=provider_update_label(name,page,now)
+        if label:report['provider_updated_label']=label
+        elif past.get('provider_updated_label'):report['provider_updated_label']=past['provider_updated_label']
+        parsed=report.get('status') in ('match','preliminary','unconfirmed','diff','partial')
+        if stamp:report['attempted_at']=stamp
+        if stamp and page is not None:report['checked_at']=stamp
+        elif past.get('checked_at'):report['checked_at']=past['checked_at']
+        if parsed and stamp:report['data_seen_at']=stamp
+        elif past.get('data_seen_at'):report['data_seen_at']=past['data_seen_at']
+        if not parsed:
+            report['fetch_failed']=page is None
+            explicit_unpublished=False
+            if page is not None and target>today:
+                raw=plain(page)
+                if name=='GPV':
+                    explicit_unpublished=bool(re.search(r'Графік на\s+'+str(target.day)+r'\s+'+MONTHS[target.month]+r'\s+ще не опубліковано',raw,re.I))
+                elif name=='Powercut':
+                    explicit_unpublished=bool(re.search(r'Графік на завтра\b.{0,300}Оператор ще не оприлюднив графік',raw,re.I))
+                else:
+                    explicit_unpublished=bool(re.search(r'Графік на завтра ще не опубліковано|Оператор ще не опублікував графік на завтра|Оператор ще не оприлюднив графік',raw[:3500],re.I))
+            if name in unpublished or explicit_unpublished:
+                report['status']='unpublished'
+                report['outages']=None
+            elif report.get('outages') is not None:
+                report['status']='old'
+            else:
+                report['status']='fetch_error' if page is None else 'unreadable'
+        report_recent_health(report,past,stamp,target,today)
 
 
 def fetch(url, label, errors, optional=False):
@@ -615,7 +610,7 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
     if allow_early and provisional_votes:
         # This site exposes tomorrow's operator-derived rows earlier than the
         # delayed aggregators. Still provisional until an independent source agrees.
-        preferred=['Київщина.info','Alerts Energy','Карта світла','Powercut','КолиСвітло','КолиБуде','БезСвітла']
+        preferred=['Київщина.info','Alerts Energy','Карта світла','Powercut','GPV','КолиСвітло','КолиБуде','БезСвітла']
         def rank(item):
             off,srcs=item
             first=min((preferred.index(src) if src in preferred else len(preferred)) for src in srcs)
@@ -626,6 +621,7 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
                 and old.get('outages') == [list(x) for x in selected]):
             return {**base,'status':'preliminary','outages':old['outages'],
                     'sources':sorted(sources),'detail':'Години щойно зчитано з одного джерела; очікуємо друге.',
+                    'alternatives':[{'sources':sorted(srcs),'outages':[list(x) for x in off]} for off,srcs in ordered[1:]],
                     'previously_confirmed':True}
         alternatives=[{'sources':sorted(srcs),'outages':[list(x) for x in off]}
                       for off,srcs in ordered[1:]]
@@ -635,6 +631,8 @@ def choose(day,bez,koly,bude,old,additional=None,primary_source='БезСвіт�
                 'sources':sorted(sources),'alternatives':alternatives,'detail':detail}
     if old.get('date')==day.isoformat() and (old.get('status') in ('normal','stale') or old.get('previously_confirmed')) and 'outages' in old:
         return {**base,'status':'stale','outages':old['outages'],'sources':old.get('sources',[]),'detail':why}
+    if old.get('date')==day.isoformat() and old.get('status') in ('preliminary','stale') and old.get('outages') and not old.get('local_report'):
+        return {**base,'status':'stale','outages':old['outages'],'sources':old.get('sources',[]),'detail':'Останній непідтверджений графік; нових годин не отримано.'}
     return {**base,'status':'unknown','outages':[],'sources':[],'detail':why}
 
 def change(old,new):
@@ -699,6 +697,8 @@ def make_log_event(now,target,old,new,message):
 CITY_KOLY = 'https://kolysvitlo.com/schedule/dtek_kyiv'
 CITY_BUDE = 'https://kolybude.com/kyiv'
 POWERCUT_CITY = 'https://powercut.io/ua/kyiv/'
+GPV_CITY = 'https://gpv-ua.com/kyiv'
+GPV_REGION = 'https://gpv-ua.com/kyivska-oblast'
 # Date-scoped building report supplied by the resident; never changes other dates or locations.
 HOME_REPORTED_PLAN = {'date':'2026-11-25','outages':[['12:30','17:00']],
                       'observed_off_at':'12:38'}
@@ -815,6 +815,57 @@ def parse_powercut_city(html,target,today,group):
     return next(iter(outcomes)) if len(outcomes)==1 else None
 
 
+def parse_gpv(html,target,today,group,city):
+    """GPV's dated city/region table with a per-row duration checksum."""
+    if not html or target not in (today,today+timedelta(days=1)):return None
+    page=plain(html)
+    locality='у Києві' if city else 'у Київській області'
+    heading=r'Графік відключень\s+'+locality+r'\s+на\s+(сьогодні|завтра)\s*,\s*(\d{1,2})\s+([А-Яа-яІіЇїЄєҐґ]+)(?:\s+(\d{4}))?'
+    label='сьогодні' if target==today else 'завтра'
+    outcomes=set()
+    for stamp in re.finditer(heading,page,re.I):
+        if stamp.group(1).lower()!=label or int(stamp.group(2))!=target.day or stamp.group(3).lower()!=MONTHS[target.month] or (stamp.group(4) and int(stamp.group(4))!=target.year):continue
+        section=page[stamp.end():]
+        finish=re.search(heading+r'|Останні зміни|Інший оператор|Питання та відповіді',section,re.I)
+        if finish:section=section[:finish.start()]
+        # A visible queue row has a time list followed by its total, not the
+        # similarly named address links, clock, or historical change cards.
+        row=r'(?<![\d.])'+re.escape(group)+r'(?![\d.])\s+'
+        period=r'\d{2}:\d{2}\s*[–—-]\s*\d{2}:\d{2}'
+        value_pattern=r'('+period+r'(?:\s*[,;]\s*'+period+r')*|Без відключень|Відключень немає|Світло весь день)\s*·?\s*(\d+)\s*год(?:\s+(\d+)\s*хв)?'
+        for m in re.finditer(row+value_pattern,section,re.I):
+            value=_strict_row_value(m.group(1))
+            if value is None:continue
+            declared=int(m.group(2))*60+int(m.group(3) or 0)
+            if declared==sum(minutes(b)-minutes(a) for a,b in value):
+                outcomes.add(value)
+    return next(iter(outcomes)) if len(outcomes)==1 else None
+
+
+def safe_read(parser, fallback, errors, label, *args):
+    """One changed provider must never prevent the other locations publishing."""
+    try:
+        return parser(*args)
+    except Exception as exc:
+        errors.append(label+': parse '+type(exc).__name__)
+        return fallback
+
+
+def report_recent_health(report,past,stamp,target,today):
+    """Bounded actual collection history, not a guessed uptime percentage."""
+    if stamp is None or target!=today:return
+    samples=list(past.get('recent_checks',[]))[-23:]
+    verdict=report.get('status')
+    outcome=('parsed' if verdict in ('match','preliminary','unconfirmed','diff') else
+             'unpublished' if verdict=='unpublished' else
+             'network' if report.get('fetch_failed') or verdict=='fetch_error' else 'parse')
+    if past.get('attempted_at')==stamp and samples:
+        samples[-1]=outcome
+    else:
+        samples.append(outcome)
+    report['recent_checks']=samples
+
+
 def bude_fallback_page(page,url,group,today,errors):
     # One extra request only for a reachable page whose dated group could not be read.
     # No retries or alternative URLs after a denied/rate-limited request.
@@ -886,17 +937,14 @@ def city_sources(entry,bez,koly,bude,street,prev,alerts=None):
 def update_city_locations(now,today,old,errors):
     """Separate city operator, street address, queue, and history; never reuse dacha data."""
     groups={config['group'] for config in CITY_LOCATIONS.values()}
-    urls={'bude':(CITY_BUDE,'КолиБуде Київ'),
+    urls={'gpv':(GPV_CITY,'GPV Київ'),
           'powercut':(POWERCUT_CITY,'Powercut Київ')}
     urls.update({group:(MAP_CITY_PREFIX+group,'Карта світла Київ '+group) for group in groups})
     with ThreadPoolExecutor(max_workers=len(urls)) as pool:
         jobs={key:pool.submit(fetch,url,label,errors) for key,(url,label) in urls.items()}
         pages={key:job.result() for key,job in jobs.items()}
-    city_bude,city_powercut=pages['bude'],pages['powercut']
+    city_gpv,city_powercut=pages['gpv'],pages['powercut']
     city_map_pages={group:pages[group] for group in groups}
-    with ThreadPoolExecutor(max_workers=len(groups)) as pool:
-        fallbacks={group:pool.submit(bude_fallback_page,city_bude,CITY_BUDE,group,today,errors) for group in groups}
-        city_bude_fallback={group:job.result() for group,job in fallbacks.items()}
     result={}
     old_locations=old.get('locations',{})
     for key,config in CITY_LOCATIONS.items():
@@ -906,22 +954,24 @@ def update_city_locations(now,today,old,errors):
         logs=list(old_loc.get('logs',[]))
         for target in (today,today+timedelta(days=1)):
             url=MAP_CITY_PREFIX+config['group']
-            bez=parse_mapasvitla(city_map_pages[config['group']],target,today,config['group'])
+            bez=safe_read(parse_mapasvitla,{'candidates':[],'updated':'','unpublished':False},errors,'Карта світла '+config['group'],city_map_pages[config['group']],target,today,config['group'])
             bez['url']=url
-            bude,bude_page,bude_url=bude_read(city_bude,city_bude_fallback[config['group']],target,today,config['group'],CITY_BUDE)
-            powercut=parse_powercut_city(city_powercut,target,today,config['group'])
+            gpv=safe_read(parse_gpv,None,errors,'GPV Київ '+config['group'],city_gpv,target,today,config['group'],True)
+            powercut=safe_read(parse_powercut_city,None,errors,'Powercut '+config['group'],city_powercut,target,today,config['group'])
             prev=old_loc.get('days',{}).get(target.isoformat(),{})
-            entry=choose(target,bez,None,bude,prev,{'Powercut':powercut},
+            entry=choose(target,bez,None,None,prev,{'Powercut':powercut,'GPV':gpv},
                          primary_source='Карта світла',allow_early=True)
             entry['url']=url
             entry=apply_home_report(entry,key,target,today)
+            if key=='home' and not entry.get('local_report'):
+                entry['address_conflict']=True
             entry['source_reports']=active_source_reports(entry,{
                 'Карта світла':(bez['candidates'][0] if len(bez['candidates'])==1 else None,url),
-                'КолиБуде':(bude,bude_url),'Powercut':(powercut,POWERCUT_CITY)},prev)
+                'GPV':(gpv,GPV_CITY),'Powercut':(powercut,POWERCUT_CITY)},prev)
             annotate_source_health(
                 entry['source_reports'],
                 {'Карта світла':city_map_pages[config['group']],
-                 'КолиБуде':bude_page,'Powercut':city_powercut},
+                 'GPV':city_gpv,'Powercut':city_powercut},
                 target,today,{'Карта світла'} if bez['unpublished'] else (),
                 now,prev.get('source_reports',{}))
             record_source_observations(now,prev,entry)
@@ -942,7 +992,7 @@ def main():
     except (FileNotFoundError,ValueError): old={'days':{},'logs':[]}
     errors=[]
     sources={
-        'bude':(KOLBUDE,'КолиБуде'),
+        'gpv':(GPV_REGION,'GPV Київська область'),
         'official':(DTEK,'ДТЕК'),
         'region_html':(KYIVSHCHYNA,'Київщина.info'),
         'map_region_html':(MAP_REGION,'Карта світла Київська область 3.1'),
@@ -958,8 +1008,7 @@ def main():
         results={key:job.result() for key,job in jobs.items()}
         article_html=article_job.result()
         city=city_job.result()
-    bude,official=results['bude'],results['official']
-    bude_fallback=bude_fallback_page(bude,KOLBUDE,'3.1',today,errors)
+    gpv_page,official=results['gpv'],results['official']
     region_html=results['region_html']
     map_region_html=results['map_region_html']
     telegram_html=results['dtek_telegram']
@@ -974,26 +1023,26 @@ def main():
 
     days={};logs=list(old.get('logs',[]))
     for target in (today,tomorrow):
-        bez=parse_mapasvitla(map_region_html,target,today,'3.1')
+        bez=safe_read(parse_mapasvitla,{'candidates':[],'updated':'','unpublished':False},errors,'Карта світла область',map_region_html,target,today,'3.1')
         bez['url']=MAP_REGION
-        b,bude_page,bude_url=bude_read(bude,bude_fallback,target,today,'3.1',KOLBUDE)
-        region=parse_kyivshchyna(region_html,target,today) if region_html else None
+        gpv=safe_read(parse_gpv,None,errors,'GPV область',gpv_page,target,today,'3.1',False)
+        region=safe_read(parse_kyivshchyna,None,errors,'Київщина.info',region_html,target,today) if region_html else None
         region_url=KYIVSHCHYNA
         region_page=region_html
         if region is None and target==tomorrow:
-            region=parse_kyivshchyna_article(article_html,target)
+            region=safe_read(parse_kyivshchyna_article,None,errors,'Київщина.info архів',article_html,target)
             if region is not None:
                 region_url=article_url
                 region_page=article_html
         previous=old.get('days',{}).get(target.isoformat(),{})
-        entry=choose(target,bez,None,b,previous,{'Київщина.info':region},
+        entry=choose(target,bez,None,None,previous,{'Київщина.info':region,'GPV':gpv},
                      primary_source='Карта світла',allow_early=True)
         entry['source_reports']=active_source_reports(entry,{
             'Карта світла':(bez['candidates'][0] if len(bez['candidates'])==1 else None,MAP_REGION),
-            'КолиБуде':(b,bude_url),'Київщина.info':(region,region_url)},previous)
+            'GPV':(gpv,GPV_REGION),'Київщина.info':(region,region_url)},previous)
         annotate_source_health(
             entry['source_reports'],
-            {'Карта світла':map_region_html,'КолиБуде':bude_page,'Київщина.info':region_page},
+            {'Карта світла':map_region_html,'GPV':gpv_page,'Київщина.info':region_page},
             target,today,{'Карта світла'} if bez['unpublished'] else (),
             now,previous.get('source_reports',{}))
         record_source_observations(now,previous,entry)
@@ -1022,5 +1071,11 @@ def main():
     OUTPUT.parent.mkdir(exist_ok=True,parents=True)
     OUTPUT.write_text(json.dumps(payload,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print('Checked:',now.isoformat(timespec='minutes'),[(d,e['status'],e['outages']) for d,e in days.items()])
+    for key,loc in payload['locations'].items():
+        for target in (today,tomorrow):
+            e=loc['days'][target.isoformat()]
+            print('SOURCE_AUDIT',key,target.isoformat(),e['status'],json.dumps(
+                {name:{'status':r['status'],'outages':r.get('outages'),'recent_checks':r.get('recent_checks',[])}
+                 for name,r in e['source_reports'].items()},ensure_ascii=False))
     if errors:print('Warnings:',errors,file=sys.stderr)
 if __name__=='__main__':main()
