@@ -149,7 +149,8 @@ class VisualStatusContract(unittest.TestCase):
         refresh = ROOT.joinpath("scripts/refresh.py").read_text(encoding="utf-8")
         self.assertIn("'group':'4.1'", refresh)
         self.assertIn("'group':'10.1'", refresh)
-        self.assertIn("parse_mapasvitla(city_map_pages[config['group']]", refresh)
+        self.assertIn("safe_read(parse_mapasvitla,", refresh)
+        self.assertIn("city_map_pages[config['group']],target,today,config['group']", refresh)
 
     def test_previous_daily_changes_are_collapsed_but_available(self):
         self.assertIn("const previousEdits=logs.filter(item=>eventKind(item)==='changed'&&item!==logs[0]);", HTML)
