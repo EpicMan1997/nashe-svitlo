@@ -1,9 +1,9 @@
 {
-  "checked_at": "2026-11-25T07:31:20+00:00",
-  "run_id": "45568729271",
+  "checked_at": "2026-11-25T07:40:55+00:00",
+  "run_id": "45570003314",
   "run_attempt": "1",
   "unit_tests": "success",
   "outage_refresh": "success",
   "validation": "success",
-  "deployment": "success"
+  "deployment": "failure"
 }
