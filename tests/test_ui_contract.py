@@ -39,7 +39,7 @@ class VisualStatusContract(unittest.TestCase):
 
     def test_obolon_is_clean_and_city_dtek_is_manual_only(self):
         self.assertNotIn("Група 4.1 попередня — потрібна адресна перевірка ДТЕК", HTML)
-        self.assertIn("locationId!=='home'&&!activeLocation()?.address_verified", HTML)
+        self.assertIn("locationId!=='dacha'&&!activeLocation()?.address_verified", HTML)
         self.assertIn("ДТЕК</a><span class=\"source-verdict source-manual-verdict\">За адресою", HTML)
         self.assertIn("Перевірити вручну на сайті ДТЕК", HTML)
         self.assertIn("Object.keys(urls).filter(name=>rows[name]?.status==='match')", HTML)

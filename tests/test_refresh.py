@@ -162,10 +162,10 @@ class Tests(unittest.TestCase):
   checked=choose(day,primary,None,None,old,
                  {'Київщина.info':(('14:00','17:30'),)},
                  primary_source='Карта світла',allow_early=True)
-  self.assertEqual(checked['status'],'stale')
+  self.assertEqual(checked['status'],'preliminary')
   self.assertEqual(checked['outages'],[['14:00','17:30']])
   reports=source_reports(checked,primary,None,None,(('14:00','17:30'),),None,old)
-  self.assertEqual(reports['Київщина.info']['status'],'unconfirmed')
+  self.assertEqual(reports['Київщина.info']['status'],'preliminary')
 
  def test_news_article_fallback_is_date_scoped_and_ignores_older_revision(self):
   target=date(2026,11,11)
@@ -247,9 +247,9 @@ class Tests(unittest.TestCase):
   lone=(('07:30','11:00'),)
   result=choose(D,first,lone,None,previously,{},
                 primary_source='Карта світла',allow_early=True)
-  self.assertEqual(result['status'],'stale')
+  self.assertEqual(result['status'],'preliminary')
   report=city_sources(result,first,lone,None,'https://example.com',previously)
-  self.assertEqual(report['КолиСвітло']['status'],'unconfirmed')
+  self.assertEqual(report['КолиСвітло']['status'],'preliminary')
   self.assertNotEqual(report['КолиСвітло']['status'],'diff')
 
  def test_city_new_single_source_cancellation_is_visible_but_tentative(self):
