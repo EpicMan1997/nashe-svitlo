@@ -24,11 +24,13 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertEqual(JS.count("capacityWh: 5000"), 1)
 
     def test_disconnected_device_values_are_not_claimed_as_live(self):
-        self.assertIn("Демо · API не підключено", HTML)
-        self.assertIn("Тестові показники, не реальна телеметрія EcoFlow", HTML)
+        self.assertIn("API · очікуємо дані", HTML)
+        self.assertIn("Очікуємо реальні показники EcoFlow API", HTML)
         panel = HTML.split('<section class="eco-shell"', 1)[1].split('</section>', 1)[0]
         self.assertTrue(panel)
         self.assertIn("const demoInventory = Object.freeze({", JS)
+        self.assertIn("monitoredDevices(key,place.devices)", JS)
+        self.assertNotIn("inventory = demoInventory;\n      return;", JS)
         self.assertNotRegex(JS, r"\bfetch\s*\(|XMLHttpRequest|WebSocket")
         self.assertNotIn("adminControls(", JS)
 
@@ -74,8 +76,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("new CustomEvent('svitlo:location-change'", HTML)
         self.assertNotIn('href="#ecoflow"', HTML)
         self.assertIn('<section class="eco-shell"', HTML)
-        self.assertIn('"./ecoflow.css?v=69"', SW)
-        self.assertIn('"./ecoflow.js?v=69"', SW)
+        self.assertIn('"./ecoflow.css?v=70"', SW)
+        self.assertIn('"./ecoflow.js?v=70"', SW)
 
 
     def test_device_section_first_and_header_rearranged(self):
@@ -140,7 +142,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
     def test_power_and_autonomy_are_shared_at_system_level(self):
         self.assertIn("function energyStats(d, capWh, pct)", JS)
         self.assertIn("Math.round(capacityWh*chargePct/100*0.85/outputW", JS)
-        self.assertIn("За навантаженням", JS)
+        self.assertIn("Автономність", JS)
         self.assertIn("За графіком", JS)
         self.assertIn("Прогноз EcoFlow", JS)
         self.assertNotIn("Автономність: —", JS)
@@ -289,10 +291,10 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('eco-title-monogram', HTML)
         self.assertIn('<path d="M14 20H26" stroke="currentColor"', HTML)
         self.assertNotIn('stroke="#67E8F9"', HTML)
-        self.assertIn('href="./ecoflow.css?v=69"', HTML)
-        self.assertIn('src="./ecoflow.js?v=69"', HTML)
+        self.assertIn('href="./ecoflow.css?v=70"', HTML)
+        self.assertIn('src="./ecoflow.js?v=70"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v69', SW)
+        self.assertIn('nashe-svitlo-static-v70', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)
@@ -527,7 +529,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('id="eco-location-summary"', HTML)
         self.assertIn('id="eco-overview-details"', HTML)
         self.assertIn("$('eco-location-summary').hidden = empty", JS)
-        self.assertIn("$('eco-overview-details').hidden = empty", JS)
+        self.assertIn("$('eco-overview-details').hidden = true", JS)
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
         self.assertIn("if (!refreshOnly) clearMetric();", JS)
         self.assertNotIn("eco-overview-details').open", JS)
@@ -619,7 +621,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("solarPowerLabel(device.solar.maxW)", JS)
         self.assertIn("progress.setAttribute('aria-valuenow'", JS)
         self.assertIn("Очікується підключення EcoFlow", JS)
-        self.assertIn('Демо · API не підключено', HTML)
+        self.assertIn('API · очікуємо дані', HTML)
 
 
     def test_solar_footnote_removed_and_overview_details_closed_initially(self):

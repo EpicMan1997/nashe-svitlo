@@ -127,6 +127,9 @@ def main():
         print(f"  #{i}: {safe_model(item)} | {online_status(item.get('online'))}")
     print("Device names, serial numbers and credentials are deliberately hidden.")
     checked = success = 0
+    targets = {"DELTA 3 Plus", "RIVER 3 Plus", "RIVER 3", "PowerOcean", "RIVER 2"}
+    if os.getenv("ECOFLOW_PROBE_MODE") == "unsupported-only":
+        devices = [d for d in devices if isinstance(d, dict) and safe_model(d) in targets]
     for item in devices[:MAX_QUOTA_CHECKS]:
         sn = item.get("sn") if isinstance(item, dict) else None
         if not isinstance(sn, str) or not sn:
@@ -136,7 +139,13 @@ def main():
             quota = request_api(DEVICE_QUOTA, access, secret, {"sn": sn})
             if isinstance(quota, dict) and quota:
                 success += 1
-        except ProbeError:
+                print(f"  QUOTA {safe_model(item)}: available ({len(quota)} fields)")
+            else:
+                print(f"  QUOTA {safe_model(item)}: empty")
+        except ProbeError as exc:
+            # Error is already sanitized by request_api. Output only a numeric code.
+            code = re.search(r"(?:code |HTTP error )(\d{1,7})", str(exc))
+            print(f"  QUOTA {safe_model(item)}: rejected " + (code.group(1) if code else "unavailable"))
             continue
     print(f"Read-only quota available: {success}/{checked} checked devices.")
     if success == 0:

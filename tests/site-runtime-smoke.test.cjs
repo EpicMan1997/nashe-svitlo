@@ -91,21 +91,21 @@ test('inline main page JS syntax is valid', () => {
   for(const block of blocks) assert.doesNotThrow(() => new vm.Script(block[2]));
 });
 
-test('all four locations render and switch without DOM exceptions', () => {
+test('all four locations render without a gateway and never show demo readings', () => {
   const m = mount();
   assert.equal(m.root.dataset.location, 'dacha');
   assert.match(m.get('eco-devices').innerHTML, /DELTA Pro 3/);
-  assert.match(m.get('eco-devices').innerHTML, /Smart Extra Battery/);
-  assert.match(m.get('eco-status').innerHTML, /Демо/);
-  assert.equal(m.get('eco-count').textContent, '5');
-  assert.match(m.get('eco-capacity').textContent, /10.526|10 526|10 526|10 526/);
-  m.events['svitlo:location-change']({detail:{id:'home'}});
-  assert.match(m.get('eco-devices').innerHTML, /PowerOcean/);
-  assert.equal(m.get('eco-count').textContent, '1');
-  assert.match(m.get('eco-devices').innerHTML, /1 акумулятор · 5[\s\u00a0\u202f]000 Wh/);
-  m.events['svitlo:location-change']({detail:{id:'solovky'}});
-  assert.match(m.get('eco-devices').innerHTML, /\+ Додаткова батарея/);
+  assert.doesNotMatch(m.get('eco-devices').innerHTML, /DELTA 3 Plus|RIVER 3|84%/);
+  assert.match(m.get('eco-status').innerHTML, /очікуємо дані/);
   assert.equal(m.get('eco-count').textContent, '3');
+  assert.match(m.get('eco-capacity').textContent, /9[\s\u00a0\u202f]216/);
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  assert.match(m.get('eco-devices').innerHTML, /Немає станцій, доступних через API/);
+  assert.equal(m.get('eco-count').textContent, '0');
+  m.events['svitlo:location-change']({detail:{id:'solovky'}});
+  assert.match(m.get('eco-devices').innerHTML, /DELTA 2/);
+  assert.doesNotMatch(m.get('eco-devices').innerHTML, /RIVER 2/);
+  assert.equal(m.get('eco-count').textContent, '2');
   m.events['svitlo:location-change']({detail:{id:'naumenky'}});
   assert.match(m.get('eco-devices').innerHTML, /DELTA 2/);
   assert.equal(m.get('eco-count').textContent, '1');
@@ -132,7 +132,7 @@ test('partially connected live location shows unknown data, not sample values', 
   assert.equal(m.get('eco-demo-total').textContent, '40%');
   assert.equal(m.get('eco-location-charge-label').textContent, 'Середній заряд підключених');
   assert.match(m.get('eco-devices').innerHTML, /500 W/);
-  assert.match(m.get('eco-status').innerHTML, /1\/4/);
+  assert.match(m.get('eco-status').innerHTML, /1\/2/);
   // Simulate a disconnected gateway; stale numbers must never linger.
   mode = 'stale';
   online = {};
@@ -168,7 +168,7 @@ test('opened battery metric details are recalculated in place on new readings', 
   assert.doesNotMatch(detail.innerHTML, /NaN|undefined|null/);
 });
 
-test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassigned DELTA 2', () => {
+test('scheduled API snapshot excludes unsupported devices and shows 3 unassigned DELTA 2', () => {
   const map = {
     'dacha:dp3': { socPercent: 62, inputW: 0, outputW: 224, operation: 'discharging' },
     'unassigned:delta2-1': { socPercent: 23, inputW: 120, outputW: 0, operation: 'charging' },
@@ -184,17 +184,16 @@ test('scheduled API snapshot keeps unsupported devices gray and shows 3 unassign
     subscribe() {}, start() {}
   };
   const m = mount(live);
-  assert.match(m.get('eco-status').innerHTML, /API · 1\/4/);
+  assert.match(m.get('eco-status').innerHTML, /API · 1\/2/);
   assert.match(m.get('eco-devices').innerHTML, /62%/);
   assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
-  assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
+  assert.doesNotMatch(m.get('eco-devices').innerHTML, /DELTA 3 Plus|RIVER 3/);
   assert.match(m.get('eco-devices').innerHTML, /Локації не підтверджено/);
   assert.match(m.get('eco-devices').innerHTML, /DELTA 2 №3/);
   assert.match(m.get('eco-devices').innerHTML, /Заряд <b>0%<\/b>/);
   assert.equal(m.get('eco-demo-total').textContent, '62%');
   m.events['svitlo:location-change']({detail:{id:'home'}});
-  assert.match(m.get('eco-devices').innerHTML, /eco-api-unavailable/);
-  assert.match(m.get('eco-devices').innerHTML, /EcoFlow API повертає 1006/);
+  assert.match(m.get('eco-devices').innerHTML, /Немає станцій, доступних через API/);
   assert.equal(m.get('eco-demo-total').textContent, '—');
 });
 
@@ -218,7 +217,7 @@ test('expanded batteries have one rounded provider SOC and clearly doubled capac
   assert.match(markup, /Залишок: ≈/);
   assert.match(markup, /7[\s\u00a0\u202f]404 Wh/);
   assert.match(markup, /20 год 45 хв/);
-  assert.match(markup, /За графіком/);
+  assert.doesNotMatch(markup, /За графіком/); // no outage context in this fixture
   assert.match(markup, /class="eco-operation eco-operation-discharging"/);
   assert.match(markup, /Розряджається/);
   assert.match(markup, /8[\s\u00a0\u202f]192 Wh/);
@@ -248,9 +247,9 @@ test('partial monitor keeps physical capacity and pending devices grouped',()=>{
   availabilityFor:()=> 'unsupported',subscribe(){},start(){}};
  const m=mount(live);
  assert.match(m.get('eco-devices').innerHTML,/class="eco-pending"/);
- assert.match(m.get('eco-devices').innerHTML,/Підключення в процесі/);
- assert.match(m.get('eco-devices').innerHTML,/eco-autonomy-unknown/);
- assert.match(m.get('eco-data-coverage').textContent,/Моніторинг 1\/4 систем/);
+ assert.match(m.get('eco-devices').innerHTML,/Немає свіжих даних/);
+ assert.doesNotMatch(m.get('eco-devices').innerHTML,/eco-autonomy-unknown|DELTA 3 Plus|RIVER 3/);
+ assert.match(m.get('eco-data-coverage').textContent,/1\/2 станцій/);
 });
 
 test('Delta 2 router load of 0 W is not incorrectly called maintaining charge',()=>{
@@ -280,11 +279,12 @@ test('no-op EcoFlow outage update does not replace stable station markup', () =>
   assert.equal(el.innerHTML,original);
   m.events['svitlo:location-change']({detail:{id:'home'}});
   assert.equal(writes,1);
-  assert.match(el.innerHTML,/PowerOcean/);
+  assert.match(el.innerHTML,/Немає станцій, доступних через API/);
 });
 
 test('paired battery details start collapsed, can expand and survive location switches',()=>{
-  const m=mount();
+  const readings={'dacha:dp3':{socPercent:84,inputW:0,outputW:200,operation:'discharging'}};
+  const m=mount({summary:()=>({status:'published'}),reading:key=>readings[key]??null,statusFor:key=>readings[key]?'published':'waiting',subscribe(){},start(){}});
   const html=m.get('eco-devices').innerHTML;
   assert.match(html,/class="eco-card-details"/);
   assert.match(html,/data-eco-card="dacha:dp3"/);
@@ -314,4 +314,15 @@ test('static generator tab stays available only for dacha and has no calculator 
   assert.equal(m.get('eco-select-generator').hidden,true);
   assert.equal(m.get('eco-tab-generator').hidden,true);
   assert.equal(m.get('eco-tab-ecoflow').hidden,false);
+});
+
+test('charging without output hides capped runtime while preserving measured zero watts',()=>{
+ const readings={'dacha:dp3':{socPercent:89.4,inputW:1493,outputW:0,runtimeMinutes:5939,operation:'charging'}};
+ const m=mount({summary:()=>({status:'published'}),reading:key=>readings[key]??null,statusFor:key=>readings[key]?'published':'waiting',subscribe(){},start(){}});
+ const html=m.get('eco-devices').innerHTML;
+ assert.match(html,/89,4%/);
+ assert.match(html,/1493 W/);
+ assert.match(html,/>0 W</);
+ assert.doesNotMatch(html,/98 год|eco-autonomy-runtime|eco-autonomy-unknown/);
+ assert.equal(m.get('eco-overview-details').hidden,true);
 });

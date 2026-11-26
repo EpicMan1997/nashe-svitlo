@@ -46,7 +46,16 @@
   // gateway with validated, freshness-checked, location-scoped telemetry.
   const live = window.NasheSvitloEcoFlowLive || null;
   let inventory = demoInventory;
-  let liveMode = false;
+  let liveMode = true;
+  // Supported by our authenticated official API publisher. Keep expected cards
+  // on temporary failures, never include permanently unsupported inventory in totals.
+  const monitoredKeys = new Set(['dacha:dp3','dacha:d2','solovky:d2','naumenky:d2']);
+  function monitoredDevices(key, devices) {
+    const active = new Set(devices.filter(d => d.type !== 'battery' &&
+      (monitoredKeys.has(key+':'+d.id) || Number.isFinite(live?.reading(key+':'+d.id)?.socPercent)))
+      .map(d => d.id));
+    return devices.filter(d => active.has(d.id) || (d.type === 'battery' && active.has(d.parentId)));
+  }
   const fmtSoc = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 1 });
   const pctLabel = value => Number.isFinite(value) ? fmtSoc.format(value) + '%' : '—';
   const wattsLabel = value => Number.isFinite(value) ? value + ' W' : '—';
@@ -87,15 +96,11 @@
     return {state,inferred:false};
   }
   function applyReadings() {
-    const state = live?.summary()?.status || 'preview';
-    liveMode = state !== 'preview';
-    if (!liveMode) {
-      inventory = demoInventory;
-      return;
-    }
+    // Never render inventory sample values, including while transport initializes.
+    liveMode = true;
     inventory = Object.fromEntries(Object.entries(demoInventory).map(([key, place]) => [
-      key, { ...place, devices: place.devices.map(device => {
-        const value = live.reading(key + ':' + device.id);
+      key, { ...place, devices: monitoredDevices(key,place.devices).map(device => {
+        const value = live?.reading(key + ':' + device.id);
         const flow = operationFromReading(key + ':' + device.id, value);
         return {
           ...device,
@@ -109,7 +114,7 @@
           inferredOperation: flow.inferred,
           lowLoad: flow.lowLoad===true,
           estimated: value?.estimated === true,
-          availability: live.availabilityFor?.(key + ':' + device.id) || 'unavailable',
+          availability: live?.availabilityFor?.(key + ':' + device.id) || 'unavailable',
           // Unknown module SOC is never invented from a primary BMS value.
           modulePercentages: device.type === 'system' ? (value?.moduleSocPercent ?? []) : undefined
         };
@@ -121,14 +126,14 @@
     if (!element) return;
     const mode = live?.summary()?.status || 'preview';
     const labels = {
-      preview: 'Демо · API не підключено',
+      preview: 'API · очікуємо дані',
       connecting: 'Підключення…',
       live: 'Live · EcoFlow',
       published: 'EcoFlow API · за розкладом',
       stale: 'Дані застаріли',
       error: 'Налаштування відсутнє'
     };
-    const devicesHere = batterySystems(demoInventory[activeEcoLocation]?.devices || []);
+    const devicesHere = batterySystems(inventory[activeEcoLocation]?.devices || []);
     const liveHere = devicesHere.filter(device =>
       ['live','published'].includes(live?.statusFor(activeEcoLocation + ':' + device.id))).length;
     const stateHere = ['live','published'].includes(mode) && liveHere === 0 ? 'stale' : mode;
@@ -136,13 +141,13 @@
     element.classList.toggle('is-published', stateHere === 'published');
     element.classList.toggle('is-stale', stateHere === 'stale');
     element.title = mode === 'preview' ?
-      'Тестові показники, не реальна телеметрія EcoFlow' :
+      'Очікуємо реальні показники EcoFlow API' :
       mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
       mode === 'published' ? 'Реальні показники з EcoFlow API, публікація залежить від графіка GitHub Actions. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
     const at = live?.summary()?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
-    const nextStatusHtml = '<i aria-hidden="true"></i>' + (mode === 'published'
+    const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':mode === 'published'
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
@@ -242,6 +247,11 @@
       : 'Заряд невідомий';
   }
   function runtimeReading(d,capWh,pct) {
+    // Time-to-empty is not actionable while charging with zero/net positive load.
+    // 98 h 59 min is a capped provider reading, not a useful forecast.
+    if ((Number.isFinite(d.inputW)&&d.inputW>0&&(!Number.isFinite(d.outputW)||d.inputW>=d.outputW)) ||
+        (d.outputW===0&&!d.lowLoad&&d.operation!=='discharging') ||
+        d.runtimeMinutes>=5939) return {minutes:null,source:'Немає прогнозу'};
     if (Number.isFinite(d.runtimeMinutes)&&d.runtimeMinutes>0)
       return {minutes:d.runtimeMinutes,source:'Прогноз EcoFlow'};
     const estimate=Number.isFinite(d.outputW)&&d.outputW>0&&Number.isFinite(pct)
@@ -262,10 +272,11 @@
   }
   function autonomyCards(d,capWh,pct) {
     const runtime=runtimeReading(d,capWh,pct),comp=autonomyComparison(runtime);
-    return '<div class="eco-device-stat eco-autonomy-runtime"><span>За навантаженням</span>' +
+    if (!Number.isFinite(runtime.minutes)) return '';
+    return '<div class="eco-device-stat eco-autonomy-runtime"><span>Автономність</span>' +
       '<strong>'+timeText(runtime.minutes)+'</strong><small>'+runtime.source+'</small></div>' +
-      '<div class="eco-device-stat eco-autonomy eco-autonomy-'+comp.color+'"><span>За графіком</span>' +
-      '<strong>'+comp.value+'</strong><small>'+comp.hint+'</small></div>';
+      (comp.color==='unknown'?'':'<div class="eco-device-stat eco-autonomy eco-autonomy-'+comp.color+'"><span>За графіком</span>' +
+      '<strong>'+comp.value+'</strong><small>'+comp.hint+'</small></div>');
   }
   const powerSeen = new Map();
   function powerReading(d,kind) {
@@ -284,10 +295,10 @@
 
   function energyStats(d, capWh, pct) {
     const output = d.outputW;
-    return '<div class="eco-device-stats eco-common-stats">' +
-      '<div class="eco-device-stat"><span>Вхід</span>' + powerReading(d,'in') + '</div>' +
-      '<div class="eco-device-stat"><span>Вихід</span>' + powerReading(d,'out') + '</div>' +
-      autonomyCards(d,capWh,pct) + '</div>';
+    const stats=(Number.isFinite(d.inputW)?'<div class="eco-device-stat"><span>Вхід</span>' + powerReading(d,'in') + '</div>':'') +
+      (Number.isFinite(output)?'<div class="eco-device-stat"><span>Вихід</span>' + powerReading(d,'out') + '</div>':'') +
+      autonomyCards(d,capWh,pct);
+    return stats?'<div class="eco-device-stats eco-common-stats">'+stats+'</div>':'';
   }
 
   // The solar component is retained for later, but hidden until panels actually exist.
@@ -333,8 +344,8 @@
         '<span>Вихід <b>' + wattsLabel(reading?.outputW) + '</b></span></div>';
     }).join('');
     return '<section class="eco-unassigned" aria-label="DELTA 2 без прив’язки">' +
-      '<div class="eco-unassigned-header"><strong>Доступні через API · DELTA 2</strong>' +
-      '<span>Локації не підтверджено</span></div><p>Ці три станції передають реальні дані, але поки не зіставлені з локаціями. До середнього заряду локацій не включені.</p>' +
+      '<div class="eco-unassigned-header"><strong>DELTA 2 · без прив’язки</strong>' +
+      '<span>Локації не підтверджено</span></div>' +
       '<div class="eco-unassigned-list">' + rows + '</div></section>';
   }
 
@@ -440,7 +451,7 @@
     return active.join('') + (pending.length ?
       '<details class="eco-pending"' + (pendingExpanded.has(activeEcoLocation)?' open':'') +
       ' data-eco-pending="' + activeEcoLocation + '"><summary><span><strong>' +
-      (partialFailure ? 'Частина моніторингу недоступна' : 'Підключення в процесі') + '</strong>' +
+      (partialFailure ? 'Частина моніторингу недоступна' : 'Немає свіжих даних') + '</strong>' +
       '<small>' + pending.length + ' станцій без свіжих показників</small></span>' +
       '<span class="eco-pending-chevron" aria-hidden="true">⌄</span></summary>' +
       '<div class="eco-pending-list">' + pending.join('') + '</div></details>' : '');
@@ -657,8 +668,8 @@
     root.dataset.location = id;
     const empty = place.devices.length === 0;
     $('eco-select-generator').hidden = id !== 'dacha';
-    $('eco-location-summary').hidden = empty;
-    $('eco-overview-details').hidden = empty;
+    $('eco-location-summary').hidden = empty || systems.length < 2;
+    $('eco-overview-details').hidden = true;
     // Dacha has EcoFlow stations again; keep Generator as a separate selectable tab.
     if (!refreshOnly) selectBackupTab('ecoflow');
     $('eco-selected-location').textContent = place.name;
@@ -668,12 +679,11 @@
     const available=systems.filter(d=>Number.isFinite(d.pct));
     const coverage=$('eco-data-coverage');
     if (coverage) coverage.textContent=liveMode && available.length<systems.length
-      ? 'Моніторинг ' + available.length + '/' + systems.length + ' систем · ' +
-        niceWh(available.reduce((sum,d)=>sum+d.capacityWh,0)) + ' із ' + niceWh(totalWh) +
-        '. Заряд решти невідомий.'
-      : 'Моніторинг усіх систем';
+      ? available.length + '/' + systems.length + ' станцій · ' +
+        niceWh(available.reduce((sum,d)=>sum+d.capacityWh,0)) + ' із ' + niceWh(totalWh)
+      : niceWh(totalWh) + ' · ' + systems.length + ' станцій';
     const partial = liveMode && !allChargesKnown;
-    const averageLabel = partial ? 'Середній заряд підключених' : 'Середній заряд локації';
+    const averageLabel = partial ? 'Середній заряд підключених' : 'Середній заряд API-станцій';
     if ($('eco-location-charge-label')) $('eco-location-charge-label').textContent = averageLabel;
     if ($('eco-metric-charge-label')) $('eco-metric-charge-label').textContent = averageLabel;
     const hasEstimates = knownSystems.some(d => d.estimated === true);
@@ -692,7 +702,7 @@
       overallTrack.setAttribute('aria-valuenow', String(weighted));
       overallTrack.setAttribute('aria-valuetext', weighted + ' відсотків');
     }
-    const deviceMarkup = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>У цій локації немає EcoFlow</strong><span>Резервне живлення дачі забезпечує генератор. Його характеристики є в сусідній вкладці.</span></div>') +
+    const deviceMarkup = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>Немає станцій, доступних через API</strong></div>') +
       (id === 'dacha' ? unassignedSection() : '');
     // Keep DOM and open details intact when nothing visible has changed.
     if (!refreshOnly || id !== lastRenderedDeviceLocation || deviceMarkup !== lastRenderedDeviceMarkup) {
