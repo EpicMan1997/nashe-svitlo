@@ -75,8 +75,9 @@ test('legacy EcoFlow Admin controls are absent and generator is a static guide',
   assert.doesNotMatch(index, /id="ecoAdminToggle"|id="eco-admin-bulk"/);
   assert.doesNotMatch(eco, /setAdminMode|adminControls\(|powerOceanAdmin\(|renderBulkPanel\(/);
   assert.match(index, /GRETOR GRT-IG5500IE/);
-  assert.match(index, /5 кВт номінально/);
-  assert.match(index, /АВР і розетку 32 А/);
+  assert.match(index, /5 <small>кВт<\/small>/);
+  assert.match(index, /32 <small>А<\/small>/);
+  assert.match(index, /Ввід через АВР · заплановано/);
   assert.doesNotMatch(index, /Ручний; електро та пульт/);
   assert.match(index, /id="eco-generator-guide"/);
   assert.doesNotMatch(index, /id="eco-gen-|data-eco-gen-target|eco-generator-planner/);

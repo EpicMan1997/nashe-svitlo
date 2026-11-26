@@ -466,7 +466,7 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 @media(max-width:430px){.season-extra-kpis{gap:7px}}
 @media(max-width:700px){.season-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:430px){.season-panel{padding:12px}.season-location{padding:11px}.season-kpis{gap:7px}.season-kpi{padding:9px}.season-kpi strong{font-size:16px}}
-</style><link rel="stylesheet" href="./ecoflow.css?v=68">
+</style><link rel="stylesheet" href="./ecoflow.css?v=69">
 <div id="pullRefresh" class="pull-refresh" role="status" aria-live="polite"><span class="pull-refresh-icon" aria-hidden="true"></span><span id="pullRefreshText">Потягни вниз для оновлення</span></div><main><header><div class="location-shell"><h1><img class="head-icon" src="./favicon.svg" alt="" aria-hidden="true"><button class="location-button" id="locationButton" type="button" aria-expanded="false"><span id="locationLabel">Дача</span><span class="location-chevron" aria-hidden="true"></span></button></h1><div class="location-menu" id="locationMenu" hidden><button type="button" data-location="dacha">Дача <small class="location-group-hint" hidden></small></button><button type="button" data-location="home">Дім <small class="location-group-hint" hidden></small></button><button type="button" data-location="solovky">Соловки <small class="location-group-hint" hidden></small></button><button type="button" data-location="naumenky">Науменки <small class="location-group-hint" hidden></small></button></div></div><div class="clock-view">
   <div class="site-clock" id="clock" aria-label="Час у Києві">--:--:--</div>
   <div class="view-switch">
@@ -552,28 +552,24 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       <div class="eco-generator-header">
         <div><span class="eco-generator-kicker">Генератор · Дача</span>
           <h3>GRETOR GRT-IG5500IE</h3>
-          <p>5 кВт номінально · бензиновий інверторний</p>
+          <p>Бензиновий інверторний</p>
         </div>
       </div>
-      <section class="eco-generator-guide" id="eco-generator-guide" aria-labelledby="eco-generator-guide-title">
-        <h4 id="eco-generator-guide-title">Пам’ятка</h4>
-        <div class="eco-generator-guide-row">
-          <h5>Підключення</h5>
-          <p>Заплановано через АВР і розетку 32 А, щоб використовувати повну номінальну потужність генератора (5 кВт). Проводка та захист мають відповідати підключенню.</p>
+      <section class="eco-generator-guide" id="eco-generator-guide" aria-label="Пам’ятка генератора">
+        <div class="eco-generator-facts">
+          <div><strong>5 <small>кВт</small></strong><span>Номінальна потужність · сумарно</span></div>
+          <div><strong>32 <small>А</small></strong><span>Ввід через АВР · заплановано</span></div>
         </div>
-        <div class="eco-generator-guide-row">
-          <h5>Коли використовувати</h5>
-          <p>Під час тривалих відключень генератор живить будинок і одночасно заряджає EcoFlow. Після заряджання можна повернутися на EcoFlow.</p>
-        </div>
+        <div class="eco-generator-purpose">Будинок + заряджання EcoFlow</div>
         <div class="eco-generator-guide-row">
           <h5>Запуск</h5>
-          <p>Вручну, кнопкою або дистанційно з пульта. Усі три способи працюють.</p>
+          <div class="eco-generator-starts"><span>✓ Ручний</span><span>✓ Кнопка</span><span>✓ Пульт</span></div>
         </div>
         <div class="eco-generator-guide-row">
-          <h5>Вимкнення</h5>
-          <p>Дистанційне вимкнення поки не працює.</p>
+          <h5>Вимкнення з пульта</h5>
+          <span class="eco-generator-stop">Не працює</span>
         </div>
-        <p class="eco-generator-guide-note">Використовувати лише надворі. Не перевищувати 5 кВт сумарного навантаження будинку та заряджання EcoFlow.</p>
+        <p class="eco-generator-guide-note">Лише надворі · довгі відключення · ввід 32 А після монтажу та перевірки захисту</p>
       </section>
     </article>
   </div>
@@ -1329,4 +1325,4 @@ document.addEventListener('keydown',e=>{
   options[(options.indexOf(e.target)+(e.key==='ArrowDown'?1:options.length-1))%options.length].focus();
  }
 });
-$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;const expanded=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(expanded));document.querySelector('main > header')?.classList.toggle('location-menu-expanded',expanded);if(expanded)closeViewMenu()};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);window.addEventListener('resize',()=>{updateBoundaryLanes(now())});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow-live.js?v=68" defer></script><script src="./ecoflow.js?v=68" defer></script></html>
+$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;const expanded=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(expanded));document.querySelector('main > header')?.classList.toggle('location-menu-expanded',expanded);if(expanded)closeViewMenu()};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);window.addEventListener('resize',()=>{updateBoundaryLanes(now())});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow-live.js?v=69" defer></script><script src="./ecoflow.js?v=69" defer></script></html>

@@ -2177,14 +2177,20 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
   main>header .clock-view #viewMenuToggle{padding:5px 8px}
 }
 
-/* Static generator reference card */
+/* Compact static generator reference card */
 .eco-generator-compact{padding:18px 19px;border-color:#536478;background:#172439}
 .eco-generator-compact .eco-generator-header h3{font-size:clamp(20px,2.5vw,25px);margin:5px 0 3px}
 .eco-generator-compact .eco-generator-header p{font-size:12px;color:#b7c9dc}
-.eco-generator-guide{margin-top:18px}
-.eco-generator-guide h4{font-size:17px;color:#dceafa;margin:0 0 8px;font-weight:780}
-.eco-generator-guide-row{display:grid;grid-template-columns:minmax(100px,145px) minmax(0,1fr);gap:8px 18px;align-items:start;padding:13px 0;border-top:1px solid #35465c}
-.eco-generator-guide-row h5{margin:0;color:#f0f5fd;font-size:13px;line-height:1.55}
-.eco-generator-guide-row p{margin:0;color:#bdcee1;font-size:13px;line-height:1.55}
-.eco-generator-guide-note{margin:12px 0 0;padding:10px 12px;background:#253041;border-radius:8px;color:#c8d6e6;font-size:12px;line-height:1.5}
-@media(max-width:540px){.eco-generator-compact{padding:14px}.eco-generator-guide-row{grid-template-columns:minmax(0,1fr);gap:3px;padding:11px 0}}
+.eco-generator-guide{margin-top:15px}
+.eco-generator-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.eco-generator-facts>div{min-width:0;padding:13px 14px;border:1px solid #405671;border-radius:11px;background:#1e3047;display:flex;flex-direction:column;gap:4px}
+.eco-generator-facts strong{font-size:clamp(25px,4vw,34px);line-height:1.15;color:#f4f7fb;font-weight:850;font-variant-numeric:tabular-nums}
+.eco-generator-facts strong small{font-size:.57em;color:#bacfe2;font-weight:750}
+.eco-generator-facts>div>span{font-size:12px;line-height:1.4;color:#aec1d6}
+.eco-generator-purpose{font-size:14px;font-weight:750;color:#d9e7f5;padding:13px 0}
+.eco-generator-guide-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:7px 12px;padding:10px 0;border-top:1px solid #35465c}
+.eco-generator-guide-row h5{margin:0;color:#dbe7f4;font-size:12px;line-height:1.4}
+.eco-generator-starts{display:flex;flex-wrap:wrap;gap:7px 12px;color:#86efac;font-size:12px;font-weight:750}
+.eco-generator-stop{font-size:12px;font-weight:750;color:#f5cf88}
+.eco-generator-guide-note{margin:7px 0 0;color:#9db2c8;font-size:11px;line-height:1.4}
+@media(max-width:540px){.eco-generator-compact{padding:14px}.eco-generator-facts>div{padding:11px 10px}.eco-generator-facts>div>span{font-size:11px}}
