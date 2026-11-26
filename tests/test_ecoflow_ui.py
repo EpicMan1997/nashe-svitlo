@@ -418,7 +418,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('<section class="eco-overview-details" id="eco-overview-details" aria-labelledby="eco-overview-heading">', HTML)
         self.assertNotIn('<summary>Детальніше про батареї', HTML)
         self.assertIn('class="eco-overview-content"', HTML)
-        self.assertIn('role="progressbar" aria-label="Середній заряд локації"', HTML)
+        self.assertIn('role="progressbar" aria-label="Середній заряд API-станцій"', HTML)
         self.assertLess(HTML.index('id="eco-location-summary"'), HTML.index('id="eco-overview-heading"'))
         self.assertIn('.eco-location-summary[hidden],.eco-overview-details[hidden]', CSS)
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
@@ -428,7 +428,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
 
     def test_location_metrics_have_compact_labels_and_accessible_details(self):
         self.assertIn('Ємність локації', HTML)
-        self.assertIn('Середній заряд локації', HTML)
+        self.assertIn('Середній заряд API-станцій', HTML)
         self.assertIn('Кількість акумуляторів та станцій', HTML)
         self.assertNotIn('Сума номінальних ємностей батарей', HTML + JS)
         self.assertNotIn('Зважений за ємністю', HTML)
