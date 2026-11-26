@@ -1489,53 +1489,6 @@ main > nav.tabs > button[data-tab="tomorrow"]{justify-self:end;margin-right:0;ma
 .eco-generator-source{display:inline-block;margin-top:12px;color:#9dd5ef;font-size:12px}
 .eco-generator-source:hover{color:#d1edff}
 
-/* Generator recharging planner. All capacities are Wh, all electrical power is W. */
-.eco-generator-planner{margin-top:20px;border:1px solid #516a81;background:#182b3e;border-radius:15px;padding:17px;min-width:0}
-.eco-generator-plan-head{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px 18px}
-.eco-generator-plan-head h4{margin:0;font-size:19px;line-height:1.3;color:#f5f9ff}
-.eco-generator-plan-head p{margin:6px 0 0;color:#b6c7dc;font-size:12px;line-height:1.55;max-width:610px}
-.eco-generator-plan-efficiency{color:#edd4a7;font-size:11px;font-weight:700;border:1px solid #705b40;border-radius:8px;padding:6px 8px;flex:none}
-.eco-generator-plan-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0 17px}
-.eco-generator-result{min-width:0;padding:17px;background:#20374d;border:1px solid #49637d;border-radius:13px;display:flex;flex-direction:column;gap:8px}
-.eco-generator-result-primary{background:#234039;border-color:#558a7c}
-.eco-generator-result>span{color:#bed2e4;font-size:12px;font-weight:750}
-.eco-generator-result>strong{color:#f0faf9;font-size:clamp(22px,3vw,33px);font-variant-numeric:tabular-nums;line-height:1.1;font-weight:850}
-.eco-generator-result>div{color:#a9f3d8;font-size:13px;font-weight:750}
-.eco-generator-result>small{font-size:11px;color:#a6bed2;line-height:1.45}
-.eco-generator-plan-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
-.eco-generator-target,.eco-generator-slider{min-width:0;border:1px solid #3f5670;background:#1c3147;border-radius:11px;padding:12px;display:flex;flex-direction:column;justify-content:space-between;gap:12px}
-.eco-generator-target>span,.eco-generator-slider>span{color:#b9cde0;font-size:12px;font-weight:750;display:flex;justify-content:space-between;gap:9px;flex-wrap:wrap}
-.eco-generator-slider output{color:#f8e1ac;font-size:14px;font-weight:850;font-variant-numeric:tabular-nums}
-.eco-generator-slider input[type=range]{width:100%;margin:6px 0;accent-color:#d4a857;cursor:pointer}
-.eco-generator-target-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-.eco-generator-target-options button{cursor:pointer;padding:10px 4px;border:1px solid #5b6e82;border-radius:8px;background:#2b4157;color:#dce7f1;font:750 13px system-ui}
-.eco-generator-target-options button.is-active{background:#75552b;color:#fff2d6;border-color:#d9ac63}
-.eco-generator-target-options button:focus-visible,.eco-generator-soc-input input:focus-visible,.eco-generator-fuel input:focus-visible{outline:2px solid #facc15;outline-offset:2px}
-.eco-generator-budget{margin:13px 0;border-left:3px solid #6cac9d;background:#203a42;padding:10px 12px;font-size:12px;line-height:1.55;color:#c7ede2}
-.eco-generator-budget.is-limited{border-left-color:#f59e0b;background:#3b3328;color:#ffe3ac}
-.eco-generator-soc{border:1px solid #3b5672;border-radius:10px;margin:13px 0 0;background:#1b3045;overflow:hidden}
-.eco-generator-soc>summary{padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#cfe1f2;font-size:12px;font-weight:800;list-style:none}
-.eco-generator-soc>summary::-webkit-details-marker{display:none}
-.eco-generator-soc-chevron{width:8px;height:8px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .2s}
-.eco-generator-soc[open] .eco-generator-soc-chevron{transform:rotate(225deg)}
-.eco-generator-soc>p{margin:0;padding:0 14px 10px;font-size:11px;color:#b4c6d9;line-height:1.5}
-.eco-generator-soc-fields{padding:0 12px 12px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.eco-generator-soc-item{min-width:0;border:1px solid #3f5871;border-radius:9px;background:#223a51;padding:9px 10px;display:flex;justify-content:space-between;gap:8px;align-items:center}
-.eco-generator-soc-item>span:first-child{font-size:12px;font-weight:700;color:#e5f0f8;min-width:0;overflow-wrap:anywhere}
-.eco-generator-soc-item small{display:block;font-weight:600;font-size:10px;color:#94bad0;margin-top:3px}
-.eco-generator-soc-input{display:flex;flex:none;align-items:center;gap:5px;color:#b6d7ec}
-.eco-generator-soc-input input{width:59px;max-width:59px;font:750 14px system-ui;text-align:center;background:#142a3d;border:1px solid #57748c;border-radius:7px;padding:7px 3px;color:#fff}
-.eco-generator-fuel{margin-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;color:#c0d0e1;font-size:12px}
-.eco-generator-fuel>span{font-weight:700}
-.eco-generator-fuel small{font-weight:450;color:#95b1c8}
-.eco-generator-fuel input{width:143px;max-width:100%;padding:8px 10px;border:1px solid #566e85;border-radius:8px;background:#1b3045;color:#fff;font:650 13px system-ui}
-.eco-generator-fuel-result{margin:9px 0 0;padding:9px 11px;background:#2b3d3c;border-radius:9px;color:#cdf2db;font-size:12px}
-.eco-generator-fuel-result[hidden]{display:none!important}
-.eco-generator-caveat{margin:14px 0 0;font-size:11px;color:#a4b8cc;line-height:1.6}
-@media(max-width:780px){.eco-generator-plan-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.eco-generator-target{grid-column:1/-1}.eco-generator-target-options{max-width:360px}}
-@media(max-width:540px){.eco-generator-planner{padding:12px}.eco-generator-plan-results,.eco-generator-plan-controls,.eco-generator-soc-fields{grid-template-columns:minmax(0,1fr)}.eco-generator-target{grid-column:auto}.eco-generator-result{padding:14px}.eco-generator-soc-item>span:first-child{font-size:11px}.eco-generator-plan-head h4{font-size:17px}}
-
-
 /* Home: a prominent full-width PowerOcean with two station cards below it. */
 @media(min-width:781px){
   .eco-shell[data-location="home"] .eco-devices{
@@ -2224,45 +2177,14 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
   main>header .clock-view #viewMenuToggle{padding:5px 8px}
 }
 
-/* v66: generator = compact charging calculator, not an equipment specification sheet. */
+/* Static generator reference card */
 .eco-generator-compact{padding:18px 19px;border-color:#536478;background:#172439}
 .eco-generator-compact .eco-generator-header h3{font-size:clamp(20px,2.5vw,25px);margin:5px 0 3px}
 .eco-generator-compact .eco-generator-header p{font-size:12px;color:#b7c9dc}
-.eco-generator-compact .eco-generator-planner{margin-top:15px;padding:0;border:0;background:transparent}
-.eco-generator-compact .eco-generator-plan-head h4{font-size:17px;color:#dceafa;font-weight:780}
-.eco-generator-compact .eco-generator-plan-results{margin:12px 0;gap:9px;grid-template-columns:repeat(2,minmax(0,1fr))}
-.eco-generator-compact .eco-generator-result{gap:6px;padding:15px 16px;background:#1c3048;border-color:#405c78}
-.eco-generator-compact .eco-generator-result-primary{background:#1c3935;border-color:#417966}
-.eco-generator-compact .eco-generator-result>span{font-size:12px}
-.eco-generator-compact .eco-generator-result>strong{font-size:clamp(18px,2.7vw,29px);line-height:1.18;overflow-wrap:anywhere}
-.eco-generator-compact .eco-generator-result>div{font-size:12px;line-height:1.4}
-.eco-generator-compact .eco-generator-result.is-missing{background:#202d3f;border-color:#42546b}
-.eco-generator-compact .eco-generator-result.is-missing>strong{color:#becbdb;font-size:clamp(17px,2.2vw,24px)}
-.eco-generator-compact .eco-generator-result.is-missing>div{color:#a9bfd6}
-.eco-generator-compact .eco-generator-plan-controls{grid-template-columns:minmax(220px,.9fr) minmax(0,1.5fr);gap:9px;align-items:stretch}
-.eco-generator-compact .eco-generator-target,.eco-generator-compact .eco-generator-slider{padding:11px 13px;gap:9px}
-.eco-generator-compact .eco-generator-budget{margin:10px 0 0;background:transparent;border-left:2px solid #4e867b;padding:6px 0 6px 10px;color:#bbd8d1;font-size:11px}
-.eco-generator-compact .eco-generator-budget.is-limited{background:transparent;color:#ffd49b;border-left-color:#f59e0b}
-.eco-generator-compact .eco-generator-soc{margin-top:12px}
-.eco-generator-compact .eco-generator-soc>summary,.eco-generator-compact .eco-generator-options>summary{min-height:43px;font-size:12px}
-.eco-generator-compact .eco-generator-soc summary small{display:inline;color:#e7c078;background:transparent;font-size:11px;margin-left:4px;padding:0}
-.eco-generator-options{border:1px solid #3b5672;border-radius:10px;background:#1b3045;margin-top:9px;overflow:hidden}
-.eco-generator-options>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;list-style:none;cursor:pointer;color:#cfe1f2;font-weight:750}
-.eco-generator-options>summary::-webkit-details-marker{display:none}
-.eco-generator-options[open] .eco-generator-soc-chevron{transform:rotate(225deg)}
-.eco-generator-options-body{display:grid;gap:10px;padding:0 13px 14px}
-.eco-generator-options-body .eco-generator-slider{background:#213a52}
-.eco-generator-options-body .eco-generator-fuel{margin:0}
-.eco-generator-options-body .eco-generator-fuel-result{margin:0}
-.eco-generator-options-body .eco-generator-caveat{margin:0;padding-top:4px;line-height:1.5;color:#98adc6}
-.eco-generator-options-body .eco-generator-source{margin:0;justify-self:start}
-.eco-generator-compact .eco-generator-soc>summary:focus-visible,.eco-generator-options>summary:focus-visible{outline:2px solid #facc15;outline-offset:-2px}
-@media(max-width:600px){
-  .eco-generator-compact{padding:12px}
-  .eco-generator-compact .eco-generator-header h3{font-size:20px}
-  .eco-generator-compact .eco-generator-plan-results{grid-template-columns:minmax(0,1fr)}
-  .eco-generator-compact .eco-generator-result{padding:12px 13px}
-  .eco-generator-compact .eco-generator-plan-controls{grid-template-columns:minmax(0,1fr);gap:8px}
-  .eco-generator-compact .eco-generator-target-options{max-width:none}
-  .eco-generator-compact .eco-generator-target,.eco-generator-compact .eco-generator-slider{padding:10px 12px}
-}
+.eco-generator-guide{margin-top:18px}
+.eco-generator-guide h4{font-size:17px;color:#dceafa;margin:0 0 8px;font-weight:780}
+.eco-generator-guide-row{display:grid;grid-template-columns:minmax(100px,145px) minmax(0,1fr);gap:8px 18px;align-items:start;padding:13px 0;border-top:1px solid #35465c}
+.eco-generator-guide-row h5{margin:0;color:#f0f5fd;font-size:13px;line-height:1.55}
+.eco-generator-guide-row p{margin:0;color:#bdcee1;font-size:13px;line-height:1.55}
+.eco-generator-guide-note{margin:12px 0 0;padding:10px 12px;background:#253041;border-radius:8px;color:#c8d6e6;font-size:12px;line-height:1.5}
+@media(max-width:540px){.eco-generator-compact{padding:14px}.eco-generator-guide-row{grid-template-columns:minmax(0,1fr);gap:3px;padding:11px 0}}

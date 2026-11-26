@@ -466,7 +466,7 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 @media(max-width:430px){.season-extra-kpis{gap:7px}}
 @media(max-width:700px){.season-grid{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:430px){.season-panel{padding:12px}.season-location{padding:11px}.season-kpis{gap:7px}.season-kpi{padding:9px}.season-kpi strong{font-size:16px}}
-</style><link rel="stylesheet" href="./ecoflow.css?v=66">
+</style><link rel="stylesheet" href="./ecoflow.css?v=68">
 <div id="pullRefresh" class="pull-refresh" role="status" aria-live="polite"><span class="pull-refresh-icon" aria-hidden="true"></span><span id="pullRefreshText">Потягни вниз для оновлення</span></div><main><header><div class="location-shell"><h1><img class="head-icon" src="./favicon.svg" alt="" aria-hidden="true"><button class="location-button" id="locationButton" type="button" aria-expanded="false"><span id="locationLabel">Дача</span><span class="location-chevron" aria-hidden="true"></span></button></h1><div class="location-menu" id="locationMenu" hidden><button type="button" data-location="dacha">Дача <small class="location-group-hint" hidden></small></button><button type="button" data-location="home">Дім <small class="location-group-hint" hidden></small></button><button type="button" data-location="solovky">Соловки <small class="location-group-hint" hidden></small></button><button type="button" data-location="naumenky">Науменки <small class="location-group-hint" hidden></small></button></div></div><div class="clock-view">
   <div class="site-clock" id="clock" aria-label="Час у Києві">--:--:--</div>
   <div class="view-switch">
@@ -552,56 +552,29 @@ h1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
       <div class="eco-generator-header">
         <div><span class="eco-generator-kicker">Генератор · Дача</span>
           <h3>GRETOR GRT-IG5500IE</h3>
-          <p>5 кВт номінально · бензин · підключення 16 A</p>
+          <p>5 кВт номінально · бензиновий інверторний</p>
         </div>
       </div>
-      <section class="eco-generator-planner" id="eco-generator-planner" aria-labelledby="eco-generator-plan-title">
-        <div class="eco-generator-plan-head"><h4 id="eco-generator-plan-title">Розрахунок заряджання EcoFlow</h4></div>
-        <div class="eco-generator-plan-results" aria-live="polite">
-          <div class="eco-generator-result eco-generator-result-primary" id="eco-gen-dp3-result">
-            <span>DELTA Pro 3 + Smart Extra Battery</span>
-            <strong id="eco-gen-dp3-time">—</strong>
-            <div id="eco-gen-dp3-energy">—</div>
-          </div>
-          <div class="eco-generator-result eco-generator-result-secondary" id="eco-gen-all-result">
-            <span>Усі EcoFlow на Дачі</span>
-            <strong id="eco-gen-all-time">—</strong>
-            <div id="eco-gen-all-energy">—</div>
-          </div>
+      <section class="eco-generator-guide" id="eco-generator-guide" aria-labelledby="eco-generator-guide-title">
+        <h4 id="eco-generator-guide-title">Пам’ятка</h4>
+        <div class="eco-generator-guide-row">
+          <h5>Підключення</h5>
+          <p>Заплановано через АВР і розетку 32 А, щоб використовувати повну номінальну потужність генератора (5 кВт). Проводка та захист мають відповідати підключенню.</p>
         </div>
-        <div class="eco-generator-plan-controls">
-          <div class="eco-generator-target">
-            <span>Зарядити до</span>
-            <div class="eco-generator-target-options" role="group" aria-label="Цільовий рівень заряду">
-              <button type="button" data-eco-gen-target="80" aria-pressed="false">80%</button>
-              <button type="button" data-eco-gen-target="90" aria-pressed="false">90%</button>
-              <button type="button" data-eco-gen-target="100" aria-pressed="true" class="is-active">100%</button>
-            </div>
-          </div>
-          <label class="eco-generator-slider"><span>Потужність заряджання <output id="eco-gen-charge-value">2 500 W</output></span>
-            <input type="range" id="eco-gen-charge-w" min="400" max="4000" step="100" value="2500" aria-label="Потужність заряджання EcoFlow в W"></label>
+        <div class="eco-generator-guide-row">
+          <h5>Коли використовувати</h5>
+          <p>Під час тривалих відключень генератор живить будинок і одночасно заряджає EcoFlow. Після заряджання можна повернутися на EcoFlow.</p>
         </div>
-        <div class="eco-generator-budget" id="eco-gen-budget" role="status" aria-live="polite"></div>
-        <details class="eco-generator-soc">
-          <summary><span>Уточнити заряд станцій <small id="eco-gen-soc-hint"></small></span>
-            <span class="eco-generator-soc-chevron" aria-hidden="true"></span></summary>
-          <p>Для станцій без показників API введи заряд із застосунку EcoFlow.</p>
-          <div class="eco-generator-soc-fields" id="eco-gen-soc-fields"></div>
-        </details>
-        <details class="eco-generator-options">
-          <summary>Додаткові налаштування <span class="eco-generator-soc-chevron" aria-hidden="true"></span></summary>
-          <div class="eco-generator-options-body">
-            <label class="eco-generator-slider"><span>Інші прилади <output id="eco-gen-house-value">150 W</output></span>
-              <input type="range" id="eco-gen-house-w" min="0" max="3000" step="50" value="150" aria-label="Потужність інших приладів від генератора в W"></label>
-            <label class="eco-generator-fuel"><span>Витрата бензину, л/год</span>
-              <input type="number" id="eco-gen-fuel" min="0.1" max="10" step="0.1" inputmode="decimal" placeholder="Якщо відома"></label>
-            <div class="eco-generator-fuel-result" id="eco-gen-fuel-result" hidden></div>
-            <p class="eco-generator-caveat">Оцінка за ККД заряджання 85%. Час наприкінці заряджання може збільшуватися. Для поточного підключення 16 A ліміт до 3 680 W сумарно. Вихід 32 A можна використовувати лише з відповідною проводкою та захистом.</p>
-            <a class="eco-generator-source" href="https://sadmarket.kiev.ua/henerator-benzynovyi-invertornyi-gretor-grt-ig5500ie/" target="_blank" rel="noopener noreferrer">Характеристики генератора</a>
-          </div>
-        </details>
+        <div class="eco-generator-guide-row">
+          <h5>Запуск</h5>
+          <p>Вручну, кнопкою або дистанційно з пульта. Усі три способи працюють.</p>
+        </div>
+        <div class="eco-generator-guide-row">
+          <h5>Вимкнення</h5>
+          <p>Дистанційне вимкнення поки не працює.</p>
+        </div>
+        <p class="eco-generator-guide-note">Використовувати лише надворі. Не перевищувати 5 кВт сумарного навантаження будинку та заряджання EcoFlow.</p>
       </section>
-
     </article>
   </div>
 </section>
@@ -1356,4 +1329,4 @@ document.addEventListener('keydown',e=>{
   options[(options.indexOf(e.target)+(e.key==='ArrowDown'?1:options.length-1))%options.length].focus();
  }
 });
-$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;const expanded=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(expanded));document.querySelector('main > header')?.classList.toggle('location-menu-expanded',expanded);if(expanded)closeViewMenu()};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);window.addEventListener('resize',()=>{updateBoundaryLanes(now())});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow-live.js?v=66" defer></script><script src="./ecoflow.js?v=66" defer></script></html>
+$('locationButton').onclick=()=>{const menu=$('locationMenu');menu.hidden=!menu.hidden;const expanded=!menu.hidden;$('locationButton').setAttribute('aria-expanded',String(expanded));document.querySelector('main > header')?.classList.toggle('location-menu-expanded',expanded);if(expanded)closeViewMenu()};document.querySelectorAll('[data-location]').forEach(b=>b.onclick=()=>selectLocation(b.dataset.location));document.addEventListener('click',e=>{if(!e.target.closest('.location-shell'))closeLocationMenu()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLocationMenu()});const restored=remembered('dubechnya-selected-location');if(['dacha','home','solovky','naumenky'].includes(restored))locationId=restored;document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;if(tab==='tomorrow')markTomorrowSeen();paint();events()});dayShown=now().iso;if(remembered('nashe-svitlo-active-view')==='statistics')switchSiteView('statistics');tick();reload();installPullToRefresh();installDailyCounterTooltip();installMetricInfoTooltip();setInterval(tick,1000);setInterval(reload,15000);window.addEventListener('resize',()=>{updateBoundaryLanes(now())});document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){reload()}else{remember('dubechnya-selected-location',locationId)}});window.addEventListener('pagehide',()=>remember('dubechnya-selected-location',locationId));if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(e=>console.warn('Offline shell unavailable',e))}})();</script><script src="./ecoflow-live.js?v=68" defer></script><script src="./ecoflow.js?v=68" defer></script></html>

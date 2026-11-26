@@ -71,14 +71,16 @@ function mount(live = null) {
   return {get, events:windowEvents, root};
 }
 
-test('legacy EcoFlow Admin controls are absent while generator planner remains', () => {
+test('legacy EcoFlow Admin controls are absent and generator is a static guide', () => {
   assert.doesNotMatch(index, /id="ecoAdminToggle"|id="eco-admin-bulk"/);
   assert.doesNotMatch(eco, /setAdminMode|adminControls\(|powerOceanAdmin\(|renderBulkPanel\(/);
   assert.match(index, /GRETOR GRT-IG5500IE/);
   assert.match(index, /5 кВт номінально/);
-  assert.match(index, /підключення 16 A/);
+  assert.match(index, /АВР і розетку 32 А/);
   assert.doesNotMatch(index, /Ручний; електро та пульт/);
-  assert.match(index, /id="eco-generator-planner"/);
+  assert.match(index, /id="eco-generator-guide"/);
+  assert.doesNotMatch(index, /id="eco-gen-|data-eco-gen-target|eco-generator-planner/);
+  assert.doesNotMatch(eco, /renderGeneratorPlanner|generatorPlan/);
 });
 
 test('inline main page JS syntax is valid', () => {
@@ -301,33 +303,14 @@ test('paired battery details start collapsed, can expand and survive location sw
   assert.doesNotMatch(m.get('eco-devices').innerHTML,/data-eco-card="dacha:dp3" open/);
 });
 
-test('compact generator displays available DP3 estimate but not fake whole-location time', () => {
-  const readings={'dacha:dp3': {socPercent:55,inputW:0,outputW:140,operation:'discharging'}};
-  const live={
-    summary:()=>({status:'published',lastFrameMs:Date.now(),unassigned:[]}),
-    statusFor:key=>readings[key]?'published':'waiting',
-    reading:key=>readings[key]||null,
-    availabilityFor:key=>readings[key]?'readable':'api_error',
-    subscribe(){},start(){}
-  };
-  const m=mount(live);
-  const main=m.get('eco-gen-dp3-time').textContent;
-  assert.match(main,/≈/);
-  assert.doesNotMatch(main,/Немає даних/);
-  assert.equal(m.get('eco-gen-all-time').textContent,'Потрібні дані');
-  assert.match(m.get('eco-gen-all-energy').textContent,/3 із 4 систем/);
-  assert.match(m.get('eco-gen-soc-hint').textContent,/3 без даних/);
-  assert.equal(m.get('eco-gen-all-result').classList.contains('is-missing'),true);
-  assert.equal(m.get('eco-gen-dp3-result').classList.contains('is-missing'),false);
-});
-
-test('compact generator retains target and safe input limit calculations', () => {
+test('static generator tab stays available only for dacha and has no calculator controls', () => {
   const m=mount();
-  assert.match(m.get('eco-gen-budget').textContent,/3[\s\u00a0\u202f]680 W сумарно/);
-  const target={dataset:{ecoGenTarget:'80'},closest(){return this;}};
-  m.root.listeners.click({target});
-  assert.equal(m.get('eco-gen-dp3-time').textContent,'Досягнуто цілі');
-  m.root.listeners.input({target:{id:'eco-gen-house-w',value:'3000'}});
-  assert.match(m.get('eco-gen-budget').textContent,/На заряд: 680 W/);
-  assert.match(m.get('eco-gen-budget').textContent,/потужність обмежено автоматично/);
+  assert.equal(m.get('eco-select-generator').hidden,false);
+  m.get('eco-select-generator').listeners.click();
+  assert.equal(m.get('eco-tab-generator').hidden,false);
+  assert.equal(m.get('eco-tab-ecoflow').hidden,true);
+  m.events['svitlo:location-change']({detail:{id:'home'}});
+  assert.equal(m.get('eco-select-generator').hidden,true);
+  assert.equal(m.get('eco-tab-generator').hidden,true);
+  assert.equal(m.get('eco-tab-ecoflow').hidden,false);
 });
