@@ -533,7 +533,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
         self.assertIn("if (!refreshOnly) clearMetric();", JS)
         self.assertNotIn("eco-overview-details').open", JS)
-        self.assertIn("У цій локації немає EcoFlow", JS)
+        self.assertIn("Немає станцій, доступних через API", JS)
         self.assertIn(".eco-empty-state", CSS)
 
 
