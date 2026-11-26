@@ -1052,10 +1052,10 @@ function currentOutageEnd(outages,minuteNow){
  return activeEnd;
 }
 function nextOutageStart(outages,minuteNow){
- // Find the next planned outage, or stop at the end of today's schedule.
+ // Find the next planned outage; 1440 means no later outage in this day.
  return outages.reduce((next,[from,to])=>{
   const start=minute(from),end=minute(to);
-  return Number.isFinite(start)&&Number.isFinite(end)&&start>minuteNow&&end>start&&end<=1440
+  return Number.isFinite(start)&&Number.isFinite(end)&&start>=0&&start>minuteNow&&end>start&&end<=1440
    ?Math.min(next,start):next;
  },1440);
 }
@@ -1092,12 +1092,23 @@ function updateCurrentPower(n){
  const powerLabel=$('powerNowLabel');if(powerLabel.textContent!==nextLabel)powerLabel.textContent=nextLabel;
  const remaining=$('powerRemaining');
  if(remaining){
-  const boundary=canPredict?(isOut?outageEnd:nextOutageStart(outages,minuteNow)):null;
+  let boundary=canPredict?(isOut?outageEnd:nextOutageStart(outages,minuteNow)):null;
+  let horizon='';
+  if(canPredict&&!isOut&&boundary===1440){
+   const next=activeLocation()?.days?.[tomorrow(n.iso)];
+   // A building-specific plan must not silently become a generic queue forecast.
+   // For an unverified queue only continue the same explicitly labeled forecast.
+   const confirmedNext=!buildingPlan&&currentStatus(next)==='normal'&&
+    Boolean(next.address_conflict)===queuePlan&&Array.isArray(next.outages);
+   const nextStart=confirmedNext?nextOutageStart(next.outages,-1):1440;
+   if(confirmedNext&&nextStart<1440)boundary=1440+nextStart;
+   else horizon=confirmedNext&&next.outages.length===0?'до кінця завтра':'до кінця дня';
+  }
   const showRemaining=boundary!==null;
   if(remaining.hidden===showRemaining)remaining.hidden=!showRemaining;
   const seconds=showRemaining?Math.max(1,Math.ceil(boundary*60-(n.h*3600+n.m*60+n.s))):0;
   const prefix=emergencyOn?'За планом ще ':'Ще ';
-  const nextRemaining=showRemaining?prefix+remainingOutageLabel(seconds)+(!isOut&&boundary===1440?' (до 24:00)':''):'';
+  const nextRemaining=!showRemaining?'':horizon?(emergencyOn?'За планом '+horizon:horizon[0].toUpperCase()+horizon.slice(1)):prefix+remainingOutageLabel(seconds);
   if(remaining.textContent!==nextRemaining)remaining.textContent=nextRemaining;
  }
 }

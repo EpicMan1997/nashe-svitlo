@@ -302,7 +302,7 @@ test('right-hand power countdown switches between light and outage at exact boun
  check(7,30,0,'power-off','Ще 2 год 30 хв');
  check(9,59,59,'power-off','Ще 1 с');
  check(10,0,0,'power-on','Ще 8 год');
- check(20,0,0,'power-on','Ще 4 год (до 24:00)');
+ check(20,0,0,'power-on','До кінця дня');
 });
 
 test('power countdown is hidden for stale schedules and labeled as planned during emergencies',async()=>{
@@ -354,4 +354,42 @@ test('unverified home queue shows a clearly labeled queue forecast, not actual v
  r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h:6,m:3,s:0});
  assert.equal(r.node('powerNowLabel').textContent,'За чергою: зі світлом');
  assert.equal(r.node('powerRemaining').textContent,'Ще 1 год 27 хв');
+});
+
+test('green countdown continues to the first confirmed outage tomorrow for the selected location',async()=>{
+ const r=runDashboard(payload=>{
+  const date=payload.tomorrow_date;
+  payload.locations.dacha.days[date]={date,status:'normal',outages:[['06:00','08:00'],['01:30','03:00']]};
+  payload.locations.solovky.days[date]={date,status:'normal',outages:[['00:00','02:00']]};
+  payload.locations.naumenky.days[date]={date,status:'normal',outages:[]};
+ });
+ await new Promise(setImmediate);
+ const tick=(h,m,s=0)=>r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h,m,s});
+ tick(21,17);
+ assert.equal(r.node('powerRemaining').textContent,'Ще 4 год 13 хв');
+ tick(19,0);
+ assert.equal(r.node('powerRemaining').textContent,'Ще 1 год');
+ r.locations[2].onclick();
+ tick(21,17);
+ assert.equal(r.node('powerRemaining').textContent,'Ще 2 год 43 хв');
+ r.locations[3].onclick();
+ tick(21,17);
+ assert.equal(r.node('powerRemaining').textContent,'До кінця завтра');
+});
+test('green countdown never extends through preliminary, stale or mismatched tomorrow schedules',async()=>{
+ const r=runDashboard();
+ await new Promise(setImmediate);
+ const date=r.payload.tomorrow_date;
+ const tick=()=>r.context.window.__testUpdateCurrentPower({iso:r.payload.today_date,h:21,m:17,s:0});
+ for(const status of ['unknown','preliminary','stale','suspended']){
+  r.payload.locations.dacha.days[date]={date,status,outages:[['01:30','03:00']]};
+  tick();
+  assert.equal(r.node('powerRemaining').textContent,'До кінця дня');
+ }
+ r.payload.locations.dacha.days[date]={date,status:'normal',address_conflict:true,outages:[['01:30','03:00']]};
+ tick();
+ assert.equal(r.node('powerRemaining').textContent,'До кінця дня');
+ r.payload.locations.dacha.days[date]={date,status:'normal',outages:[['01:30','03:00']]};
+ tick();
+ assert.equal(r.node('powerRemaining').textContent,'Ще 4 год 13 хв');
 });
