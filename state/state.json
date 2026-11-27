@@ -377,9 +377,9 @@
       },
       "source_reports": {
         "GPV": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "data_seen_at": "2026-11-27T22:10+02:00",
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
           "outages": [
             [
               "00:30",
@@ -425,9 +425,9 @@
           "url": "https://gpv-ua.com/kyivska-oblast"
         },
         "Карта світла": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "data_seen_at": "2026-11-27T22:10+02:00",
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
           "outages": [
             [
               "00:30",
@@ -474,9 +474,9 @@
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "data_seen_at": "2026-11-27T22:10+02:00",
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
           "outages": [
             [
               "00:30",
@@ -492,7 +492,7 @@
             ]
           ],
           "partial": [],
-          "provider_updated_label": "27.11.2026 15:50",
+          "provider_updated_label": "27.11.2026 22:05",
           "recent_checks": [
             "parsed",
             "parsed",
@@ -534,43 +534,96 @@
     },
     "2026-11-28": {
       "date": "2026-11-28",
-      "detail": "Графік ще не опубліковано",
-      "outages": [],
-      "source_observations": {},
+      "detail": "Зіставлено незалежні джерела",
+      "outages": [
+        [
+          "10:00",
+          "15:00"
+        ],
+        [
+          "19:00",
+          "22:00"
+        ]
+      ],
+      "source_observations": {
+        "GPV": {
+          "fingerprint": "[[\"10:00\", \"15:00\"], [\"19:00\", \"22:00\"]]",
+          "first_seen": "2026-11-27T22:20+02:00"
+        },
+        "Карта світла": {
+          "fingerprint": "[[\"10:00\", \"15:00\"], [\"19:00\", \"22:00\"]]",
+          "first_seen": "2026-11-27T22:20+02:00"
+        },
+        "Київщина.info": {
+          "fingerprint": "[[\"10:00\", \"15:00\"], [\"19:00\", \"22:00\"]]",
+          "first_seen": "2026-11-27T22:20+02:00"
+        }
+      },
       "source_reports": {
         "GPV": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "fetch_failed": false,
-          "outages": null,
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
+          "outages": [
+            [
+              "10:00",
+              "15:00"
+            ],
+            [
+              "19:00",
+              "22:00"
+            ]
+          ],
           "partial": [],
-          "status": "unpublished",
+          "status": "match",
           "url": "https://gpv-ua.com/kyivska-oblast"
         },
         "Карта світла": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "fetch_failed": false,
-          "outages": null,
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
+          "outages": [
+            [
+              "10:00",
+              "15:00"
+            ],
+            [
+              "19:00",
+              "22:00"
+            ]
+          ],
           "partial": [],
           "provider_updated_label": "27.11 12:26",
-          "status": "unpublished",
+          "status": "match",
           "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
         },
         "Київщина.info": {
-          "attempted_at": "2026-11-27T22:10+02:00",
-          "checked_at": "2026-11-27T22:10+02:00",
-          "fetch_failed": false,
-          "outages": null,
+          "attempted_at": "2026-11-27T22:20+02:00",
+          "checked_at": "2026-11-27T22:20+02:00",
+          "data_seen_at": "2026-11-27T22:20+02:00",
+          "outages": [
+            [
+              "10:00",
+              "15:00"
+            ],
+            [
+              "19:00",
+              "22:00"
+            ]
+          ],
           "partial": [],
-          "provider_updated_label": "27.11.2026 15:50",
-          "status": "unreadable",
+          "provider_updated_label": "27.11.2026 22:05",
+          "status": "match",
           "url": "https://kyivshchyna.info/hrafik-vidkliuchen-svitla-kyivska-oblast/"
         }
       },
       "source_updated": "",
-      "sources": [],
-      "status": "unknown",
+      "sources": [
+        "GPV",
+        "Карта світла",
+        "Київщина.info"
+      ],
+      "status": "normal",
       "url": "https://mapasvitla.com.ua/kyivska-oblast/dtek-krem/3.1"
     }
   },
@@ -944,9 +997,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -988,9 +1041,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -1033,9 +1086,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -1114,9 +1167,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -1128,9 +1181,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -1143,9 +1196,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -1912,9 +1965,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "02:30",
@@ -1956,9 +2009,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "02:30",
@@ -2001,9 +2054,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "02:30",
@@ -2085,9 +2138,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "09:00",
@@ -2103,9 +2156,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "09:00",
@@ -2122,9 +2175,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "09:00",
@@ -2898,9 +2951,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -2942,9 +2995,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -2987,9 +3040,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "07:30",
@@ -3067,9 +3120,9 @@
           },
           "source_reports": {
             "GPV": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -3081,9 +3134,9 @@
               "url": "https://gpv-ua.com/kyiv"
             },
             "Powercut": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -3096,9 +3149,9 @@
               "url": "https://powercut.io/ua/kyiv/"
             },
             "Карта світла": {
-              "attempted_at": "2026-11-27T22:10+02:00",
-              "checked_at": "2026-11-27T22:10+02:00",
-              "data_seen_at": "2026-11-27T22:10+02:00",
+              "attempted_at": "2026-11-27T22:20+02:00",
+              "checked_at": "2026-11-27T22:20+02:00",
+              "data_seen_at": "2026-11-27T22:20+02:00",
               "outages": [
                 [
                   "13:30",
@@ -3473,6 +3526,29 @@
     }
   },
   "logs": [
+    {
+      "after": [
+        [
+          "10:00",
+          "15:00"
+        ],
+        [
+          "19:00",
+          "22:00"
+        ]
+      ],
+      "at": "2026-11-27T22:20+02:00",
+      "before": null,
+      "date": "2026-11-28",
+      "first_observed_source": null,
+      "kind": "published",
+      "message": "Опубліковано графік: 10:00–15:00, 19:00–22:00",
+      "sources_confirmed": [
+        "GPV",
+        "Карта світла",
+        "Київщина.info"
+      ]
+    },
     {
       "after": [
         [
