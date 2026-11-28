@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
-import worker,{signedHeaders,normalize,TelemetryGate} from './worker.mjs';
+import worker,{signedHeaders,normalize,TelemetryGate,requestApi} from './worker.mjs';
 test('HMAC matches existing Python signing order',async()=>{
  const h=await signedHeaders('access','secret',{sn:'test-device'},'123456','1234567890');
  assert.equal(h.sign,createHmac('sha256','secret').update('sn=test-device&accessKey=access&nonce=123456&timestamp=1234567890').digest('hex'));
@@ -30,4 +30,25 @@ test('root endpoint identifies the deployed gateway without contacting EcoFlow',
  assert.equal(response.status,200);
  assert.deepEqual(await response.json(),{service:'nashe-svitlo-ecoflow',mode:'read-only',health:'/health'});
  assert.equal(response.headers.get('Cache-Control'),'no-store');
+});
+
+test('Cloudflare-compatible transport never follows redirects or forwards credentials',async t=>{
+ const previous=globalThis.fetch;
+ t.after(()=>{globalThis.fetch=previous;});
+ let calls=0;
+ globalThis.fetch=async (url,opts)=>{
+  calls++;
+  assert.equal(opts.redirect,'manual');
+  assert.equal(opts.method,'GET');
+  assert.equal(url.hostname,'api-e.ecoflow.com');
+  assert.ok(opts.headers.sign);
+  return new Response(null,{status:302,headers:{Location:'https://untrusted.invalid/'}});
+ };
+ const env={ECOFLOW_ACCESS_KEY:'access',ECOFLOW_SECRET_KEY:'secret'};
+ await assert.rejects(requestApi(env,'/iot-open/sign/device/list'),{message:'unexpected_redirect'});
+ assert.equal(calls,1);
+ globalThis.fetch=async()=>new Response(JSON.stringify({code:1000,message:'private data never returned'}),{status:200});
+ await assert.rejects(requestApi(env,'/iot-open/sign/device/list'),{message:'api_code_1000'});
+ globalThis.fetch=async()=>new Response(JSON.stringify({code:0,data:[]}),{status:200});
+ assert.deepEqual(await requestApi(env,'/iot-open/sign/device/list'),[]);
 });

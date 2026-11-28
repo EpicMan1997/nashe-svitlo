@@ -29,19 +29,31 @@ export async function signedHeaders(access,secret,query={},nonce=String(100000+c
 class ApiError extends Error {
   constructor(kind){super(kind);this.kind=kind;}
 }
-async function requestApi(env,path,query={}) {
+export async function requestApi(env,path,query={}) {
   if(![LIST,QUOTA].includes(path))throw new ApiError('invalid_endpoint');
   const url=new URL(API+path);
   for(const [k,v] of Object.entries(query))url.searchParams.set(k,v);
-  let res;
-  try {res=await fetch(url,{method:'GET',headers:await signedHeaders(env.ECOFLOW_ACCESS_KEY,env.ECOFLOW_SECRET_KEY,query),signal:AbortSignal.timeout(8000),redirect:'error'});}
-  catch {throw new ApiError('network');}
-  if(res.status===429)throw new ApiError('rate_limited');
-  if(!res.ok)throw new ApiError('api_error');
-  let raw;
-  try {raw=await res.json();}catch{throw new ApiError('invalid_data');}
-  if(!raw||typeof raw!=='object'||Array.isArray(raw)||!['0','200'].includes(String(raw.code??0)))throw new ApiError('api_error');
-  return raw.data;
+  let headers;
+  try {headers=await signedHeaders(env.ECOFLOW_ACCESS_KEY.trim(),env.ECOFLOW_SECRET_KEY.trim(),query);}
+  catch {throw new ApiError('signing_error');}
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),15000);
+  try {
+    let res;
+    // Workers does not implement redirect:'error'. Manual mode avoids forwarding
+    // signed credentials to any redirect destination, including a different host.
+    try {res=await fetch(url,{method:'GET',headers,signal:controller.signal,redirect:'manual'});}
+    catch {throw new ApiError(controller.signal.aborted?'timeout':'network');}
+    if(res.status>=300&&res.status<400)throw new ApiError('unexpected_redirect');
+    if(res.status===429)throw new ApiError('rate_limited');
+    if(!res.ok)throw new ApiError('http_'+res.status);
+    let raw;
+    try {raw=await res.json();}catch{throw new ApiError(controller.signal.aborted?'timeout':'invalid_data');}
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new ApiError('invalid_data');
+    const code=String(raw.code??'0');
+    if(!['0','200'].includes(code))throw new ApiError(/^\d{1,7}$/.test(code)?'api_code_'+code:'api_error');
+    return raw.data;
+  } finally {clearTimeout(timer);}
 }
 function nestedGet(raw,path) {
   if(raw&&Object.hasOwn(raw,path))return raw[path];
@@ -92,7 +104,7 @@ async function collect(env){
     let key=null;
     if(kind==='dp3'&&dp3Count===1)key='dacha:dp3';
     if(kind==='d2'){
-      const fp=await hmac(env.ECOFLOW_SECRET_KEY,'nashe-svitlo/ecoflow-device-key/v1:'+d.sn);
+      const fp=await hmac(env.ECOFLOW_SECRET_KEY.trim(),'nashe-svitlo/ecoflow-device-key/v1:'+d.sn);
       key=Object.keys(BINDINGS).find(k=>BINDINGS[k]===fp);
     }
     if(!key)continue;
@@ -105,7 +117,7 @@ async function collect(env){
     try{
       const quota=await requestApi(env,QUOTA,{sn:serial});
       const reading=normalize(quota,kind,new Date().toISOString());
-      if(!reading){frame.availability[key]='invalid_data';continue;}
+      if(!reading){frame.availability[key]='invalid_data';problem=problem??'invalid_data';continue;}
       frame.devices[key]=reading;frame.availability[key]='readable';
     }catch(err){
       const reason=err instanceof ApiError?err.kind:'api_error';
@@ -116,21 +128,21 @@ async function collect(env){
   }
   frame.emittedAt=new Date().toISOString();
   frame.connection=Object.keys(frame.devices).length?'ok':'unavailable';
-  return {frame,problem};
+  return {frame,problem:problem??(Object.keys(frame.devices).length<4?'incomplete_devices':null)};
 }
 function json(value,status=200,extra={}){return new Response(JSON.stringify(value),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...extra}});}
 export class TelemetryGate {
   constructor(state,env){this.state=state;this.env=env;this.inFlight=null;}
   async refresh(){
     const prior=await this.state.storage.get('state')??{};
-    if(Date.now()<(prior.nextAt??0))return prior;
+    if(Date.now()<(prior.nextAt??0)&&!(prior.problem==='network'&&!prior.transportVersion))return prior;
     // Persist a global lock before calling the provider; even object restarts cannot cause a burst.
-    await this.state.storage.put('state',{...prior,nextAt:Date.now()+MIN_MS});
+    await this.state.storage.put('state',{...prior,transportVersion:2,nextAt:Date.now()+MIN_MS});
     let frame=prior.frame??null,problem=null;
     try{const result=await collect(this.env);problem=result.problem;if(result.frame.connection==='ok'||!frame)frame=result.frame;else problem=problem??'no_readings';}
     catch(err){problem=err instanceof ApiError?err.kind:'api_error';}
     const delay=problem?Math.min(MAX_MS,Math.max(MIN_MS*2,(prior.delay??MIN_MS)*2)):MIN_MS;
-    const next={frame,problem,delay,nextAt:Date.now()+delay};
+    const next={frame,problem,delay,nextAt:Date.now()+delay,transportVersion:2};
     await this.state.storage.put('state',next);
     return next;
   }
