@@ -121,23 +121,28 @@
       }) }
     ]));
   }
-  const CHECK_CUE_MS=850, RESULT_CUE_MS=3200, NUMBER_MOTION_MS=1400;
-  let cueLocation=null,cueReadingSignature='',lastLocalUpdateMs=null;
-  function pollPresentation(info,now,localUpdate,animating) {
+  const NUMBER_MOTION_MS=1400;
+  let localPollResult=null;
+  function pollPresentation(info,now,local) {
     if(info?.mode!=='worker'&&info?.mode!=='published')return {text:'',state:'idle'};
-    const started=info.checkStartedMs,finished=info.checkFinishedMs;
-    if(info.checking||(Number.isFinite(started)&&now-started<CHECK_CUE_MS&&now>=started))return {text:'Перевірка…',state:'checking'};
-    if(animating||(Number.isFinite(localUpdate)&&now-localUpdate<RESULT_CUE_MS&&now>=localUpdate))return {text:'Оновлено',state:'updated'};
-    if(Number.isFinite(finished)&&now-finished<RESULT_CUE_MS&&now>=finished)
-      return info.checkResult==='failed'?{text:'Немає відповіді',state:'failed'}:{text:'Перевірено',state:'checked'};
-    const due=Number.isFinite(info.nextCheckMs)&&info.nextCheckMs>0?Math.max(0,Math.ceil((info.nextCheckMs-now)/1000)):null;
+    if(info.checking)return {text:'Перевірка…',state:'checking'};
+    if(Number.isFinite(info.resultUntilMs)&&now<info.resultUntilMs){
+      if(info.checkResult==='failed')return {text:'Немає відповіді',state:'failed'};
+      const result=local?.checkId===info.checkId?local.outcome:'same';
+      if(result==='changed')return {text:'Оновлено',state:'updated'};
+      if(result==='received')return {text:'Дані отримано',state:'checked'};
+      if(result==='lost')return {text:'Дані недоступні',state:'failed'};
+      return {text:'Без змін',state:'checked'};
+    }
+    const due=Number.isFinite(info.nextCheckMs)?Math.max(0,Math.ceil((info.nextCheckMs-now)/1000)):null;
     return {text:due===null?'':due===0?'Перевірка скоро':'Через '+due+' с',state:'idle'};
   }
   function renderPollIndicator() {
+    if(document.visibilityState==='hidden')return;
     const indicator=root.querySelector('.eco-status');
     const timer=indicator?.querySelector('.eco-poll-timer');
     if(!timer)return;
-    const state=pollPresentation(live?.summary(),Date.now(),lastLocalUpdateMs,root.classList.contains('is-telemetry-animating'));
+    const state=pollPresentation(live?.summary(),Date.now(),localPollResult);
     if(timer.textContent!==state.text)timer.textContent=state.text;
     for(const name of ['checking','updated','checked','failed'])indicator.classList.toggle('is-'+name,state.state===name);
   }
@@ -171,23 +176,13 @@
       mode === 'published' ? 'Реальні показники з EcoFlow API, публікація залежить від графіка GitHub Actions. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
     const readingsHere=devicesHere.map(device=>live?.reading(activeEcoLocation+':'+device.id)?.updatedMs).filter(Number.isFinite);
-    const signature=devicesHere.map(d=>{
-      const key=activeEcoLocation+':'+d.id,value=live?.reading(key);
-      return value&&Number.isFinite(value.updatedMs)?key+':'+value.updatedMs:'';
-    }).filter(Boolean).join('|');
-    if(cueLocation!==activeEcoLocation){
-      cueLocation=activeEcoLocation;cueReadingSignature=signature;lastLocalUpdateMs=null;
-    }else if(signature!==cueReadingSignature){
-      if(signature)lastLocalUpdateMs=Date.now();
-      cueReadingSignature=signature;
-    }
     const at = workerMode&&readingsHere.length?Math.min(...readingsHere):summary?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
     const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':workerMode&&liveHere?((primaryHere?'API · '+primaryHere+'/'+devicesHere.length:'Резерв · '+backupHere+'/'+devicesHere.length)+(primaryHere&&backupHere?' · резерв '+backupHere:'')+' · '+hhmm):mode === 'published'
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
-    if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Відлік до наступної перевірки браузером (20 с), нові дані не гарантовані. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
+    if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Відлік 20 с починається після результату перевірки. Нові дані не гарантовані. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
     const markup=nextStatusHtml+((workerMode||summary?.mode==='published')&&devicesHere.length?' <span class="eco-poll-timer" aria-hidden="true"></span>':'');
     if(element.dataset.ecoStatusMarkup!==markup){element.innerHTML=markup;element.dataset.ecoStatusMarkup=markup;}
     renderPollIndicator();
@@ -361,6 +356,16 @@
     }
     return old;
   }
+  function numericOutcome(before,after) {
+    let changed=false,received=false,lost=false;
+    for(const [key,item] of after){
+      const prior=before.get(key);
+      if(!prior||prior.kind!==item.kind)received=true;
+      else if(numberText(item.kind,prior.target)!==numberText(item.kind,item.target))changed=true;
+    }
+    for(const key of before.keys())if(!after.has(key))lost=true;
+    return changed?'changed':received?'received':lost?'lost':'same';
+  }
   function setAggregateNumber(node,value,kind,key,force) {
     if(!force&&node.dataset.ecoNumberKey===key&&node.dataset.ecoNumber===String(value)&&node.dataset.ecoNumberKind===kind)return;
     delete node.dataset.ecoSocShown;
@@ -395,7 +400,15 @@
     const changes=[];
     for(const node of numericNodes(grid)){
       const item=numericMeta(node),prior=old.get(item.key);
-      if(!prior||!Number.isFinite(item.target)||prior.kind!==item.kind||prior.shown===item.target)continue;
+      if(!prior||!Number.isFinite(item.target)||prior.kind!==item.kind||numberText(item.kind,prior.shown)===numberText(item.kind,item.target)){
+        if(Number.isFinite(item.target)){
+          node.textContent=numberText(item.kind,item.target);
+          delete node.dataset.ecoSocShown;node.classList.remove('eco-soc-transition');
+          const fill=item.soc?node.closest('article')?.querySelector('.eco-charge-track i'):node.id==='eco-location-charge-value'?$('eco-location-charge-fill'):null;
+          if(fill)fill.style.width=item.target+'%';
+        }
+        continue;
+      }
       const card=item.soc?node.closest('article'):null;
       const fill=item.soc?card?.querySelector('.eco-charge-track i'):node.id==='eco-location-charge-value'?$('eco-location-charge-fill'):null;
       changes.push({node,fill,kind:item.kind,from:prior.shown,to:item.target});
@@ -403,7 +416,6 @@
     }
     if(!changes.length){renderPollIndicator();return;}
     root.classList.add('is-telemetry-animating');
-    lastLocalUpdateMs=Date.now();
     renderPollIndicator();
     let started=null;
     const paint=(change,value,final=false)=>{
@@ -794,7 +806,7 @@
     updateChannel('low', pv.lowW, pv.lowMaxW);
   }
 
-  function updateLocation(id, refreshOnly = false) {
+  function updateLocation(id, refreshOnly = false, completedCheckId = null) {
     if (!Object.prototype.hasOwnProperty.call(inventory, id)) return;
     const place = inventory[id];
     const packs = physicalDevices(place.devices);
@@ -807,8 +819,8 @@
     const weighted = knownCapacityWh
       ? Math.round(knownSystems.reduce((sum,d)=>sum+d.capacityWh*d.pct,0)/knownCapacityWh*10)/10
       : null;
-     activeEcoLocation = id;
-    renderConnection();
+    if(id!==activeEcoLocation||!refreshOnly)localPollResult=null;
+    activeEcoLocation = id;
     if (!refreshOnly) clearMetric();
     root.dataset.location = id;
     const empty = place.devices.length === 0;
@@ -833,7 +845,7 @@
     if ($('eco-metric-charge-label')) $('eco-metric-charge-label').textContent = averageLabel;
     const hasEstimates = knownSystems.some(d => d.estimated === true);
     const grid=$('eco-devices');
-    const old=refreshOnly&&id===lastRenderedDeviceLocation&&chargeMotionAllowed()?captureChargeLabels(grid):new Map();
+    const old=refreshOnly&&id===lastRenderedDeviceLocation?captureChargeLabels(grid):new Map();
     const aggregateKey=id+':average:'+knownSystems.map(d=>d.id).join(',')+':'+hasEstimates;
     const aggregateKind=hasEstimates?'estimated-soc':'soc';
     const aggregateChanged=$('eco-location-charge-value').dataset.ecoNumberKey!==aggregateKey||$('eco-location-charge-value').dataset.ecoNumber!==String(weighted);
@@ -855,12 +867,16 @@
     const deviceMarkup = (place.devices.length ? renderDeviceGrid(place.devices) : '<div class="eco-empty-state"><strong>Немає станцій, доступних через API</strong></div>') +
       (id === 'dacha' ? unassignedSection() : '');
     // Keep DOM and open details intact when nothing visible has changed.
-    if (!refreshOnly || id !== lastRenderedDeviceLocation || deviceMarkup !== lastRenderedDeviceMarkup) {
-      grid.innerHTML = deviceMarkup;
-      animateChargeChanges(grid,old);
-      lastRenderedDeviceMarkup = deviceMarkup;
-      lastRenderedDeviceLocation = id;
-    } else if(aggregateChanged&&weighted!==null) animateChargeChanges(grid,old);
+    const redraw=!refreshOnly||id!==lastRenderedDeviceLocation||deviceMarkup!==lastRenderedDeviceMarkup;
+    if(redraw){
+      grid.innerHTML=deviceMarkup;
+      lastRenderedDeviceMarkup=deviceMarkup;
+      lastRenderedDeviceLocation=id;
+    }
+    // Only formatted numeric targets on this location classify the poll.
+    if(completedCheckId!==null)localPollResult={checkId:completedCheckId,outcome:numericOutcome(old,captureChargeLabels(grid))};
+    renderConnection();
+    if(redraw||aggregateChanged)animateChargeChanges(grid,old);
     renderSolar(place);
     if (refreshOnly && metricOpen && detailPanel && !detailPanel.hidden) {
       detailPanel.innerHTML = metricBreakdown(metricOpen);
@@ -882,13 +898,13 @@
   const restored = selectedButton?.dataset.location || 'dacha';
   applyReadings();
   updateLocation(restored);
-  live?.subscribe(() => {
+  live?.subscribe(event => {
     applyReadings();
-    updateLocation(activeEcoLocation, true);
+    updateLocation(activeEcoLocation,true,event?.kind==='poll'?event.checkId:null);
   });
-  live?.start();
-  // Local clock only: no extra network requests or full card redraws.
   live?.subscribePoll?.(renderPollIndicator);
+  live?.start();
+  // Local clock only; transport owns the polling schedule.
   window.setInterval?.(renderPollIndicator,200);
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
   // One tick per minute is enough; skip forecasts whose displayed values did not change.

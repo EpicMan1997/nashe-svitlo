@@ -36,14 +36,28 @@
   let acceptedPublishedFrame = null;
   let snapshotInFlight = null;
   let nextCheckMs = null;
-  let checkStartedMs=null,checkFinishedMs=null,checkResult=null;
+  const MIN_CHECK_MS=700, RESULT_MS=2200;
+  let checkStartedMs=null,checkFinishedMs=null,checkResult=null,resultUntilMs=null,checkId=0;
+  let pollTimer=null, pollActive=false, pendingNotify=false, started=false;
+  const hidden=()=>host.document?.visibilityState==='hidden';
+  const pollDelay=()=>mode==='stream'?30000:20000;
+  function cancelPoll(){
+    if(pollTimer!==null)clearTimeout(pollTimer);
+    pollTimer=null;nextCheckMs=null;
+  }
+  function schedulePoll(){
+    cancelPoll();
+    if(!enabled||hidden())return;
+    nextCheckMs=(resultUntilMs??Date.now())+pollDelay();
+    pollTimer=setTimeout(()=>{pollTimer=null;return getSnapshot();},Math.max(0,nextCheckMs-Date.now()));
+  }
   const pollSubscribers=new Set();
   const notifyPoll=()=>pollSubscribers.forEach(fn=>{try{fn();}catch(_){}});
   let lastError = null;
   const subscribers = new Set();
 
-  const notify = () => subscribers.forEach(fn => {
-    try { fn(); } catch (error) { console.warn('EcoFlow subscriber error', error); }
+  const notify = event => subscribers.forEach(fn => {
+    try { fn(event); } catch (error) { console.warn('EcoFlow subscriber error', error); }
   });
   const number = (value, min, max) =>
     typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max ? value : null;
@@ -107,7 +121,7 @@
   function summary() {
     const present = DEVICE_KEYS.filter(key => ['live','published'].includes(statusFor(key))).length;
     return { status, mode, lastError, present, total: DEVICE_KEYS.length, lastFrameMs: newestEmittedMs,
-      unassigned: [...unassigned], checking: Boolean(snapshotInFlight), nextCheckMs, checkStartedMs, checkFinishedMs, checkResult };
+      unassigned: [...unassigned], checking: pollActive, nextCheckMs, checkStartedMs, checkFinishedMs, checkResult, checkId, resultUntilMs };
   }
   function refreshStatus() {
     if (!enabled) return;
@@ -117,7 +131,7 @@
     const signature = [status, revision, ...DEVICE_KEYS.map(key => statusFor(key))].join('|');
     if (signature !== publishedSignature) {
       publishedSignature = signature;
-      notify();
+      if(pollActive)pendingNotify=true;else notify();
     }
   }
   function acceptWorkerFrame(raw, source) {
@@ -125,7 +139,7 @@
     const emitted=isoTime(raw.emittedAt), primary=source==='worker', maxAge=primary?WORKER_MAX_AGE_MS:PUBLISHED_MAX_AGE_MS;
     if(emitted===null||Date.now()-emitted>maxAge||emitted<(primary?workerFrameMs:fallbackFrameMs)||raw.connection==='unavailable')return false;
     const signature=JSON.stringify(raw);
-    if(signature===(primary?workerSignature:fallbackSignature))return true;
+    if(signature===(primary?workerSignature:fallbackSignature))return Object.entries(raw.devices).some(([key,value])=>(primary?WORKER_KEYS.includes(key):KNOWN.has(key))&&normaliseReading(value,emitted)?.socPercent!=null);
     const next=new Map(primary?workerReadings:fallbackReadings);
     let usable=0;
     for(const [key,entry] of Object.entries(raw.devices)){
@@ -190,7 +204,9 @@
     lastError=primaryOk?null:'worker-unavailable';
     if(!primaryOk||WORKER_KEYS.some(key=>!workerFresh(workerReadings.get(key))||workerAvailability[key]!=='readable')){
       try{
-        const response=await fetch(fallbackUrl+'?t='+Math.floor(Date.now()/20000),{cache:'no-store',credentials:'omit'});
+        const options={cache:'no-store',credentials:'omit'};
+        if(typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function')options.signal=AbortSignal.timeout(10000);
+        const response=await fetch(fallbackUrl+'?t='+Math.floor(Date.now()/20000),options);
         if(response.ok)fallbackOk=acceptWorkerFrame(await response.json(),'fallback');
       }catch(_){}
     }
@@ -198,27 +214,40 @@
     return primaryOk||fallbackOk;
   }
   async function getSnapshot() {
-    if (!enabled || !snapshotUrl || ((mode === 'published'||mode==='worker') && host.document?.visibilityState === 'hidden')) return;
-    if (snapshotInFlight) return snapshotInFlight;
-    checkStartedMs=Date.now();checkResult=null;
-    snapshotInFlight = (async () => {
-      if(mode==='worker')return getWorkerSnapshot();
+    if(!enabled||!snapshotUrl||hidden())return;
+    if(snapshotInFlight)return snapshotInFlight;
+    cancelPoll();
+    const id=++checkId;
+    checkStartedMs=Date.now();checkFinishedMs=null;checkResult=null;resultUntilMs=null;
+    pollActive=true;pendingNotify=false;
+    // Publish primary and fallback together after the minimum visible check.
+    snapshotInFlight=(async()=>{
+      let ok=false;
       try {
-        const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 20000)) : '';
-        const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const frame=await response.json();
-        acceptFrame(frame);
-        return frame?.version===1&&isoTime(frame.emittedAt)!==null&&frame.connection!=='unavailable';
-      } catch (error) {
-        lastError = 'snapshot-unavailable';
-        refreshStatus();return false;
-      }
+        if(mode==='worker')ok=await getWorkerSnapshot();
+        else {
+          const cacheBust=mode==='published'?('?t='+Math.floor(Date.now()/20000)):'';
+          const options={cache:'no-store',credentials:'omit'};
+          if(typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function')options.signal=AbortSignal.timeout(15000);
+          const response=await fetch(snapshotUrl+cacheBust,options);
+          if(!response.ok)throw new Error('HTTP '+response.status);
+          const frame=await response.json();
+          const accepted=acceptFrame(frame);
+          const duplicate=mode==='published'&&JSON.stringify(frame)===acceptedPublishedFrame;
+          ok=Boolean((accepted||duplicate)&&frame.connection!=='unavailable'&&Object.keys(frame.devices||{}).some(key=>KNOWN.has(key)&&normaliseReading(frame.devices[key],Date.parse(frame.emittedAt))?.socPercent!=null));
+        }
+      }catch(_){lastError='snapshot-unavailable';ok=false;}
+      const remaining=MIN_CHECK_MS-(Date.now()-checkStartedMs);
+      if(remaining>0&&!hidden())await new Promise(resolve=>setTimeout(resolve,remaining));
+      checkFinishedMs=Date.now();checkResult=ok?'ok':'failed';resultUntilMs=checkFinishedMs+RESULT_MS;
+      pollActive=false;snapshotInFlight=null;
+      const changed=pendingNotify;pendingNotify=false;
+      schedulePoll();
+      if(changed)notify({kind:'poll',checkId:id});
+      notifyPoll();
     })();
     notifyPoll();
-    try { checkResult=(await snapshotInFlight)?'ok':'failed'; }
-    catch(_){checkResult='failed';}
-    finally { snapshotInFlight=null;checkFinishedMs=Date.now();notifyPoll(); }
+    return snapshotInFlight;
   }
   function connectStream() {
     if (!enabled || !streamUrl || typeof EventSource === 'undefined') return;
@@ -242,6 +271,7 @@
     } catch (_) { return false; }
   }
   async function start() {
+    if(started)return;started=true;
     try {
       const response = await fetch('./ecoflow-live-config.json', { cache: 'no-store' });
       if (!response.ok) throw new Error('Configuration unavailable');
@@ -263,16 +293,14 @@
       notify();
       await getSnapshot();
       if (mode === 'stream') connectStream();
-      // Published GitHub Actions snapshots are NOT live; look for a new publication every 20 seconds.
       setInterval(refreshStatus, RECONNECT_CHECK_MS);
-      const pollMs=mode==='published'||mode==='worker'?20000:30000;
-      nextCheckMs=Date.now()+pollMs;
-      setInterval(()=>{nextCheckMs=Date.now()+pollMs;return getSnapshot();},pollMs);
       host.document?.addEventListener?.('visibilitychange', () => {
-        if (host.document.visibilityState === 'visible') getSnapshot();
+        if(hidden()){cancelPoll();notifyPoll();}
+        else {refreshStatus();getSnapshot();}
       });
+      if(!snapshotInFlight&&pollTimer===null&&!hidden())schedulePoll();
     } catch (error) {
-      enabled = false; status = 'error'; lastError = 'configuration-error'; notify();
+      cancelPoll();enabled = false; status = 'error'; lastError = 'configuration-error'; notify();
     }
   }
   function subscribe(fn) {

@@ -11,6 +11,7 @@ function fixture() {
     snapshotUrl: 'https://read-only.example.test/api/ecoflow/snapshot',
     streamUrl: 'https://read-only.example.test/api/ecoflow/events' };
   const socket = [], intervals = [], snapshotCalls = [], documentEvents = {};
+  const timers=new Map();let timerSeq=0;
   let snapshotResponder = null;
   const FakeDate = class extends Date { static now() { return time; } };
   class FakeEvents {
@@ -25,6 +26,13 @@ function fixture() {
   const context = {
     window, Date: FakeDate, URL, EventSource: FakeEvents, console,
     setInterval(fn,ms) { intervals.push({fn,ms}); },
+    setTimeout(fn,ms){
+      const id=++timerSeq;
+      if(ms<=700){time+=ms;queueMicrotask(fn);}
+      else timers.set(id,{fn,due:time+ms});
+      return id;
+    },
+    clearTimeout(id){timers.delete(id);},
     async fetch(url) {
       if (url === './ecoflow-live-config.json') return {
         ok: true, async json() { return config; }
@@ -42,6 +50,8 @@ function fixture() {
     socket, now: () => time, advance: value => { time += value; },
     configure: value => { config = value; },
     intervals, snapshotCalls, document: window.document, documentEvents,
+    poll(){const entry=[...timers.entries()].at(-1);if(!entry)return;const [id,timer]=entry;timers.delete(id);time=Math.max(time,timer.due);return timer.fn();},
+    timerCount:()=>timers.size,
     setSnapshotResponder: fn => { snapshotResponder = fn; }
   };
 }
@@ -158,12 +168,12 @@ test('edge 09 parallel published snapshot triggers share one HTTP request', asyn
   const f=fixture();
   f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
   await f.api.start();
-  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
+  const poll=f.poll;
   assert.ok(poll);
   assert.equal(f.snapshotCalls.length,1);
   let resolveSnapshot;
   f.setSnapshotResponder(()=>new Promise(resolve=>{resolveSnapshot=resolve;}));
-  const first=poll(),second=poll();
+  const first=poll(),second=f.documentEvents.visibilitychange();
   assert.equal(f.snapshotCalls.length,2,'only one in-flight HTTP call allowed');
   resolveSnapshot({ok:true,async json(){
     return {version:1,emittedAt:new Date(f.now()).toISOString(),
@@ -178,7 +188,7 @@ test('edge 10 hidden published PWA pauses polls and refreshes when visible',asyn
   const f=fixture();
   f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
   await f.api.start();
-  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
+  const poll=f.poll;
   assert.ok(poll);
   const initial=f.snapshotCalls.length;
   f.document.visibilityState='hidden';
@@ -192,20 +202,19 @@ test('edge 10 hidden published PWA pauses polls and refreshes when visible',asyn
   assert.equal(f.api.summary().mode,'published');
 });
 
-test('published mode checks snapshots every 20 seconds with a fresh cache key',async()=>{
+test('published mode schedules a full 20 second countdown after result with a fresh cache key',async()=>{
   const f=fixture();
   f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
   await f.api.start();
-  const poll=f.intervals.find(x=>x.ms===20000)?.fn;
+  const poll=f.poll;
   assert.ok(poll,'fast published polling');
   const initial=f.snapshotCalls[0];
   await poll();
   assert.equal(f.snapshotCalls.length,2);
-  assert.equal(f.snapshotCalls[1],initial);
-  f.advance(20000);
+  assert.notEqual(f.snapshotCalls[1],initial);
   await poll();
   assert.equal(f.snapshotCalls.length,3);
-  assert.notEqual(f.snapshotCalls[2],initial);
+  assert.notEqual(f.snapshotCalls[2],f.snapshotCalls[1]);
   assert.equal(f.socket.length,0);
 });
 
@@ -249,16 +258,16 @@ test('worker mode prefers fresh primary per station and uses scheduled fallback 
  assert.equal(f.api.reading('dacha:d2').socPercent,80);
  assert.equal(f.socket.length,0);
  primary=false;f.advance(151000);
- await f.intervals.find(x=>x.ms===20000).fn();
+ await f.poll();
  assert.equal(f.api.statusFor('dacha:dp3'),'published');
  assert.equal(f.api.reading('dacha:dp3').socPercent,50);
  primary=true;f.advance(60000);
- await f.intervals.find(x=>x.ms===20000).fn();
+ await f.poll();
  assert.equal(f.api.statusFor('dacha:dp3'),'live');
  assert.equal(f.api.reading('dacha:dp3').socPercent,55);
  f.document.visibilityState='hidden';
  const count=f.snapshotCalls.length;
- await f.intervals.find(x=>x.ms===20000).fn();
+ await f.poll();
  assert.equal(f.snapshotCalls.length,count);
 });
 test('worker mode rejects unexpected gateway host',async()=>{
@@ -272,13 +281,15 @@ test('worker mode rejects unexpected gateway host',async()=>{
 test('poll timing is the actual browser check interval, not a claimed upstream refresh',async()=>{
  const f=fixture();f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
  await f.api.start();
- assert.equal(f.api.summary().nextCheckMs,f.now()+20000);
- const poll=f.intervals.find(x=>x.ms===20000).fn;
+ assert.equal(f.api.summary().nextCheckMs,f.now()+22200);
+ const poll=f.poll;
  f.advance(20000);
  let resolve;f.setSnapshotResponder(()=>new Promise(r=>{resolve=r;}));
- const pending=poll();assert.equal(f.api.summary().checking,true);assert.equal(f.api.summary().nextCheckMs,f.now()+20000);
+ const pending=poll();assert.equal(f.api.summary().checking,true);assert.equal(f.api.summary().nextCheckMs,null);
  resolve({ok:true,json:async()=>({version:1,emittedAt:new Date(f.now()).toISOString(),devices:{}})});
  await pending;assert.equal(f.api.summary().checking,false);
+ assert.equal(f.api.summary().nextCheckMs,f.api.summary().resultUntilMs+20000);
+ assert.equal(f.api.summary().nextCheckMs,f.now()+22200);
 });
 
 test('poll subscribers see start and end even for unchanged fast snapshot',async()=>{
@@ -290,9 +301,10 @@ test('poll subscribers see start and end even for unchanged fast snapshot',async
  f.api.subscribe(()=>changes++);
  f.api.subscribePoll(()=>{const info=f.api.summary();events.push([info.checking,info.checkResult]);});
  f.advance(20000);
- await f.intervals.find(x=>x.ms===20000).fn();
+ await f.poll();
  assert.deepEqual(events,[[true,null],[false,'ok']]);
  assert.equal(changes,0);
- assert.equal(f.api.summary().checkStartedMs,f.now());
+ assert.equal(f.api.summary().checkStartedMs,f.now()-700);
  assert.equal(f.api.summary().checkFinishedMs,f.now());
+ assert.equal(f.timerCount(),1);
 });

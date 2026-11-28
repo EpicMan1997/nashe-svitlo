@@ -391,18 +391,26 @@ test('numeric animation handles watts, Wh and minutes with no duplicate animatio
  const same=captureChargeLabels(grid);animateChargeChanges(grid,same);assert.equal(callbacks.size,0);
 });
 
-test('quick cached poll remains visible and real readings have a separate update cue',()=>{
- const instrumented=eco.replace(/\}\)\(\);\s*$/, 'window.testPoll=pollPresentation;})();');
+test('poll result is based on formatted numeric changes in the current location and countdown starts at 20',()=>{
+ const instrumented=eco.replace(/\}\)\(\);\s*$/, 'window.testPoll={pollPresentation,numericOutcome};})();');
  const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element(id));return nodes.get(id);};
  const doc={getElementById:get,querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}};
  const window={document:doc,addEventListener(){}};
  vm.runInNewContext(instrumented,{window,document:doc,console});
- const show=(now,local=null,active=false,extra={})=>window.testPoll({mode:'worker',checking:false,checkStartedMs:1000,checkFinishedMs:1050,checkResult:'ok',nextCheckMs:21000,...extra},now,local,active);
- assert.equal(show(1100).text,'Перевірка…');
- assert.equal(show(1900).text,'Перевірено');
- assert.equal(show(1900,1050,true).text,'Оновлено');
- assert.equal(show(1900,1050).text,'Оновлено');
- assert.equal(show(1900,null,false,{checkResult:'failed'}).text,'Немає відповіді');
- assert.equal(show(5000).text,'Через 16 с');
- assert.equal(show(5000,null,false,{checking:true}).text,'Перевірка…');
+ const {pollPresentation,numericOutcome}=window.testPoll;
+ const show=(now,local=null,extra={})=>pollPresentation({mode:'worker',checking:false,checkId:7,checkFinishedMs:1700,resultUntilMs:3900,checkResult:'ok',nextCheckMs:23900,...extra},now,local).text;
+ const reading=(target,kind='soc')=>({target,shown:target,kind});
+ const baseline=new Map([['dacha:dp3',reading(40)],['dacha:dp3:out',reading(100,'watts')]]);
+ assert.equal(numericOutcome(baseline,new Map([['dacha:dp3',reading(40.01)],['dacha:dp3:out',reading(100,'watts')]])),'same');
+ assert.equal(numericOutcome(baseline,new Map([['dacha:dp3',reading(40.2)],['dacha:dp3:out',reading(100,'watts')]])),'changed');
+ assert.equal(numericOutcome(new Map(),baseline),'received');
+ assert.equal(numericOutcome(baseline,new Map()),'lost');
+ assert.equal(show(1100,null,{checking:true}),'Перевірка…');
+ assert.equal(show(1900),'Без змін');
+ assert.equal(show(1900,{checkId:7,outcome:'changed'}),'Оновлено');
+ assert.equal(show(1900,{checkId:6,outcome:'changed'}),'Без змін');
+ assert.equal(show(1900,{checkId:7,outcome:'received'}),'Дані отримано');
+ assert.equal(show(1900,null,{checkResult:'failed'}),'Немає відповіді');
+ assert.equal(show(3900),'Через 20 с');
+ assert.equal(show(4900),'Через 19 с');
 });
