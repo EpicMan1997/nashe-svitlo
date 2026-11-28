@@ -604,7 +604,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertNotIn(' hidden>', HTML[template_open:template_close])
         device_fn = JS.split("function deviceView(d) {", 1)[1].split("function powerOceanView(d)", 1)[0]
         self.assertIn("solarDisclosure(d)", device_fn)
-        loc = JS.split("function updateLocation(id, refreshOnly = false) {", 1)[1].split("// Read-only draft controls", 1)[0]
+        loc = JS.split("function updateLocation(id, refreshOnly = false, completedCheckId = null) {", 1)[1].split("// Read-only draft controls", 1)[0]
         self.assertLess(loc.index("renderDeviceGrid(place.devices)"), loc.index("renderSolar(place);"))
         self.assertIn("if (!solarUiEnabled || !device.solar) return '';", JS)
         self.assertIn("source.innerHTML", JS)
