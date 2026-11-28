@@ -293,6 +293,61 @@
     powerSeen.set(key,value);
     return '<strong class="eco-power-reading' + (changed?' eco-power-changed':'') + '">' + wattsLabel(value) + '</strong>';
   }
+  // Animate only between two received readings, never predict intermediate SOC
+  // over the polling interval. Model, ARIA and energy calculations stay exact.
+  let chargeAnimationFrame = null;
+  function chargeMotionAllowed() {
+    return typeof window.requestAnimationFrame==='function' &&
+      !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches &&
+      document.visibilityState!=='hidden';
+  }
+  function captureChargeLabels(grid) {
+    const old=new Map();
+    for(const node of grid.querySelectorAll('[data-eco-soc-key]')){
+      const target=Number(node.dataset.ecoSoc),shown=Number(node.dataset.ecoSocShown??node.dataset.ecoSoc);
+      if(Number.isFinite(target)&&Number.isFinite(shown))old.set(node.dataset.ecoSocKey,{target,shown});
+    }
+    return old;
+  }
+  function animateChargeChanges(grid,old) {
+    if(chargeAnimationFrame!==null){
+      window.cancelAnimationFrame?.(chargeAnimationFrame);
+      chargeAnimationFrame=null;
+    }
+    if(!chargeMotionAllowed())return;
+    const changes=[];
+    for(const node of grid.querySelectorAll('[data-eco-soc-key]')){
+      const prior=old.get(node.dataset.ecoSocKey),target=Number(node.dataset.ecoSoc);
+      if(!prior||!Number.isFinite(target)||prior.shown===target)continue;
+      const card=node.closest('article'),fill=card?.querySelector('.eco-charge-track i');
+      changes.push({node,fill,from:prior.shown,to:target});
+      node.classList.add('eco-soc-transition');
+    }
+    if(!changes.length)return;
+    let started=null;
+    const paint=(change,value)=>{
+      change.node.dataset.ecoSocShown=String(value);
+      change.node.textContent=pctLabel(value);
+      if(change.fill)change.fill.style.width=value+'%';
+    };
+    for(const change of changes)paint(change,change.from);
+    const tick=now=>{
+      if(started===null)started=now;
+      const progress=chargeMotionAllowed()?Math.min(1,Math.max(0,(now-started)/650)):1;
+      const ease=1-Math.pow(1-progress,3);
+      for(const change of changes){
+        paint(change,progress===1?change.to:change.from+(change.to-change.from)*ease);
+        if(progress===1){delete change.node.dataset.ecoSocShown;change.node.classList.remove('eco-soc-transition');}
+      }
+      chargeAnimationFrame=progress<1?window.requestAnimationFrame(tick):null;
+    };
+    chargeAnimationFrame=window.requestAnimationFrame(tick);
+  }
+  function chargeLabel(d,cls,tag='span') {
+    const key=activeEcoLocation+':'+d.id;
+    const attributes=Number.isFinite(d.pct)?' data-eco-soc-key="'+key+'" data-eco-soc="'+d.pct+'" aria-label="Заряд '+pctLabel(d.pct)+'"':'';
+    return '<'+tag+' class="'+cls+'"'+attributes+'>'+pctLabel(d.pct)+'</'+tag+'>';
+  }
   function chargeTrack(pct, name) {
     return '<div class="eco-charge-track" role="progressbar" aria-label="Заряд ' + name +
       '" aria-valuemin="0" aria-valuemax="100"' +
@@ -367,8 +422,8 @@
       '<div class="eco-device-head"><div class="eco-device-ident">' +
       '<strong class="eco-device-name">' + d.name + '</strong>' +
       '<span class="eco-device-model">' + titleNote + '</span></div>' + operationBadge(d) + '</div>' +
-      '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) +
-      '</span><span class="eco-battery-art" aria-hidden="true"><i style="width:' +
+      '<div class="eco-battery">' + chargeLabel(d,'eco-battery-percent') +
+      '<span class="eco-battery-art" aria-hidden="true"><i style="width:' +
       (Number.isFinite(d.pct) ? d.pct : 0) + '%"></i></span></div>' +
       chargeTrack(d.pct, d.name) +
       '<div class="eco-capacity-line"><strong>' + capacity + '</strong><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
@@ -385,7 +440,7 @@
       '<h3>PowerOcean</h3><span class="eco-ocean-cap">' + d.batteryCount + (d.batteryCount === 1 ? ' акумулятор' : ' акумулятори') + ' · ' + cap + ' · інвертор ' + uk.format(d.inverterKw * 1000) + ' W' +
       '</span></div>' + operationBadge(d) + '</div>' +
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
-      '<div class="eco-battery"><span class="eco-battery-percent">' + pctLabel(d.pct) + '</span></div>' +
+      '<div class="eco-battery">' + chargeLabel(d,'eco-battery-percent') + '</div>' +
       chargeTrack(d.pct, d.name) + '<span>' + cap + '</span><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
       '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span>' + powerReading(d,'in') + '</div>' +
       '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span>' +
@@ -412,8 +467,8 @@
       '</strong><span class="eco-system-tag">+ ' + label + '</span></div>' +
       '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' + operationBadge(main) + '</div></div>' +
       '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
-      '<span>Заряд усієї системи</span><strong class="eco-system-combined-percent">' +
-      pctLabel(soc) + '</strong></div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
+      '<span>Заряд усієї системи</span>' + chargeLabel(main,'eco-system-combined-percent','strong') +
+      '</div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
       '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc) + '</small>' +
       '</div>' +
       (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
@@ -713,7 +768,10 @@
       (id === 'dacha' ? unassignedSection() : '');
     // Keep DOM and open details intact when nothing visible has changed.
     if (!refreshOnly || id !== lastRenderedDeviceLocation || deviceMarkup !== lastRenderedDeviceMarkup) {
-      $('eco-devices').innerHTML = deviceMarkup;
+      const grid=$('eco-devices');
+      const old=refreshOnly&&id===lastRenderedDeviceLocation&&chargeMotionAllowed()?captureChargeLabels(grid):new Map();
+      grid.innerHTML = deviceMarkup;
+      animateChargeChanges(grid,old);
       lastRenderedDeviceMarkup = deviceMarkup;
       lastRenderedDeviceLocation = id;
     }

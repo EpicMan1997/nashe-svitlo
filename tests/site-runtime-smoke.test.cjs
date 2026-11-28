@@ -326,3 +326,37 @@ test('charging without output hides capped runtime while preserving measured zer
  assert.doesNotMatch(html,/98 год|eco-autonomy-runtime|eco-autonomy-unknown/);
  assert.equal(m.get('eco-overview-details').hidden,true);
 });
+
+test('charge labels are keyed by location and contain exact provider SOC',()=>{
+ const online={'dacha:dp3':{socPercent:39.9,inputW:1000,outputW:0,operation:'charging'},'dacha:d2':{socPercent:80}};
+ const m=mount({summary:()=>({status:'live'}),statusFor:k=>online[k]?'live':'waiting',reading:k=>online[k]??null,subscribe(){},start(){}});
+ const html=m.get('eco-devices').innerHTML;
+ assert.match(html,/data-eco-soc-key="dacha:dp3" data-eco-soc="39.9"/);
+ assert.match(html,/data-eco-soc-key="dacha:d2" data-eco-soc="80"/);
+ assert.match(html,/eco-operation-charging/);
+});
+test('charge animation interpolates only received endpoints and respects reduced motion',()=>{
+ const instrumented=eco.replace(/\}\)\(\);\s*$/, 'window.testCharge={captureChargeLabels,animateChargeChanges};})();');
+ assert.notEqual(instrumented,eco);
+ const nodes=new Map();
+ const get=id=>{if(!nodes.has(id))nodes.set(id,new Element(id));return nodes.get(id);};
+ const doc={getElementById:get,querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'visible',addEventListener(){}};
+ let seq=0,reduced=false;const callbacks=new Map();
+ const window={document:doc,addEventListener(){},matchMedia:()=>({matches:reduced}),requestAnimationFrame:fn=>{callbacks.set(++seq,fn);return seq;},cancelAnimationFrame:id=>callbacks.delete(id)};
+ vm.runInNewContext(instrumented,{window,document:doc,console});
+ const fill={style:{}},card={querySelector:()=>fill};
+ const label=(key,pct)=>{const n=new Element(key);n.dataset={ecoSocKey:key,ecoSoc:String(pct)};n.closest=()=>card;n.textContent=pct+'%';return n;};
+ let n=label('dacha:dp3',40);const grid={querySelectorAll:()=>[n]};
+ const {captureChargeLabels,animateChargeChanges}=window.testCharge;
+ const step=time=>{const batch=[...callbacks.values()];callbacks.clear();batch.forEach(fn=>fn(time));};
+ let old=captureChargeLabels(grid);n=label('dacha:dp3',42);
+ animateChargeChanges(grid,old);assert.equal(n.textContent,'40%');step(0);step(325);
+ assert.ok(Number(n.dataset.ecoSocShown)>40&&Number(n.dataset.ecoSocShown)<42);
+ step(650);assert.equal(n.textContent,'42%');assert.equal(fill.style.width,'42%');assert.equal(callbacks.size,0);
+ old=captureChargeLabels(grid);n=label('dacha:dp3',42);animateChargeChanges(grid,old);assert.equal(callbacks.size,0);
+ old=captureChargeLabels(grid);n=label('dacha:dp3',38);animateChargeChanges(grid,old);step(1000);step(1325);
+ assert.ok(Number(n.dataset.ecoSocShown)<42&&Number(n.dataset.ecoSocShown)>38);
+ step(1650);assert.equal(n.textContent,'38%');
+ old=captureChargeLabels(grid);n=label('solovky:d2',80);animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'80%');
+ old=captureChargeLabels(grid);n=label('solovky:d2',81);reduced=true;animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'81%');
+});
