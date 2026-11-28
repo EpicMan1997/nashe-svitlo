@@ -169,7 +169,7 @@
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
-    if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
+    if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Відлік до наступної перевірки браузером (20 с), нові дані не гарантовані. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
     const markup=nextStatusHtml+((workerMode||summary?.mode==='published')&&devicesHere.length?' <span class="eco-poll-timer" aria-hidden="true"></span>':'');
     if(element.dataset.ecoStatusMarkup!==markup){element.innerHTML=markup;element.dataset.ecoStatusMarkup=markup;}
     renderPollIndicator();
@@ -361,7 +361,19 @@
       chargeAnimationFrame=null;
     }
     root.classList.remove('is-telemetry-animating');
-    if(!chargeMotionAllowed()){renderPollIndicator();return;}
+    if(!chargeMotionAllowed()){
+      // Aggregate labels persist across card replacements. Finish a cancelled
+      // animation at its exact target when visibility/motion preference changes.
+      for(const node of numericNodes(grid)){
+        const item=numericMeta(node);
+        if(!Number.isFinite(item.target))continue;
+        node.textContent=numberText(item.kind,item.target);
+        delete node.dataset.ecoSocShown;
+        node.classList.remove('eco-soc-transition');
+        if(node.id==='eco-location-charge-value')$('eco-location-charge-fill').style.width=item.target+'%';
+      }
+      renderPollIndicator();return;
+    }
     const changes=[];
     for(const node of numericNodes(grid)){
       const item=numericMeta(node),prior=old.get(item.key);
