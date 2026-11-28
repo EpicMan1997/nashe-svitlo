@@ -360,3 +360,33 @@ test('charge animation interpolates only received endpoints and respects reduced
  old=captureChargeLabels(grid);n=label('solovky:d2',80);animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'80%');
  old=captureChargeLabels(grid);n=label('solovky:d2',81);reduced=true;animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'81%');
 });
+
+test('power, energy, and autonomy labels use stable per-station numeric keys',()=>{
+ const readings={'dacha:dp3':{socPercent:40,inputW:0,outputW:506,runtimeMinutes:351,operation:'discharging'}};
+ const m=mount({summary:()=>({mode:'worker',status:'live',nextCheckMs:Date.now()+20000}),statusFor:k=>readings[k]?'live':'waiting',reading:k=>readings[k]??null,subscribe(){},start(){}});
+ const html=m.get('eco-devices').innerHTML;
+ assert.match(html,/data-eco-number-key="dacha:dp3:out:" data-eco-number="506" data-eco-number-kind="watts"/);
+ assert.match(html,/data-eco-number-key="dacha:dp3:energy:" data-eco-number="3277" data-eco-number-kind="wh"/);
+ assert.match(html,/data-eco-number-key="dacha:dp3:runtime:Прогноз EcoFlow" data-eco-number="351" data-eco-number-kind="minutes"/);
+ assert.match(m.get('eco-status').innerHTML,/eco-poll-timer/);
+});
+test('numeric animation handles watts, Wh and minutes with no duplicate animations',()=>{
+ const instrumented=eco.replace(/\}\)\(\);\s*$/, 'window.testCharge={captureChargeLabels,animateChargeChanges};})();');
+ const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element(id));return nodes.get(id);};
+ const doc={getElementById:get,querySelector:()=>null,querySelectorAll:()=>[],visibilityState:'visible',addEventListener(){}};
+ let seq=0;const callbacks=new Map();
+ const window={document:doc,addEventListener(){},requestAnimationFrame:fn=>{callbacks.set(++seq,fn);return seq;},cancelAnimationFrame:id=>callbacks.delete(id)};
+ vm.runInNewContext(instrumented,{window,document:doc,console});
+ const label=(key,value,kind)=>{const n=new Element(key);n.dataset={ecoNumberKey:key,ecoNumber:String(value),ecoNumberKind:kind};return n;};
+ let list=[label('out',100,'watts'),label('energy',1000,'wh'),label('runtime',60,'minutes')];const grid={querySelectorAll:()=>list};
+ const {captureChargeLabels,animateChargeChanges}=window.testCharge;
+ const old=captureChargeLabels(grid);list=[label('out',300,'watts'),label('energy',1200,'wh'),label('runtime',90,'minutes')];
+ const step=time=>{const batch=[...callbacks.values()];callbacks.clear();batch.forEach(fn=>fn(time));};
+ animateChargeChanges(grid,old);
+ assert.equal(list[0].textContent,'100 W');
+ assert.equal(get('ecoflow').classList.contains('is-telemetry-animating'),true);
+ step(0);step(325);assert.ok(Number(list[0].dataset.ecoSocShown)>100&&Number(list[0].dataset.ecoSocShown)<300);
+ step(650);assert.equal(list[0].textContent,'300 W');assert.match(list[1].textContent,/1[\s\u00a0\u202f]200 Wh/);assert.equal(list[2].textContent,'1 год 30 хв');
+ assert.equal(get('ecoflow').classList.contains('is-telemetry-animating'),false);
+ const same=captureChargeLabels(grid);animateChargeChanges(grid,same);assert.equal(callbacks.size,0);
+});

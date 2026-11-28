@@ -121,6 +121,18 @@
       }) }
     ]));
   }
+  function renderPollIndicator() {
+    const indicator=root.querySelector('.eco-status');
+    const timer=indicator?.querySelector('.eco-poll-timer');
+    if(!timer)return;
+    const info=live?.summary();
+    if(info?.mode!=='worker'&&info?.mode!=='published')return;
+    const active=root.classList.contains('is-telemetry-animating');
+    const due=Number.isFinite(info.nextCheckMs)&&info.nextCheckMs>0?Math.max(0,Math.ceil((info.nextCheckMs-Date.now())/1000)):null;
+    const text=active?'Оновлено':info.checking?'Перевірка…':due===null?'':due===0?'Перевірка скоро':'Через '+due+' с';
+    if(timer.textContent!==text)timer.textContent=text;
+    indicator.classList.toggle('is-checking',Boolean(info.checking)&&!active);
+  }
   function renderConnection() {
     const element = root.querySelector('.eco-status');
     if (!element) return;
@@ -153,12 +165,14 @@
     const readingsHere=devicesHere.map(device=>live?.reading(activeEcoLocation+':'+device.id)?.updatedMs).filter(Number.isFinite);
     const at = workerMode&&readingsHere.length?Math.min(...readingsHere):summary?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
-    const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':workerMode&&liveHere?((primaryHere?'API · '+primaryHere+'/'+devicesHere.length+' · 1 хв':'Резерв · '+backupHere+'/'+devicesHere.length)+(primaryHere&&backupHere?' · резерв '+backupHere:'')+' · '+hhmm):mode === 'published'
+    const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':workerMode&&liveHere?((primaryHere?'API · '+primaryHere+'/'+devicesHere.length:'Резерв · '+backupHere+'/'+devicesHere.length)+(primaryHere&&backupHere?' · резерв '+backupHere:'')+' · '+hhmm):mode === 'published'
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
     if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
-    if (element.innerHTML !== nextStatusHtml) element.innerHTML = nextStatusHtml;
+    const markup=nextStatusHtml+((workerMode||summary?.mode==='published')&&devicesHere.length?' <span class="eco-poll-timer" aria-hidden="true"></span>':'');
+    if(element.dataset.ecoStatusMarkup!==markup){element.innerHTML=markup;element.dataset.ecoStatusMarkup=markup;}
+    renderPollIndicator();
     root.dataset.telemetryState = stateHere;
   }
 
@@ -248,9 +262,9 @@
     const value=Math.round(minutes),hours=Math.floor(value/60),mins=value%60;
     return (hours?hours+' год':'')+(mins?(hours?' ':'')+mins+' хв':'')||'0 хв';
   }
-  function remainingEnergy(capacityWh,pct) {
+  function remainingEnergy(capacityWh,pct,d) {
     return Number.isFinite(pct)&&Number.isFinite(capacityWh)
-      ? '≈ '+niceWh(Math.round(capacityWh*pct/100))+' із '+niceWh(capacityWh)
+      ? '≈ '+numberLabel(d,'energy',Math.round(capacityWh*pct/100),'wh')+' із '+niceWh(capacityWh)
       : 'Заряд невідомий';
   }
   function runtimeReading(d,capWh,pct) {
@@ -281,53 +295,90 @@
     const runtime=runtimeReading(d,capWh,pct),comp=autonomyComparison(runtime);
     if (!Number.isFinite(runtime.minutes)) return '';
     return '<div class="eco-device-stat eco-autonomy-runtime"><span>Автономність</span>' +
-      '<strong>'+timeText(runtime.minutes)+'</strong><small>'+runtime.source+'</small></div>' +
+      numberLabel(d,'runtime',runtime.minutes,'minutes','strong','',runtime.source)+'<small>'+runtime.source+'</small></div>' +
       (comp.color==='unknown'?'':'<div class="eco-device-stat eco-autonomy eco-autonomy-'+comp.color+'"><span>За графіком</span>' +
       '<strong>'+comp.value+'</strong><small>'+comp.hint+'</small></div>');
   }
-  const powerSeen = new Map();
-  function powerReading(d,kind) {
-    const value = kind==='in'?d.inputW:d.outputW;
-    const key=activeEcoLocation+':'+d.id+':'+kind,old=powerSeen.get(key);
-    const changed=liveMode && Number.isFinite(value) && Number.isFinite(old) && value!==old;
-    powerSeen.set(key,value);
-    return '<strong class="eco-power-reading' + (changed?' eco-power-changed':'') + '">' + wattsLabel(value) + '</strong>';
+  function numberText(kind,value) {
+    if(kind==='watts')return wattsLabel(value);
+    if(kind==='wh')return niceWh(Math.round(value));
+    if(kind==='minutes')return timeText(value);
+    return (kind==='estimated-soc'?'≈ ':'')+pctLabel(value);
   }
-  // Animate only between two received readings, never predict intermediate SOC
-  // over the polling interval. Model, ARIA and energy calculations stay exact.
+  function numberLabel(d,field,value,kind,tag='span',cls='',basis='') {
+    const key=activeEcoLocation+':'+d.id+':'+field+':'+basis;
+    const attrs=Number.isFinite(value)?' data-eco-number-key="'+textEscape(key)+'" data-eco-number="'+value+'" data-eco-number-kind="'+kind+'"':'';
+    return '<'+tag+(cls?' class="'+cls+'"':'')+attrs+'>'+numberText(kind,value)+'</'+tag+'>';
+  }
+  function powerReading(d,kind) {
+    return numberLabel(d,kind,kind==='in'?d.inputW:d.outputW,'watts','strong','eco-power-reading');
+  }
+  // Animate only between received numeric endpoints. All calculations use the
+  // actual provider values, and unknown readings never become animated zeros.
   let chargeAnimationFrame = null;
   function chargeMotionAllowed() {
     return typeof window.requestAnimationFrame==='function' &&
       !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches &&
       document.visibilityState!=='hidden';
   }
+  function numericNodes(grid) {
+    const nodes=Array.from(grid.querySelectorAll('[data-eco-soc-key], [data-eco-number-key]'));
+    if(grid.id==='eco-devices')for(const id of ['eco-demo-total','eco-location-charge-value']){
+      const n=$(id);if(n?.dataset.ecoNumberKey)nodes.push(n);
+    }
+    return nodes;
+  }
+  function numericMeta(node) {
+    const soc=Boolean(node.dataset.ecoSocKey);
+    const key=soc?node.dataset.ecoSocKey:node.dataset.ecoNumberKey;
+    const target=Number(soc?node.dataset.ecoSoc:node.dataset.ecoNumber);
+    const shown=Number(node.dataset.ecoSocShown??target);
+    return {key,target,shown,kind:soc?'soc':node.dataset.ecoNumberKind,soc};
+  }
   function captureChargeLabels(grid) {
     const old=new Map();
-    for(const node of grid.querySelectorAll('[data-eco-soc-key]')){
-      const target=Number(node.dataset.ecoSoc),shown=Number(node.dataset.ecoSocShown??node.dataset.ecoSoc);
-      if(Number.isFinite(target)&&Number.isFinite(shown))old.set(node.dataset.ecoSocKey,{target,shown});
+    for(const node of numericNodes(grid)){
+      const item=numericMeta(node);
+      if(item.key&&Number.isFinite(item.target)&&Number.isFinite(item.shown))old.set(item.key,item);
     }
     return old;
+  }
+  function setAggregateNumber(node,value,kind,key,force) {
+    if(!force&&node.dataset.ecoNumberKey===key&&node.dataset.ecoNumber===String(value)&&node.dataset.ecoNumberKind===kind)return;
+    delete node.dataset.ecoSocShown;
+    node.classList.remove('eco-soc-transition');
+    if(Number.isFinite(value)){
+      node.dataset.ecoNumberKey=key;node.dataset.ecoNumber=String(value);node.dataset.ecoNumberKind=kind;
+      node.textContent=numberText(kind,value);
+    }else{
+      delete node.dataset.ecoNumberKey;delete node.dataset.ecoNumber;delete node.dataset.ecoNumberKind;
+      node.textContent='—';
+    }
   }
   function animateChargeChanges(grid,old) {
     if(chargeAnimationFrame!==null){
       window.cancelAnimationFrame?.(chargeAnimationFrame);
       chargeAnimationFrame=null;
     }
-    if(!chargeMotionAllowed())return;
+    root.classList.remove('is-telemetry-animating');
+    if(!chargeMotionAllowed()){renderPollIndicator();return;}
     const changes=[];
-    for(const node of grid.querySelectorAll('[data-eco-soc-key]')){
-      const prior=old.get(node.dataset.ecoSocKey),target=Number(node.dataset.ecoSoc);
-      if(!prior||!Number.isFinite(target)||prior.shown===target)continue;
-      const card=node.closest('article'),fill=card?.querySelector('.eco-charge-track i');
-      changes.push({node,fill,from:prior.shown,to:target});
+    for(const node of numericNodes(grid)){
+      const item=numericMeta(node),prior=old.get(item.key);
+      if(!prior||!Number.isFinite(item.target)||prior.kind!==item.kind||prior.shown===item.target)continue;
+      const card=item.soc?node.closest('article'):null;
+      const fill=item.soc?card?.querySelector('.eco-charge-track i'):node.id==='eco-location-charge-value'?$('eco-location-charge-fill'):null;
+      changes.push({node,fill,kind:item.kind,from:prior.shown,to:item.target});
       node.classList.add('eco-soc-transition');
     }
-    if(!changes.length)return;
+    if(!changes.length){renderPollIndicator();return;}
+    root.classList.add('is-telemetry-animating');
+    renderPollIndicator();
     let started=null;
-    const paint=(change,value)=>{
+    const paint=(change,value,final=false)=>{
       change.node.dataset.ecoSocShown=String(value);
-      change.node.textContent=pctLabel(value);
+      const shown=change.kind==='watts'&&!final?Math.round(value):value;
+      change.node.textContent=numberText(change.kind,shown);
       if(change.fill)change.fill.style.width=value+'%';
     };
     for(const change of changes)paint(change,change.from);
@@ -336,10 +387,11 @@
       const progress=chargeMotionAllowed()?Math.min(1,Math.max(0,(now-started)/650)):1;
       const ease=1-Math.pow(1-progress,3);
       for(const change of changes){
-        paint(change,progress===1?change.to:change.from+(change.to-change.from)*ease);
+        paint(change,progress===1?change.to:change.from+(change.to-change.from)*ease,progress===1);
         if(progress===1){delete change.node.dataset.ecoSocShown;change.node.classList.remove('eco-soc-transition');}
       }
       chargeAnimationFrame=progress<1?window.requestAnimationFrame(tick):null;
+      if(progress===1){root.classList.remove('is-telemetry-animating');renderPollIndicator();}
     };
     chargeAnimationFrame=window.requestAnimationFrame(tick);
   }
@@ -426,7 +478,7 @@
       '<span class="eco-battery-art" aria-hidden="true"><i style="width:' +
       (Number.isFinite(d.pct) ? d.pct : 0) + '%"></i></span></div>' +
       chargeTrack(d.pct, d.name) +
-      '<div class="eco-capacity-line"><strong>' + capacity + '</strong><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
+      '<div class="eco-capacity-line"><strong>' + capacity + '</strong><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct,d) + '</small></div>' +
       energyStats(d, d.capacityWh, d.pct) +
       solarDisclosure(d) +
       availabilityNote(d) +
@@ -441,7 +493,7 @@
       '</span></div>' + operationBadge(d) + '</div>' +
       '<div class="eco-ocean-body"><div class="eco-ocean-battery"><span class="eco-ocean-label">Акумулятор</span>' +
       '<div class="eco-battery">' + chargeLabel(d,'eco-battery-percent') + '</div>' +
-      chargeTrack(d.pct, d.name) + '<span>' + cap + '</span><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct) + '</small></div>' +
+      chargeTrack(d.pct, d.name) + '<span>' + cap + '</span><small class="eco-remaining-energy">Залишок: ' + remainingEnergy(d.capacityWh,d.pct,d) + '</small></div>' +
       '<div class="eco-ocean-energy"><div><span>Мережа / заряд</span>' + powerReading(d,'in') + '</div>' +
       '<div class="eco-ocean-flow" aria-hidden="true">→</div><div><span>Будинок</span>' +
       powerReading(d,'out') + '</div></div></div>' +
@@ -469,7 +521,7 @@
       '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
       '<span>Заряд усієї системи</span>' + chargeLabel(main,'eco-system-combined-percent','strong') +
       '</div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
-      '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc) + '</small>' +
+      '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc,main) + '</small>' +
       '</div>' +
       (liveMode && !Number.isFinite(soc) ? availabilityNote(main) : '') +
       energyStats(main, capacityWh, soc) +
@@ -749,14 +801,19 @@
     if ($('eco-location-charge-label')) $('eco-location-charge-label').textContent = averageLabel;
     if ($('eco-metric-charge-label')) $('eco-metric-charge-label').textContent = averageLabel;
     const hasEstimates = knownSystems.some(d => d.estimated === true);
-    $('eco-demo-total').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
+    const grid=$('eco-devices');
+    const old=refreshOnly&&id===lastRenderedDeviceLocation&&chargeMotionAllowed()?captureChargeLabels(grid):new Map();
+    const aggregateKey=id+':average:'+knownSystems.map(d=>d.id).join(',')+':'+hasEstimates;
+    const aggregateKind=hasEstimates?'estimated-soc':'soc';
+    const aggregateChanged=$('eco-location-charge-value').dataset.ecoNumberKey!==aggregateKey||$('eco-location-charge-value').dataset.ecoNumber!==String(weighted);
+    setAggregateNumber($('eco-demo-total'),weighted,aggregateKind,aggregateKey+':metric',!refreshOnly);
     $('eco-demo-total').dataset.level = weighted === null ? 'unknown' : level(weighted);
     // One bar represents the capacity-weighted average charge across physical batteries.
     const overallTrack = $('eco-location-charge-track');
-    $('eco-location-charge-value').textContent = weighted === null ? '—' : (hasEstimates ? '≈ ' : '') + pctLabel(weighted);
+    setAggregateNumber($('eco-location-charge-value'),weighted,aggregateKind,aggregateKey,!refreshOnly);
     overallTrack.dataset.level = weighted === null ? 'unknown' : level(weighted);
     overallTrack.setAttribute('aria-label', averageLabel);
-    $('eco-location-charge-fill').style.width = weighted === null ? '0%' : weighted + '%';
+    if(aggregateChanged||!refreshOnly) $('eco-location-charge-fill').style.width = weighted === null ? '0%' : weighted + '%';
     if (weighted === null) {
       overallTrack.removeAttribute('aria-valuenow');
       overallTrack.setAttribute('aria-valuetext', 'Заряд невідомий');
@@ -768,13 +825,11 @@
       (id === 'dacha' ? unassignedSection() : '');
     // Keep DOM and open details intact when nothing visible has changed.
     if (!refreshOnly || id !== lastRenderedDeviceLocation || deviceMarkup !== lastRenderedDeviceMarkup) {
-      const grid=$('eco-devices');
-      const old=refreshOnly&&id===lastRenderedDeviceLocation&&chargeMotionAllowed()?captureChargeLabels(grid):new Map();
       grid.innerHTML = deviceMarkup;
       animateChargeChanges(grid,old);
       lastRenderedDeviceMarkup = deviceMarkup;
       lastRenderedDeviceLocation = id;
-    }
+    } else if(aggregateChanged&&weighted!==null) animateChargeChanges(grid,old);
     renderSolar(place);
     if (refreshOnly && metricOpen && detailPanel && !detailPanel.hidden) {
       detailPanel.innerHTML = metricBreakdown(metricOpen);
@@ -801,6 +856,8 @@
     updateLocation(activeEcoLocation, true);
   });
   live?.start();
+  // Local clock only: no extra network requests or full card redraws.
+  window.setInterval?.(renderPollIndicator,1000);
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
   // One tick per minute is enough; skip forecasts whose displayed values did not change.
   let lastOutageRenderKey = null;

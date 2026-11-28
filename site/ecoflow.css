@@ -2242,3 +2242,13 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
  #ecoflow .eco-operation-charging .eco-operation-icon{animation:none}
  #ecoflow .eco-charge-track i{transition:none}
 }
+
+/* One compact refresh indicator: browser check countdown, not a fabricated API ETA. */
+#ecoflow .eco-poll-timer{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700;opacity:.9}
+#ecoflow .eco-poll-timer:not(:empty){border-left:1px solid currentColor;padding-left:7px}
+#ecoflow .eco-status.is-checking i{animation:eco-check-pulse 1s ease-in-out infinite}
+#ecoflow.is-telemetry-animating .eco-status i{animation:eco-check-pulse .65s ease-out}
+#ecoflow .eco-soc-transition{font-variant-numeric:tabular-nums}
+@keyframes eco-check-pulse{0%,100%{box-shadow:0 0 0 3px #34d39925}50%{box-shadow:0 0 0 7px #34d39965}}
+@media(prefers-reduced-motion:reduce){#ecoflow .eco-status.is-checking i,#ecoflow.is-telemetry-animating .eco-status i{animation:none}}
+@media(max-width:390px){#ecoflow .eco-poll-timer:not(:empty){padding-left:5px}#ecoflow .eco-status{gap:5px}}

@@ -35,6 +35,7 @@
   let publishedSignature = '';
   let acceptedPublishedFrame = null;
   let snapshotInFlight = null;
+  let nextCheckMs = null;
   let lastError = null;
   const subscribers = new Set();
 
@@ -103,7 +104,7 @@
   function summary() {
     const present = DEVICE_KEYS.filter(key => ['live','published'].includes(statusFor(key))).length;
     return { status, mode, lastError, present, total: DEVICE_KEYS.length, lastFrameMs: newestEmittedMs,
-      unassigned: [...unassigned] };
+      unassigned: [...unassigned], checking: Boolean(snapshotInFlight), nextCheckMs };
   }
   function refreshStatus() {
     if (!enabled) return;
@@ -254,7 +255,9 @@
       if (mode === 'stream') connectStream();
       // Published GitHub Actions snapshots are NOT live; look for a new publication every 20 seconds.
       setInterval(refreshStatus, RECONNECT_CHECK_MS);
-      setInterval(getSnapshot, mode === 'published'||mode==='worker' ? 20000 : 30000);
+      const pollMs=mode==='published'||mode==='worker'?20000:30000;
+      nextCheckMs=Date.now()+pollMs;
+      setInterval(()=>{nextCheckMs=Date.now()+pollMs;return getSnapshot();},pollMs);
       host.document?.addEventListener?.('visibilitychange', () => {
         if (host.document.visibilityState === 'visible') getSnapshot();
       });

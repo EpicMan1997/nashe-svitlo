@@ -268,3 +268,15 @@ test('worker mode rejects unexpected gateway host',async()=>{
  assert.equal(f.api.summary().status,'error');
  assert.equal(f.snapshotCalls.length,0);
 });
+
+test('poll timing is the actual browser check interval, not a claimed upstream refresh',async()=>{
+ const f=fixture();f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+ await f.api.start();
+ assert.equal(f.api.summary().nextCheckMs,f.now()+20000);
+ const poll=f.intervals.find(x=>x.ms===20000).fn;
+ f.advance(20000);
+ let resolve;f.setSnapshotResponder(()=>new Promise(r=>{resolve=r;}));
+ const pending=poll();assert.equal(f.api.summary().checking,true);assert.equal(f.api.summary().nextCheckMs,f.now()+20000);
+ resolve({ok:true,json:async()=>({version:1,emittedAt:new Date(f.now()).toISOString(),devices:{}})});
+ await pending;assert.equal(f.api.summary().checking,false);
+});
