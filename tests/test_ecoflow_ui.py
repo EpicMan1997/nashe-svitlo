@@ -76,8 +76,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("new CustomEvent('svitlo:location-change'", HTML)
         self.assertNotIn('href="#ecoflow"', HTML)
         self.assertIn('<section class="eco-shell"', HTML)
-        self.assertIn('"./ecoflow.css?v=76"', SW)
-        self.assertIn('"./ecoflow.js?v=76"', SW)
+        self.assertIn('"./ecoflow.css?v=77"', SW)
+        self.assertIn('"./ecoflow.js?v=77"', SW)
 
 
     def test_device_section_first_and_header_rearranged(self):
@@ -291,10 +291,10 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('eco-title-monogram', HTML)
         self.assertIn('<path d="M14 20H26" stroke="currentColor"', HTML)
         self.assertNotIn('stroke="#67E8F9"', HTML)
-        self.assertIn('href="./ecoflow.css?v=76"', HTML)
-        self.assertIn('src="./ecoflow.js?v=76"', HTML)
+        self.assertIn('href="./ecoflow.css?v=77"', HTML)
+        self.assertIn('src="./ecoflow.js?v=77"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v76', SW)
+        self.assertIn('nashe-svitlo-static-v77', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)
@@ -418,7 +418,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('<section class="eco-overview-details" id="eco-overview-details" aria-labelledby="eco-overview-heading">', HTML)
         self.assertNotIn('<summary>Детальніше про батареї', HTML)
         self.assertIn('class="eco-overview-content"', HTML)
-        self.assertIn('role="progressbar" aria-label="Середній заряд API-станцій"', HTML)
+        self.assertIn('role="progressbar" aria-label="Загальний заряд"', HTML)
         self.assertLess(HTML.index('id="eco-location-summary"'), HTML.index('id="eco-overview-heading"'))
         self.assertIn('.eco-location-summary[hidden],.eco-overview-details[hidden]', CSS)
         self.assertNotIn("if (!empty) displayMetric('capacity');", JS)
@@ -428,7 +428,7 @@ class EcoFlowPreviewContract(unittest.TestCase):
 
     def test_location_metrics_have_compact_labels_and_accessible_details(self):
         self.assertIn('Ємність локації', HTML)
-        self.assertIn('Середній заряд API-станцій', HTML)
+        self.assertIn('Загальний заряд', HTML)
         self.assertIn('Кількість акумуляторів та станцій', HTML)
         self.assertNotIn('Сума номінальних ємностей батарей', HTML + JS)
         self.assertNotIn('Зважений за ємністю', HTML)

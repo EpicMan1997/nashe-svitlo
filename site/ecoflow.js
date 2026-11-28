@@ -302,7 +302,9 @@
     const diff=runtime.minutes-outage.minutes;
     return {color:diff<0?'danger':diff<outage.minutes*0.25?'warning':'safe',
       value:diff<0?'Не вистачить':'Вистачить',
-      hint:label+' · '+(diff<0?'бракує ':'запас ')+timeText(Math.abs(diff))};
+      hint:label+' · '+(diff<0?'бракує ':'запас ')+timeText(Math.abs(diff)),
+      durationLabel:outage.current?'До світла':'Відключення',duration:timeText(outage.minutes),
+      marginLabel:diff<0?'Бракує':'Запас',margin:timeText(Math.abs(diff))};
   }
   function autonomyCards(d,capWh,pct) {
     const runtime=runtimeReading(d,capWh,pct),comp=autonomyComparison(runtime);
@@ -310,7 +312,7 @@
     return '<div class="eco-device-stat eco-autonomy-runtime"><span>Автономність</span>' +
       numberLabel(d,'runtime',runtime.minutes,'minutes','strong','',runtime.source)+'<small>'+runtime.source+'</small></div>' +
       (comp.color==='unknown'?'':'<div class="eco-device-stat eco-autonomy eco-autonomy-'+comp.color+'"><span>За графіком</span>' +
-      '<strong>'+comp.value+'</strong><small>'+comp.hint+'</small></div>');
+      '<strong>'+comp.value+'</strong><small class="eco-outage-detail"><span>'+comp.durationLabel+': '+comp.duration+'</span><span class="eco-outage-sep"> · </span><span>'+comp.marginLabel+': '+comp.margin+'</span></small></div>');
   }
   function numberText(kind,value) {
     if(kind==='watts')return wattsLabel(value);
@@ -517,7 +519,7 @@
       '<div class="eco-device-head"><div class="eco-device-ident">' +
       '<strong class="eco-device-name">' + d.name + '</strong>' +
       '<span class="eco-device-model">' + titleNote + '</span></div>' + operationBadge(d) + '</div>' +
-      '<div class="eco-battery">' + chargeLabel(d,'eco-battery-percent') +
+      '<div class="eco-battery"><span class="eco-mobile-charge-label">Заряд</span>' + chargeLabel(d,'eco-battery-percent') +
       '<span class="eco-battery-art" aria-hidden="true"><i style="width:' +
       (Number.isFinite(d.pct) ? d.pct : 0) + '%"></i></span></div>' +
       chargeTrack(d.pct, d.name) +
@@ -559,10 +561,10 @@
       '" aria-label="' + main.name + ' із додатковою батареєю, ємність ' + niceWh(capacityWh) +
       ', загальний заряд ' + pctLabel(soc) + '">' +
       '<div class="eco-system-head"><div class="eco-system-title"><strong>' + main.name +
-      '</strong><span class="eco-system-tag">+ ' + label + '</span></div>' +
+      '</strong><span class="eco-system-tag" title="'+label+'"><span class="eco-addon-full">+ ' + label + '</span><span class="eco-addon-short">+ батарея</span></span></div>' +
       '<div class="eco-system-total"><strong>' + niceWh(capacityWh) + '</strong>' + operationBadge(main) + '</div></div>' +
       '<div class="eco-system-combined-charge"><div class="eco-system-combined-heading">' +
-      '<span>Заряд усієї системи</span>' + chargeLabel(main,'eco-system-combined-percent','strong') +
+      '<span class="eco-system-charge-label">Заряд усієї системи</span>' + chargeLabel(main,'eco-system-combined-percent','strong') +
       '</div>' + chargeTrack(soc, main.name + ' разом із батареєю') +
       '<small class="eco-remaining-energy">Залишок: ' + remainingEnergy(capacityWh,soc,main) + '</small>' +
       '</div>' +
@@ -835,12 +837,15 @@
     $('eco-capacity').textContent = !packs.length ? '—' : allKnown ? niceWh(totalWh) : 'Уточнюється';
     const available=systems.filter(d=>Number.isFinite(d.pct));
     const coverage=$('eco-data-coverage');
-    if (coverage) coverage.textContent=liveMode && available.length<systems.length
-      ? available.length + '/' + systems.length + ' станцій · ' +
-        niceWh(available.reduce((sum,d)=>sum+d.capacityWh,0)) + ' із ' + niceWh(totalWh)
-      : niceWh(totalWh) + ' · ' + systems.length + ' станцій';
+    if (coverage) {
+      const remainingWh=available.reduce((sum,d)=>sum+d.capacityWh*d.pct/100,0);
+      const availableWh=available.reduce((sum,d)=>sum+d.capacityWh,0);
+      const count=available.length<systems.length?available.length+'/'+systems.length+' станцій':systems.length+' '+(systems.length===1?'станція':systems.length<5?'станції':'станцій');
+      coverage.textContent=(available.length?'≈ '+uk.format(Math.round(remainingWh))+' / '+niceWh(availableWh):'Немає даних')+' · '+count;
+      coverage.title='Залишок енергії та номінальна ємність станцій із доступними показниками'+(available.length<systems.length?'. Повна ємність локації: '+niceWh(totalWh):'');
+    }
     const partial = liveMode && !allChargesKnown;
-    const averageLabel = partial ? 'Середній заряд підключених' : 'Середній заряд API-станцій';
+    const averageLabel = partial ? 'Заряд доступних станцій' : 'Загальний заряд';
     if ($('eco-location-charge-label')) $('eco-location-charge-label').textContent = averageLabel;
     if ($('eco-metric-charge-label')) $('eco-metric-charge-label').textContent = averageLabel;
     const hasEstimates = knownSystems.some(d => d.estimated === true);

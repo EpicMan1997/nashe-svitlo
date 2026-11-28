@@ -130,7 +130,7 @@ test('partially connected live location shows unknown data, not sample values', 
   assert.doesNotMatch(m.get('eco-devices').innerHTML, /36%/);
   assert.doesNotMatch(m.get('eco-devices').innerHTML, />84%/);
   assert.equal(m.get('eco-demo-total').textContent, '40%');
-  assert.equal(m.get('eco-location-charge-label').textContent, 'Середній заряд підключених');
+  assert.equal(m.get('eco-location-charge-label').textContent, 'Заряд доступних станцій');
   assert.match(m.get('eco-devices').innerHTML, /500 W/);
   assert.match(m.get('eco-status').innerHTML, /1\/2/);
   // Simulate a disconnected gateway; stale numbers must never linger.
@@ -413,4 +413,18 @@ test('poll result is based on formatted numeric changes in the current location 
  assert.equal(show(1900,null,{checkResult:'failed'}),'Немає відповіді');
  assert.equal(show(3900),'Через 20 с');
  assert.equal(show(4900),'Через 19 с');
+});
+
+test('mobile layout uses a complete two-column stat grid and keeps summary energy transparent',()=>{
+ const readings={'dacha:dp3':{socPercent:82,inputW:0,outputW:484,runtimeMinutes:709,operation:'discharging'},'dacha:d2':{socPercent:80,inputW:0,outputW:0}};
+ const m=mount({summary:()=>({mode:'worker',status:'live'}),statusFor:k=>readings[k]?'live':'waiting',reading:k=>readings[k]??null,subscribe(){},start(){}});
+ assert.equal(m.get('eco-location-charge-label').textContent,'Загальний заряд');
+ assert.equal(m.get('eco-location-charge-value').textContent,'81,8%');
+ assert.match(m.get('eco-data-coverage').textContent,/≈ 7[\s\u00a0\u202f]537 \/ 9[\s\u00a0\u202f]216 Wh · 2 станції/);
+ const css=fs.readFileSync('site/ecoflow.css','utf8');
+ const mobile=css.slice(css.indexOf('/* v77:'));
+ assert.match(mobile,/\.eco-common-stats\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(mobile,/\.eco-device-stat:last-child:nth-child\(odd\)\{grid-column:1\/-1!important\}/);
+ assert.match(m.get('eco-devices').innerHTML,/eco-addon-short/);
+ assert.match(m.get('eco-devices').innerHTML,/eco-mobile-charge-label/);
 });
