@@ -1,0 +1,24 @@
+{
+  "name": "nashe-svitlo-ecoflow",
+  "main": "worker.mjs",
+  "compatibility_date": "2026-11-28",
+  "workers_dev": true,
+  "preview_urls": false,
+  "keep_vars": true,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TELEMETRY",
+        "class_name": "TelemetryGate"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "TelemetryGate"
+      ]
+    }
+  ]
+}
