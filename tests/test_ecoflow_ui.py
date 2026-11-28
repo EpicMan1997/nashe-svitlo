@@ -76,8 +76,8 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn("new CustomEvent('svitlo:location-change'", HTML)
         self.assertNotIn('href="#ecoflow"', HTML)
         self.assertIn('<section class="eco-shell"', HTML)
-        self.assertIn('"./ecoflow.css?v=74"', SW)
-        self.assertIn('"./ecoflow.js?v=74"', SW)
+        self.assertIn('"./ecoflow.css?v=75"', SW)
+        self.assertIn('"./ecoflow.js?v=75"', SW)
 
 
     def test_device_section_first_and_header_rearranged(self):
@@ -291,10 +291,10 @@ class EcoFlowPreviewContract(unittest.TestCase):
         self.assertIn('eco-title-monogram', HTML)
         self.assertIn('<path d="M14 20H26" stroke="currentColor"', HTML)
         self.assertNotIn('stroke="#67E8F9"', HTML)
-        self.assertIn('href="./ecoflow.css?v=74"', HTML)
-        self.assertIn('src="./ecoflow.js?v=74"', HTML)
+        self.assertIn('href="./ecoflow.css?v=75"', HTML)
+        self.assertIn('src="./ecoflow.js?v=75"', HTML)
         self.assertIn("updateViaCache:'none'", HTML)
-        self.assertIn('nashe-svitlo-static-v74', SW)
+        self.assertIn('nashe-svitlo-static-v75', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.css")', SW)
         self.assertIn('url.pathname.endsWith("/ecoflow.js")', SW)
         self.assertIn('fetch(request, {cache: "no-store"})', SW)

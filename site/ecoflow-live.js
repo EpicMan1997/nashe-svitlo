@@ -36,6 +36,9 @@
   let acceptedPublishedFrame = null;
   let snapshotInFlight = null;
   let nextCheckMs = null;
+  let checkStartedMs=null,checkFinishedMs=null,checkResult=null;
+  const pollSubscribers=new Set();
+  const notifyPoll=()=>pollSubscribers.forEach(fn=>{try{fn();}catch(_){}});
   let lastError = null;
   const subscribers = new Set();
 
@@ -104,7 +107,7 @@
   function summary() {
     const present = DEVICE_KEYS.filter(key => ['live','published'].includes(statusFor(key))).length;
     return { status, mode, lastError, present, total: DEVICE_KEYS.length, lastFrameMs: newestEmittedMs,
-      unassigned: [...unassigned], checking: Boolean(snapshotInFlight), nextCheckMs };
+      unassigned: [...unassigned], checking: Boolean(snapshotInFlight), nextCheckMs, checkStartedMs, checkFinishedMs, checkResult };
   }
   function refreshStatus() {
     if (!enabled) return;
@@ -177,7 +180,7 @@
     return true;
   }
   async function getWorkerSnapshot() {
-    let primaryOk=false;
+    let primaryOk=false, fallbackOk=false;
     try{
       const options={cache:'no-store',credentials:'omit'};
       if(typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function')options.signal=AbortSignal.timeout(25000);
@@ -188,27 +191,34 @@
     if(!primaryOk||WORKER_KEYS.some(key=>!workerFresh(workerReadings.get(key))||workerAvailability[key]!=='readable')){
       try{
         const response=await fetch(fallbackUrl+'?t='+Math.floor(Date.now()/20000),{cache:'no-store',credentials:'omit'});
-        if(response.ok)acceptWorkerFrame(await response.json(),'fallback');
+        if(response.ok)fallbackOk=acceptWorkerFrame(await response.json(),'fallback');
       }catch(_){}
     }
     refreshStatus();
+    return primaryOk||fallbackOk;
   }
   async function getSnapshot() {
     if (!enabled || !snapshotUrl || ((mode === 'published'||mode==='worker') && host.document?.visibilityState === 'hidden')) return;
     if (snapshotInFlight) return snapshotInFlight;
+    checkStartedMs=Date.now();checkResult=null;
     snapshotInFlight = (async () => {
       if(mode==='worker')return getWorkerSnapshot();
       try {
         const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 20000)) : '';
         const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
-        acceptFrame(await response.json());
+        const frame=await response.json();
+        acceptFrame(frame);
+        return frame?.version===1&&isoTime(frame.emittedAt)!==null&&frame.connection!=='unavailable';
       } catch (error) {
         lastError = 'snapshot-unavailable';
-        refreshStatus();
+        refreshStatus();return false;
       }
     })();
-    try { await snapshotInFlight; } finally { snapshotInFlight = null; }
+    notifyPoll();
+    try { checkResult=(await snapshotInFlight)?'ok':'failed'; }
+    catch(_){checkResult='failed';}
+    finally { snapshotInFlight=null;checkFinishedMs=Date.now();notifyPoll(); }
   }
   function connectStream() {
     if (!enabled || !streamUrl || typeof EventSource === 'undefined') return;
@@ -271,6 +281,7 @@
   }
   host.NasheSvitloEcoFlowLive = Object.freeze({
     start, subscribe, reading, statusFor, summary,
+    subscribePoll(fn){pollSubscribers.add(fn);return ()=>pollSubscribers.delete(fn);},
     availabilityFor: key => mode==='worker'?(statusFor(key)==='published'?fallbackAvailability[key]||'readable':workerAvailability[key]||fallbackAvailability[key]||'unavailable'):availability[key] || 'unavailable',
     // For deterministic tests only; never exposed as a control to the UI.
     acceptFrame, deviceKeys: DEVICE_KEYS

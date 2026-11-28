@@ -350,13 +350,13 @@ test('charge animation interpolates only received endpoints and respects reduced
  const {captureChargeLabels,animateChargeChanges}=window.testCharge;
  const step=time=>{const batch=[...callbacks.values()];callbacks.clear();batch.forEach(fn=>fn(time));};
  let old=captureChargeLabels(grid);n=label('dacha:dp3',42);
- animateChargeChanges(grid,old);assert.equal(n.textContent,'40%');step(0);step(325);
+ animateChargeChanges(grid,old);assert.equal(n.textContent,'40%');step(0);step(700);
  assert.ok(Number(n.dataset.ecoSocShown)>40&&Number(n.dataset.ecoSocShown)<42);
- step(650);assert.equal(n.textContent,'42%');assert.equal(fill.style.width,'42%');assert.equal(callbacks.size,0);
+ step(1400);assert.equal(n.textContent,'42%');assert.equal(fill.style.width,'42%');assert.equal(callbacks.size,0);
  old=captureChargeLabels(grid);n=label('dacha:dp3',42);animateChargeChanges(grid,old);assert.equal(callbacks.size,0);
- old=captureChargeLabels(grid);n=label('dacha:dp3',38);animateChargeChanges(grid,old);step(1000);step(1325);
+ old=captureChargeLabels(grid);n=label('dacha:dp3',38);animateChargeChanges(grid,old);step(1000);step(1700);
  assert.ok(Number(n.dataset.ecoSocShown)<42&&Number(n.dataset.ecoSocShown)>38);
- step(1650);assert.equal(n.textContent,'38%');
+ step(2400);assert.equal(n.textContent,'38%');
  old=captureChargeLabels(grid);n=label('solovky:d2',80);animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'80%');
  old=captureChargeLabels(grid);n=label('solovky:d2',81);reduced=true;animateChargeChanges(grid,old);assert.equal(callbacks.size,0);assert.equal(n.textContent,'81%');
 });
@@ -385,8 +385,24 @@ test('numeric animation handles watts, Wh and minutes with no duplicate animatio
  animateChargeChanges(grid,old);
  assert.equal(list[0].textContent,'100 W');
  assert.equal(get('ecoflow').classList.contains('is-telemetry-animating'),true);
- step(0);step(325);assert.ok(Number(list[0].dataset.ecoSocShown)>100&&Number(list[0].dataset.ecoSocShown)<300);
- step(650);assert.equal(list[0].textContent,'300 W');assert.match(list[1].textContent,/1[\s\u00a0\u202f]200 Wh/);assert.equal(list[2].textContent,'1 год 30 хв');
+ step(0);step(700);assert.ok(Number(list[0].dataset.ecoSocShown)>100&&Number(list[0].dataset.ecoSocShown)<300);
+ step(1400);assert.equal(list[0].textContent,'300 W');assert.match(list[1].textContent,/1[\s\u00a0\u202f]200 Wh/);assert.equal(list[2].textContent,'1 год 30 хв');
  assert.equal(get('ecoflow').classList.contains('is-telemetry-animating'),false);
  const same=captureChargeLabels(grid);animateChargeChanges(grid,same);assert.equal(callbacks.size,0);
+});
+
+test('quick cached poll remains visible and real readings have a separate update cue',()=>{
+ const instrumented=eco.replace(/\}\)\(\);\s*$/, 'window.testPoll=pollPresentation;})();');
+ const nodes=new Map(),get=id=>{if(!nodes.has(id))nodes.set(id,new Element(id));return nodes.get(id);};
+ const doc={getElementById:get,querySelector:()=>null,querySelectorAll:()=>[],addEventListener(){}};
+ const window={document:doc,addEventListener(){}};
+ vm.runInNewContext(instrumented,{window,document:doc,console});
+ const show=(now,local=null,active=false,extra={})=>window.testPoll({mode:'worker',checking:false,checkStartedMs:1000,checkFinishedMs:1050,checkResult:'ok',nextCheckMs:21000,...extra},now,local,active);
+ assert.equal(show(1100).text,'Перевірка…');
+ assert.equal(show(1900).text,'Перевірено');
+ assert.equal(show(1900,1050,true).text,'Оновлено');
+ assert.equal(show(1900,1050).text,'Оновлено');
+ assert.equal(show(1900,null,false,{checkResult:'failed'}).text,'Немає відповіді');
+ assert.equal(show(5000).text,'Через 16 с');
+ assert.equal(show(5000,null,false,{checking:true}).text,'Перевірка…');
 });

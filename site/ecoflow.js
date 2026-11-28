@@ -121,17 +121,25 @@
       }) }
     ]));
   }
+  const CHECK_CUE_MS=850, RESULT_CUE_MS=3200, NUMBER_MOTION_MS=1400;
+  let cueLocation=null,cueReadingSignature='',lastLocalUpdateMs=null;
+  function pollPresentation(info,now,localUpdate,animating) {
+    if(info?.mode!=='worker'&&info?.mode!=='published')return {text:'',state:'idle'};
+    const started=info.checkStartedMs,finished=info.checkFinishedMs;
+    if(info.checking||(Number.isFinite(started)&&now-started<CHECK_CUE_MS&&now>=started))return {text:'Перевірка…',state:'checking'};
+    if(animating||(Number.isFinite(localUpdate)&&now-localUpdate<RESULT_CUE_MS&&now>=localUpdate))return {text:'Оновлено',state:'updated'};
+    if(Number.isFinite(finished)&&now-finished<RESULT_CUE_MS&&now>=finished)
+      return info.checkResult==='failed'?{text:'Немає відповіді',state:'failed'}:{text:'Перевірено',state:'checked'};
+    const due=Number.isFinite(info.nextCheckMs)&&info.nextCheckMs>0?Math.max(0,Math.ceil((info.nextCheckMs-now)/1000)):null;
+    return {text:due===null?'':due===0?'Перевірка скоро':'Через '+due+' с',state:'idle'};
+  }
   function renderPollIndicator() {
     const indicator=root.querySelector('.eco-status');
     const timer=indicator?.querySelector('.eco-poll-timer');
     if(!timer)return;
-    const info=live?.summary();
-    if(info?.mode!=='worker'&&info?.mode!=='published')return;
-    const active=root.classList.contains('is-telemetry-animating');
-    const due=Number.isFinite(info.nextCheckMs)&&info.nextCheckMs>0?Math.max(0,Math.ceil((info.nextCheckMs-Date.now())/1000)):null;
-    const text=active?'Оновлено':info.checking?'Перевірка…':due===null?'':due===0?'Перевірка скоро':'Через '+due+' с';
-    if(timer.textContent!==text)timer.textContent=text;
-    indicator.classList.toggle('is-checking',Boolean(info.checking)&&!active);
+    const state=pollPresentation(live?.summary(),Date.now(),lastLocalUpdateMs,root.classList.contains('is-telemetry-animating'));
+    if(timer.textContent!==state.text)timer.textContent=state.text;
+    for(const name of ['checking','updated','checked','failed'])indicator.classList.toggle('is-'+name,state.state===name);
   }
   function renderConnection() {
     const element = root.querySelector('.eco-status');
@@ -163,6 +171,16 @@
       mode === 'published' ? 'Реальні показники з EcoFlow API, публікація залежить від графіка GitHub Actions. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
     const readingsHere=devicesHere.map(device=>live?.reading(activeEcoLocation+':'+device.id)?.updatedMs).filter(Number.isFinite);
+    const signature=devicesHere.map(d=>{
+      const key=activeEcoLocation+':'+d.id,value=live?.reading(key);
+      return value&&Number.isFinite(value.updatedMs)?key+':'+value.updatedMs:'';
+    }).filter(Boolean).join('|');
+    if(cueLocation!==activeEcoLocation){
+      cueLocation=activeEcoLocation;cueReadingSignature=signature;lastLocalUpdateMs=null;
+    }else if(signature!==cueReadingSignature){
+      if(signature)lastLocalUpdateMs=Date.now();
+      cueReadingSignature=signature;
+    }
     const at = workerMode&&readingsHere.length?Math.min(...readingsHere):summary?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
     const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':workerMode&&liveHere?((primaryHere?'API · '+primaryHere+'/'+devicesHere.length:'Резерв · '+backupHere+'/'+devicesHere.length)+(primaryHere&&backupHere?' · резерв '+backupHere:'')+' · '+hhmm):mode === 'published'
@@ -385,6 +403,7 @@
     }
     if(!changes.length){renderPollIndicator();return;}
     root.classList.add('is-telemetry-animating');
+    lastLocalUpdateMs=Date.now();
     renderPollIndicator();
     let started=null;
     const paint=(change,value,final=false)=>{
@@ -396,7 +415,7 @@
     for(const change of changes)paint(change,change.from);
     const tick=now=>{
       if(started===null)started=now;
-      const progress=chargeMotionAllowed()?Math.min(1,Math.max(0,(now-started)/650)):1;
+      const progress=chargeMotionAllowed()?Math.min(1,Math.max(0,(now-started)/NUMBER_MOTION_MS)):1;
       const ease=1-Math.pow(1-progress,3);
       for(const change of changes){
         paint(change,progress===1?change.to:change.from+(change.to-change.from)*ease,progress===1);
@@ -869,7 +888,8 @@
   });
   live?.start();
   // Local clock only: no extra network requests or full card redraws.
-  window.setInterval?.(renderPollIndicator,1000);
+  live?.subscribePoll?.(renderPollIndicator);
+  window.setInterval?.(renderPollIndicator,200);
   window.addEventListener('svitlo:location-change', e => updateLocation(e.detail?.id));
   // One tick per minute is enough; skip forecasts whose displayed values did not change.
   let lastOutageRenderKey = null;

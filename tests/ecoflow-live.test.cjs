@@ -280,3 +280,19 @@ test('poll timing is the actual browser check interval, not a claimed upstream r
  resolve({ok:true,json:async()=>({version:1,emittedAt:new Date(f.now()).toISOString(),devices:{}})});
  await pending;assert.equal(f.api.summary().checking,false);
 });
+
+test('poll subscribers see start and end even for unchanged fast snapshot',async()=>{
+ const f=fixture();f.configure({enabled:true,mode:'published',snapshotUrl:'./ecoflow-snapshot.json',streamUrl:''});
+ const raw={version:1,emittedAt:new Date(f.now()).toISOString(),devices:{'dacha:dp3':{socPercent:50}}};
+ f.setSnapshotResponder(async()=>({ok:true,json:async()=>raw}));
+ await f.api.start();
+ let changes=0;const events=[];
+ f.api.subscribe(()=>changes++);
+ f.api.subscribePoll(()=>{const info=f.api.summary();events.push([info.checking,info.checkResult]);});
+ f.advance(20000);
+ await f.intervals.find(x=>x.ms===20000).fn();
+ assert.deepEqual(events,[[true,null],[false,'ok']]);
+ assert.equal(changes,0);
+ assert.equal(f.api.summary().checkStartedMs,f.now());
+ assert.equal(f.api.summary().checkFinishedMs,f.now());
+});

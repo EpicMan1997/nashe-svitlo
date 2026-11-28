@@ -2252,3 +2252,13 @@ main > header .clock-view{grid-column:2;justify-self:center;min-width:0}
 @keyframes eco-check-pulse{0%,100%{box-shadow:0 0 0 3px #34d39925}50%{box-shadow:0 0 0 7px #34d39965}}
 @media(prefers-reduced-motion:reduce){#ecoflow .eco-status.is-checking i,#ecoflow.is-telemetry-animating .eco-status i{animation:none}}
 @media(max-width:390px){#ecoflow .eco-poll-timer:not(:empty){padding-left:5px}#ecoflow .eco-status{gap:5px}}
+
+/* Visible refresh feedback; no additional requests. */
+#ecoflow .eco-status.is-checking{border-color:#8ac9ed;background:#224559;color:#d6f0ff}
+#ecoflow .eco-status.is-updated{border-color:#63e6af;background:#1d5945;color:#dcfce7}
+#ecoflow .eco-status.is-checked{border-color:#458d78}
+#ecoflow .eco-status.is-failed{border-color:#a77b3b;color:#fde68a;background:#403119}
+#ecoflow .eco-status.is-updated i{animation:eco-check-pulse 1.4s ease-in-out 2}
+#ecoflow .eco-soc-transition{animation:eco-number-glow 1.4s ease-out}
+@keyframes eco-number-glow{0%,25%{filter:brightness(1.65)}100%{filter:brightness(1)}}
+@media(prefers-reduced-motion:reduce){#ecoflow .eco-status.is-updated i,#ecoflow .eco-soc-transition{animation:none}}
