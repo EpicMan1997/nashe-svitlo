@@ -118,6 +118,11 @@ def check_payload(payload, season, config, site, now):
     for key, location in season["locations"].items():
         require(isinstance(location.get("recorded_days"), int) and location["recorded_days"] >= 0,
                 "Invalid season recorded days for " + key)
+    if config.get('mode') == 'worker':
+        require(config == {'enabled': True, 'mode': 'worker',
+                          'snapshotUrl': 'https://nashe-svitlo-ecoflow.ssolovko.workers.dev/snapshot',
+                          'fallbackUrl': './ecoflow-snapshot.json', 'streamUrl': ''},
+                'Invalid EcoFlow Worker configuration')
     require((config.get('enabled') is True and config.get('mode') == 'published' and
              config.get('snapshotUrl') == './ecoflow-snapshot.json' and
              config.get('streamUrl') == '') or
@@ -126,7 +131,7 @@ def check_payload(payload, season, config, site, now):
         and isinstance(config.get("snapshotUrl"), str)
         and isinstance(config.get("streamUrl"), str)),
         "EcoFlow live configuration is malformed")
-    if config.get('mode') == 'published':
+    if config.get('mode') in ('published', 'worker'):
         snap = json.loads((site / 'ecoflow-snapshot.json').read_text(encoding='utf-8'))
         require(snap.get('version') == 1 and snap.get('mode') == 'scheduled',
                 'Incorrect EcoFlow published snapshot version')

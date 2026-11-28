@@ -232,3 +232,39 @@ test('private API quota interruptions have explicit sanitized availability state
   assert.equal(f.api.reading('dacha:d2'),null);
   assert.equal(f.api.reading('dacha:dp3').socPercent,64);
 });
+
+test('worker mode prefers fresh primary per station and uses scheduled fallback independently', async()=>{
+ const f=fixture();
+ const url='https://nashe-svitlo-ecoflow.ssolovko.workers.dev/snapshot';
+ f.configure({enabled:true,mode:'worker',snapshotUrl:url,fallbackUrl:'./ecoflow-snapshot.json',streamUrl:''});
+ let primary=true;
+ const frame=(mode,devices,age=0)=>({version:1,mode,emittedAt:new Date(f.now()-age).toISOString(),devices,
+   availability:Object.fromEntries(Object.keys(devices).map(k=>[k,'readable'])),connection:'ok'});
+ f.setSnapshotResponder(async u=>u===url?{ok:primary,json:async()=>frame('worker-poll',{'dacha:dp3':{socPercent:55,inputW:0,outputW:200}})}:
+  {ok:true,json:async()=>frame('scheduled',{'dacha:dp3':{socPercent:50},'dacha:d2':{socPercent:80}},60000)});
+ await f.api.start();
+ assert.equal(f.api.statusFor('dacha:dp3'),'live');
+ assert.equal(f.api.reading('dacha:dp3').socPercent,55);
+ assert.equal(f.api.statusFor('dacha:d2'),'published');
+ assert.equal(f.api.reading('dacha:d2').socPercent,80);
+ assert.equal(f.socket.length,0);
+ primary=false;f.advance(151000);
+ await f.intervals.find(x=>x.ms===20000).fn();
+ assert.equal(f.api.statusFor('dacha:dp3'),'published');
+ assert.equal(f.api.reading('dacha:dp3').socPercent,50);
+ primary=true;f.advance(60000);
+ await f.intervals.find(x=>x.ms===20000).fn();
+ assert.equal(f.api.statusFor('dacha:dp3'),'live');
+ assert.equal(f.api.reading('dacha:dp3').socPercent,55);
+ f.document.visibilityState='hidden';
+ const count=f.snapshotCalls.length;
+ await f.intervals.find(x=>x.ms===20000).fn();
+ assert.equal(f.snapshotCalls.length,count);
+});
+test('worker mode rejects unexpected gateway host',async()=>{
+ const f=fixture();
+ f.configure({enabled:true,mode:'worker',snapshotUrl:'https://other.test/snapshot',fallbackUrl:'./ecoflow-snapshot.json',streamUrl:''});
+ await f.api.start();
+ assert.equal(f.api.summary().status,'error');
+ assert.equal(f.snapshotCalls.length,0);
+});

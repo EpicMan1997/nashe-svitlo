@@ -13,6 +13,13 @@
   const VALID_OPERATIONS = new Set(['charging', 'discharging', 'holding', 'unknown']);
   const MAX_AGE_MS = 30000;
   const PUBLISHED_MAX_AGE_MS = 25 * 60 * 1000;
+  const WORKER_MAX_AGE_MS = 150000;
+  const WORKER_KEYS = ['dacha:dp3','dacha:d2','solovky:d2','naumenky:d2'];
+  const WORKER_URL = 'https://nashe-svitlo-ecoflow.ssolovko.workers.dev/snapshot';
+  let fallbackUrl = null;
+  let workerReadings = new Map(), fallbackReadings = new Map();
+  let workerAvailability = {}, fallbackAvailability = {}, workerSignature = '', fallbackSignature = '';
+  let workerFrameMs = 0, fallbackFrameMs = 0;
   let mode = 'stream';
   let availability = {};
   let unassigned = [];
@@ -68,13 +75,28 @@
       (mode === 'published' ? PUBLISHED_MAX_AGE_MS : MAX_AGE_MS) &&
       Date.now() >= reading.updatedMs - 60000);
   }
+  function workerFresh(value) {
+    return Boolean(value && Date.now()-value.updatedMs<=WORKER_MAX_AGE_MS && Date.now()>=value.updatedMs-60000);
+  }
+  function fallbackFresh(value) {
+    return Boolean(value && Date.now()-value.updatedMs<=PUBLISHED_MAX_AGE_MS && Date.now()>=value.updatedMs-60000);
+  }
   function reading(key) {
+    if(mode==='worker') {
+      const primary=workerReadings.get(key), backup=fallbackReadings.get(key);
+      return workerFresh(primary)?{...primary}:fallbackFresh(backup)?{...backup}:null;
+    }
     // Expiry is checked per device, not only by the health of the SSE socket.
     const value = telemetry.get(key);
     return isFresh(value) ? { ...value } : null;
   }
   function statusFor(key) {
     if (!enabled) return 'preview';
+    if(mode==='worker') {
+      if(workerFresh(workerReadings.get(key))) return 'live';
+      if(fallbackFresh(fallbackReadings.get(key))) return 'published';
+      return workerReadings.has(key)||fallbackReadings.has(key)?'stale':'waiting';
+    }
     const value = telemetry.get(key);
     return !value ? 'waiting' : isFresh(value) ? (mode === 'published' ? 'published' : 'live') : 'stale';
   }
@@ -86,7 +108,7 @@
   function refreshStatus() {
     if (!enabled) return;
     const freshCount = DEVICE_KEYS.filter(key => ['live','published'].includes(statusFor(key))).length;
-    const next = freshCount ? (mode === 'published' ? 'published' : 'live') : newestEmittedMs ? 'stale' : 'connecting';
+    const next = freshCount ? (mode === 'worker' ? (DEVICE_KEYS.some(key=>statusFor(key)==='live')?'live':'published') : mode === 'published' ? 'published' : 'live') : newestEmittedMs ? 'stale' : 'connecting';
     status = next;
     const signature = [status, revision, ...DEVICE_KEYS.map(key => statusFor(key))].join('|');
     if (signature !== publishedSignature) {
@@ -94,7 +116,30 @@
       notify();
     }
   }
+  function acceptWorkerFrame(raw, source) {
+    if(!enabled||!raw||raw.version!==1||raw.mode!==(source==='worker'?'worker-poll':'scheduled')||!raw.devices||typeof raw.devices!=='object'||Array.isArray(raw.devices))return false;
+    const emitted=isoTime(raw.emittedAt), primary=source==='worker', maxAge=primary?WORKER_MAX_AGE_MS:PUBLISHED_MAX_AGE_MS;
+    if(emitted===null||Date.now()-emitted>maxAge||emitted<(primary?workerFrameMs:fallbackFrameMs)||raw.connection==='unavailable')return false;
+    const signature=JSON.stringify(raw);
+    if(signature===(primary?workerSignature:fallbackSignature))return true;
+    const next=new Map(primary?workerReadings:fallbackReadings);
+    let usable=0;
+    for(const [key,entry] of Object.entries(raw.devices)){
+      if(!(primary?WORKER_KEYS.includes(key):KNOWN.has(key)))continue;
+      const value=normaliseReading(entry,emitted);
+      if(!value||value.socPercent===null||Date.now()-value.updatedMs>maxAge||value.updatedMs>emitted+60000)continue;
+      if(!next.has(key)||next.get(key).updatedMs<=value.updatedMs)next.set(key,value);
+      usable++;
+    }
+    const allowed=new Set(['unavailable','unsupported','unassigned','readable','not_listed','api_error','invalid_data','rate_limited']);
+    const avail=Object.fromEntries(Object.entries(raw.availability||{}).filter(([key,val])=>KNOWN.has(key)&&allowed.has(val)));
+    if(primary){workerReadings=next;workerAvailability=avail;workerFrameMs=emitted;workerSignature=signature;}
+    else{fallbackReadings=next;fallbackAvailability=avail;fallbackFrameMs=emitted;fallbackSignature=signature;unassigned=Array.isArray(raw.unassigned)?raw.unassigned.filter(key=>KNOWN.has(key)&&key.startsWith('unassigned:')):[];}
+    newestEmittedMs=Math.max(workerFrameMs,fallbackFrameMs);
+    revision++;refreshStatus();return usable>0;
+  }
   function acceptFrame(raw) {
+    if(mode==='worker')return acceptWorkerFrame(raw,raw?.mode==='worker-poll'?'worker':'fallback');
     if (!enabled || !raw || raw.version !== 1 ||
         !raw.devices || typeof raw.devices !== 'object' || Array.isArray(raw.devices)) return false;
     const emittedMs = isoTime(raw.emittedAt);
@@ -130,10 +175,28 @@
     refreshStatus();
     return true;
   }
+  async function getWorkerSnapshot() {
+    let primaryOk=false;
+    try{
+      const options={cache:'no-store',credentials:'omit'};
+      if(typeof AbortSignal!=='undefined'&&typeof AbortSignal.timeout==='function')options.signal=AbortSignal.timeout(25000);
+      const response=await fetch(snapshotUrl,options);
+      if(response.ok)primaryOk=acceptWorkerFrame(await response.json(),'worker');
+    }catch(_){}
+    lastError=primaryOk?null:'worker-unavailable';
+    if(!primaryOk||WORKER_KEYS.some(key=>!workerFresh(workerReadings.get(key))||workerAvailability[key]!=='readable')){
+      try{
+        const response=await fetch(fallbackUrl+'?t='+Math.floor(Date.now()/20000),{cache:'no-store',credentials:'omit'});
+        if(response.ok)acceptWorkerFrame(await response.json(),'fallback');
+      }catch(_){}
+    }
+    refreshStatus();
+  }
   async function getSnapshot() {
-    if (!enabled || !snapshotUrl || (mode === 'published' && host.document?.visibilityState === 'hidden')) return;
+    if (!enabled || !snapshotUrl || ((mode === 'published'||mode==='worker') && host.document?.visibilityState === 'hidden')) return;
     if (snapshotInFlight) return snapshotInFlight;
     snapshotInFlight = (async () => {
+      if(mode==='worker')return getWorkerSnapshot();
       try {
         const cacheBust = mode === 'published' ? ('?t=' + Math.floor(Date.now() / 20000)) : '';
         const response = await fetch(snapshotUrl + cacheBust, { cache: 'no-store', credentials: 'omit' });
@@ -173,11 +236,15 @@
       if (!response.ok) throw new Error('Configuration unavailable');
       const config = await response.json();
       if (config.enabled !== true) { status = 'preview'; notify(); return; }
-      mode = config.mode === 'published' ? 'published' : 'stream';
+      mode = config.mode === 'worker' ? 'worker' : config.mode === 'published' ? 'published' : 'stream';
       if (!validUrl(config.snapshotUrl) || (mode === 'stream' && !validUrl(config.streamUrl)))
         throw new Error('Invalid read-only gateway URLs');
       if (mode === 'published' && new URL(config.snapshotUrl, host.location.href).origin !== host.location.origin)
         throw new Error('Published snapshot must be same-origin');
+      if(mode==='worker'){
+        if(config.snapshotUrl!==WORKER_URL||config.fallbackUrl!=='./ecoflow-snapshot.json'||config.streamUrl!=='')throw new Error('Invalid Worker configuration');
+        fallbackUrl=new URL(config.fallbackUrl,host.location.href).href;
+      }
       enabled = true;
       snapshotUrl = new URL(config.snapshotUrl, host.location.href).href;
       streamUrl = mode === 'stream' ? new URL(config.streamUrl, host.location.href).href : null;
@@ -187,7 +254,7 @@
       if (mode === 'stream') connectStream();
       // Published GitHub Actions snapshots are NOT live; look for a new publication every 20 seconds.
       setInterval(refreshStatus, RECONNECT_CHECK_MS);
-      setInterval(getSnapshot, mode === 'published' ? 20000 : 30000);
+      setInterval(getSnapshot, mode === 'published'||mode==='worker' ? 20000 : 30000);
       host.document?.addEventListener?.('visibilitychange', () => {
         if (host.document.visibilityState === 'visible') getSnapshot();
       });
@@ -201,7 +268,7 @@
   }
   host.NasheSvitloEcoFlowLive = Object.freeze({
     start, subscribe, reading, statusFor, summary,
-    availabilityFor: key => availability[key] || 'unavailable',
+    availabilityFor: key => mode==='worker'?(statusFor(key)==='published'?fallbackAvailability[key]||'readable':workerAvailability[key]||fallbackAvailability[key]||'unavailable'):availability[key] || 'unavailable',
     // For deterministic tests only; never exposed as a control to the UI.
     acceptFrame, deviceKeys: DEVICE_KEYS
   });

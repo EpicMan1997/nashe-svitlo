@@ -1,6 +1,7 @@
 {
   "enabled": true,
-  "mode": "published",
-  "snapshotUrl": "./ecoflow-snapshot.json",
+  "mode": "worker",
+  "snapshotUrl": "https://nashe-svitlo-ecoflow.ssolovko.workers.dev/snapshot",
+  "fallbackUrl": "./ecoflow-snapshot.json",
   "streamUrl": ""
 }

@@ -1,6 +1,6 @@
 /* Network-first app shell. Keep outage data and UI assets fresh, with offline fallback. */
-const SHELL_CACHE = "nashe-svitlo-static-v71";
-const STATIC = ["./", "./favicon.svg", "./touch-bulb-v2.png", "./manifest.webmanifest", "./pwa-icon-192.svg", "./pwa-icon-512.svg", "./ecoflow.css?v=70", "./ecoflow-live.js?v=70", "./ecoflow.js?v=70"];
+const SHELL_CACHE = "nashe-svitlo-static-v72";
+const STATIC = ["./", "./favicon.svg", "./touch-bulb-v2.png", "./manifest.webmanifest", "./pwa-icon-192.svg", "./pwa-icon-512.svg", "./ecoflow.css?v=72", "./ecoflow-live.js?v=72", "./ecoflow.js?v=72"];
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(SHELL_CACHE).then(cache => cache.addAll(STATIC)).then(() => self.skipWaiting()));
 });

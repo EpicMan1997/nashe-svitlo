@@ -124,7 +124,8 @@
   function renderConnection() {
     const element = root.querySelector('.eco-status');
     if (!element) return;
-    const mode = live?.summary()?.status || 'preview';
+    const summary = live?.summary();
+    let mode = summary?.status || 'preview';
     const labels = {
       preview: 'API · очікуємо дані',
       connecting: 'Підключення…',
@@ -136,6 +137,10 @@
     const devicesHere = batterySystems(inventory[activeEcoLocation]?.devices || []);
     const liveHere = devicesHere.filter(device =>
       ['live','published'].includes(live?.statusFor(activeEcoLocation + ':' + device.id))).length;
+    const workerMode=summary?.mode==='worker';
+    const primaryHere=devicesHere.filter(device=>live?.statusFor(activeEcoLocation+':'+device.id)==='live').length;
+    const backupHere=liveHere-primaryHere;
+    if(workerMode&&liveHere)mode=primaryHere?'live':'published';
     const stateHere = ['live','published'].includes(mode) && liveHere === 0 ? 'stale' : mode;
     element.classList.toggle('is-live', stateHere === 'live');
     element.classList.toggle('is-published', stateHere === 'published');
@@ -145,12 +150,14 @@
       mode === 'live' ? 'Дані зі шлюзу EcoFlow; стан перевіряється окремо для кожної станції' :
       mode === 'published' ? 'Реальні показники з EcoFlow API, публікація залежить від графіка GitHub Actions. Не миттєві.' :
       'Немає свіжих даних. Показники приховано.';
-    const at = live?.summary()?.lastFrameMs;
+    const readingsHere=devicesHere.map(device=>live?.reading(activeEcoLocation+':'+device.id)?.updatedMs).filter(Number.isFinite);
+    const at = workerMode&&readingsHere.length?Math.min(...readingsHere):summary?.lastFrameMs;
     const hhmm = Number.isFinite(at) && at > 0 ? new Date(at).toLocaleTimeString('uk-UA', {hour:'2-digit',minute:'2-digit'}) : '—';
-    const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':mode === 'published'
+    const nextStatusHtml = '<i aria-hidden="true"></i>' + (!devicesHere.length?'API · немає станцій':workerMode&&liveHere?((primaryHere?'API · '+primaryHere+'/'+devicesHere.length+' · 1 хв':'Резерв · '+backupHere+'/'+devicesHere.length)+(primaryHere&&backupHere?' · резерв '+backupHere:'')+' · '+hhmm):mode === 'published'
       ? ('API · ' + liveHere + '/' + devicesHere.length + ' · ' + hhmm)
       : mode === 'live' ? ('Live · ' + liveHere + '/' + devicesHere.length + ' станцій')
       : labels[mode] || 'Немає зв’язку');
+    if(workerMode&&liveHere)element.title=primaryHere?'Cloudflare: опитування EcoFlow API приблизно раз на хвилину; час найстарішого показника в локації. Не MQTT.' : 'Резервні дані GitHub Actions; Cloudflare недоступний для цієї локації.';
     if (element.innerHTML !== nextStatusHtml) element.innerHTML = nextStatusHtml;
     root.dataset.telemetryState = stateHere;
   }
