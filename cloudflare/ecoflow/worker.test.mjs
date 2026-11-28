@@ -24,3 +24,10 @@ test('missing keys back off globally without emitting invented readings',async()
  assert.equal(a.problem,'missing_secrets');assert.equal(a.devices,0);assert.equal(a.refreshSeconds,120);
  assert.deepEqual(b,a);
 });
+
+test('root endpoint identifies the deployed gateway without contacting EcoFlow',async()=>{
+ const response=await worker.fetch(new Request('https://test/'),{});
+ assert.equal(response.status,200);
+ assert.deepEqual(await response.json(),{service:'nashe-svitlo-ecoflow',mode:'read-only',health:'/health'});
+ assert.equal(response.headers.get('Cache-Control'),'no-store');
+});
